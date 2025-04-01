@@ -1,5 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
+import Link from "next/link"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -15,11 +16,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <nav className="p-4 bg-gray-800 text-white flex space-x-4">
+          <Link href="/" className="hover:underline">Home</Link>
+          <Link href="/trade-signals" className="hover:underline">Trade Signals</Link>
+        </nav>
+        {children}
+      </body>
     </html>
   )
 }
-
-
-
-import './globals.css'
