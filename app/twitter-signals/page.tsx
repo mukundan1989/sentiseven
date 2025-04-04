@@ -1,6 +1,7 @@
-"use client";
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+'use client';
+
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 interface TwitterSignal {
   date: string;
@@ -11,38 +12,59 @@ interface TwitterSignal {
   entry_price: number;
 }
 
-const TwitterSignalsPage: React.FC = () => {
-  const [twitterData, setTwitterData] = useState<TwitterSignal[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+export default function TwitterSignalsPage() {
+  const [signals, setSignals] = useState<TwitterSignal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchTwitterSignals = async () => {
+    const fetchSignals = async () => {
       try {
-        const response = await axios.get("/api/twitter-signals");
-        setTwitterData(response.data);
-      } catch (error) {
-        console.error("Error fetching Twitter signals:", error);
+        const res = await axios.get('/api/twitter-signals');
+        setSignals(res.data);
+      } catch (err: any) {
+        setError('Failed to load Twitter Signals.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTwitterSignals();
+    fetchSignals();
   }, []);
+
+  const getSentimentClass = (sentiment: string) => {
+    if (sentiment.toLowerCase() === 'positive') return 'bg-green-600 text-white';
+    if (sentiment.toLowerCase() === 'negative') return 'bg-red-600 text-white';
+    return 'bg-gray-600 text-white';
+  };
 
   return (
     <div className="p-6">
-      <h1 className="text-white text-2xl font-bold mb-4">X (Twitter) Signals</h1>
+      <div className="flex items-center gap-4 mb-6">
+        <img
+          src="https://raw.githubusercontent.com/mukundan1989/stock-signals-app/refs/heads/main/images/twitter-logo.png"
+          alt="Twitter Logo"
+          className="w-10 h-10"
+        />
+        <h1 className="text-2xl font-bold">X Signals</h1>
+      </div>
 
-      {loading ? (
-        <p className="text-white">Loading...</p>
-      ) : (
+      <p className="mb-4 text-gray-300">View the latest Twitter sentiment signals for each stock.</p>
+
+      {loading && <p className="text-gray-400">Loading...</p>}
+      {error && <p className="text-red-500">{error}</p>}
+
+      {!loading && !error && signals.length === 0 && (
+        <p className="text-yellow-500">No Twitter signals found.</p>
+      )}
+
+      {!loading && !error && signals.length > 0 && (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-white border border-gray-700">
-            <thead className="text-xs uppercase bg-gray-800 text-white">
-              <tr>
-                <th className="px-4 py-2">Date</th>
-                <th className="px-4 py-2">Symbol</th>
+          <table className="min-w-full table-auto border-separate border-spacing-y-2 text-sm">
+            <thead>
+              <tr className="bg-black text-white rounded-lg">
+                <th className="px-4 py-2 text-left">Date</th>
+                <th className="px-4 py-2 text-left">Company Symbol</th>
                 <th className="px-4 py-2">Analyzed Tweets</th>
                 <th className="px-4 py-2">Sentiment Score</th>
                 <th className="px-4 py-2">Sentiment</th>
@@ -50,26 +72,18 @@ const TwitterSignalsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {twitterData.map((signal, index) => (
-                <tr key={index} className="border-b border-gray-700 hover:bg-gray-900">
+              {signals.map((signal, index) => (
+                <tr key={index} className="bg-zinc-900 text-white rounded-lg">
                   <td className="px-4 py-2">{signal.date}</td>
-                  <td className="px-4 py-2">{signal.comp_symbol}</td>
-                  <td className="px-4 py-2">{signal.analyzed_tweets}</td>
-                  <td className="px-4 py-2">{signal.sentiment_score}</td>
-                  <td className="px-4 py-2">
-                    <span
-                      className={`inline-block px-2 py-1 rounded-full text-sm font-medium ${
-                        signal.sentiment.toLowerCase() === "positive"
-                          ? "bg-green-600"
-                          : signal.sentiment.toLowerCase() === "negative"
-                          ? "bg-red-600"
-                          : "bg-gray-500"
-                      }`}
-                    >
+                  <td className="px-4 py-2 font-semibold">{signal.comp_symbol}</td>
+                  <td className="px-4 py-2 text-center">{signal.analyzed_tweets}</td>
+                  <td className="px-4 py-2 text-center">{signal.sentiment_score.toFixed(2)}</td>
+                  <td className="px-4 py-2 text-center">
+                    <span className={`px-3 py-1 rounded-full ${getSentimentClass(signal.sentiment)}`}>
                       {signal.sentiment}
                     </span>
                   </td>
-                  <td className="px-4 py-2">{signal.entry_price}</td>
+                  <td className="px-4 py-2 text-center">{signal.entry_price.toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
@@ -78,6 +92,4 @@ const TwitterSignalsPage: React.FC = () => {
       )}
     </div>
   );
-};
-
-export default TwitterSignalsPage;
+}
