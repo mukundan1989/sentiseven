@@ -60,7 +60,8 @@
     "zod": "^3.24.1",
     "@emotion/is-prop-valid": "latest",
     "framer-motion": "latest",
-    "mysql2": "^3.9.2"
+    "mysql2": "^3.9.2",
+    "axios": "^1.6.8"
   },
   "devDependencies": {
     "@types/node": "^22",
