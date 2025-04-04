@@ -1,4 +1,4 @@
-// /app/google-trend-signals/page.js
+// /app/google-trend-signals/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -32,14 +32,17 @@ export default function GoogleTrendSignalsPage() {
         />
         <h1 className="text-2xl font-bold">Google Trends Signals</h1>
       </div>
+
       <p className="text-muted-foreground">
         View the latest Google Trends sentiment signals for each stock.
       </p>
+
       <Card>
         <CardContent className="overflow-auto p-4">
           {loading ? (
             <div className="flex justify-center items-center h-32">
-              <Loader2 className="animate-spin w-6 h-6" /> Loading...
+              <Loader2 className="animate-spin w-6 h-6 mr-2" />
+              Loading...
             </div>
           ) : data.length > 0 ? (
             <table className="w-full text-sm text-center border-separate border-spacing-y-2">
@@ -70,8 +73,7 @@ export default function GoogleTrendSignalsPage() {
                             ? 'bg-lime-500'
                             : row.sentiment.toLowerCase() === 'negative'
                             ? 'bg-red-500'
-                            : 'bg-gray-500'}
-                        `}
+                            : 'bg-gray-500'}`}
                       >
                         {row.sentiment}
                       </span>
