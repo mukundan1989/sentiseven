@@ -1,7 +1,7 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+export async function GET() {
   try {
     const connection = await mysql.createConnection({
       host: '13.234.110.203',
@@ -21,11 +21,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     `);
 
     await connection.end();
-    res.status(200).json(rows);
+
+    return NextResponse.json(rows);
   } catch (error) {
     console.error('API error:', error);
-    res.status(500).json({ message: 'Error fetching News signals' });
+    return NextResponse.json({ error: 'Failed to fetch news signals' }, { status: 500 });
   }
-};
-
-export default handler;
+}
