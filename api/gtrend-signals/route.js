@@ -3,14 +3,22 @@ import mysql from 'mysql2/promise';
 
 export async function GET(req, res) {
     const connection = await mysql.createConnection({
-        host: 'your-mysql-host',
-        user: 'your-mysql-user',
-        password: 'your-mysql-password',
-        database: 'your-database-name'
+        host: '13.234.110.203',
+        user: 'stockstream_two',
+        password: 'stockstream_two',
+        database: 'stockstream_two'
     });
 
     try {
-        const [rows] = await connection.execute('SELECT * FROM tbl_gtrend_signals');
+        const [rows] = await connection.execute(`
+            SELECT date, comp_symbol, analyzed_keywords, sentiment_score, sentiment, entry_price
+            FROM gtrend_signals_full
+            WHERE (comp_symbol, date) IN (
+                SELECT comp_symbol, MAX(date)
+                FROM gtrend_signals_full
+                GROUP BY comp_symbol
+            );
+        `);
         await connection.end();
         return Response.json(rows);
     } catch (error) {
