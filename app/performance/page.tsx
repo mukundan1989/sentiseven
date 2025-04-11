@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Loader2, CheckCircle, DollarSign, TrendingUp, Search } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts"
 
+// Add a helper function to format dates at the top of the component, after the imports
 export default function PerformancePage() {
   const [symbol, setSymbol] = useState("APRN")
   const [metrics, setMetrics] = useState<any>(null)
@@ -16,6 +17,20 @@ export default function PerformancePage() {
   const [cumulativePL, setCumulativePL] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Helper function to format dates
+  const formatDate = (dateString: string) => {
+    if (!dateString) return ""
+    // If it's already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString
+
+    try {
+      const date = new Date(dateString)
+      return date.toISOString().split("T")[0] // Returns YYYY-MM-DD
+    } catch (e) {
+      return dateString // Return original if parsing fails
+    }
+  }
 
   const fetchData = async () => {
     if (!symbol) return
@@ -41,9 +56,21 @@ export default function PerformancePage() {
         plRes.json(),
       ])
 
+      // Format dates in the performance data
+      const formattedPerformanceData = performanceData.map((row) => ({
+        ...row,
+        date: formatDate(row.date),
+      }))
+
+      // Format dates in the cumulative P/L data
+      const formattedPlData = plData.map((row) => ({
+        ...row,
+        date: formatDate(row.date),
+      }))
+
       setMetrics(metricsData)
-      setPerformanceData(performanceData)
-      setCumulativePL(plData)
+      setPerformanceData(formattedPerformanceData)
+      setCumulativePL(formattedPlData)
     } catch (err: any) {
       setError(err.message)
     } finally {
