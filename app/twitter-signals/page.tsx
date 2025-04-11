@@ -36,22 +36,43 @@ export default function TwitterSignalsPage() {
   })
   const [comparisonData, setComparisonData] = useState([])
 
+  // Helper function to format dates
+  const formatDate = (dateString: string) => {
+    if (!dateString) return ""
+    // If it's already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString
+
+    try {
+      const date = new Date(dateString)
+      return date.toISOString().split("T")[0] // Returns YYYY-MM-DD
+    } catch (e) {
+      return dateString // Return original if parsing fails
+    }
+  }
+
   useEffect(() => {
     const fetchSignals = async () => {
       try {
         const res = await fetch("/api/twitter-signals")
         const data = await res.json()
-        setData(data)
-        setFilteredData(data)
 
-        // Generate summary stats
+        // Format dates in the data
+        const formattedData = data.map((item: TwitterSignal) => ({
+          ...item,
+          date: formatDate(item.date),
+        }))
+
+        setData(formattedData)
+        setFilteredData(formattedData)
+
+        // Generate summary stats with formatted date
         const stats = {
           total: data.length,
-          positive: data.filter((item) => item.sentiment.toLowerCase() === "positive").length,
-          negative: data.filter((item) => item.sentiment.toLowerCase() === "negative").length,
-          neutral: data.filter((item) => item.sentiment.toLowerCase() === "neutral").length,
-          lastUpdate: data.length > 0 ? data[0].date : "N/A",
-          totalTweets: data.reduce((sum, item) => sum + (item.analyzed_tweets || 0), 0),
+          positive: data.filter((item: TwitterSignal) => item.sentiment.toLowerCase() === "positive").length,
+          negative: data.filter((item: TwitterSignal) => item.sentiment.toLowerCase() === "negative").length,
+          neutral: data.filter((item: TwitterSignal) => item.sentiment.toLowerCase() === "neutral").length,
+          lastUpdate: data.length > 0 ? formatDate(data[0].date) : "N/A",
+          totalTweets: data.reduce((sum: number, item: TwitterSignal) => sum + (item.analyzed_tweets || 0), 0),
         }
         setSummaryStats(stats)
 
