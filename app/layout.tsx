@@ -16,23 +16,25 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-gradient-to-br from-slate-950 to-slate-900 text-slate-50 min-h-screen">
-        <nav className="p-4 bg-slate-900 border-b border-slate-800 text-white flex items-center space-x-6">
-          <Link href="/" className="hover:text-amber-500 transition-colors font-medium">
-            Home
-          </Link>
-          <Link href="/google-trend-signals" className="hover:text-amber-500 transition-colors">
-            Google Trends
-          </Link>
-          <Link href="/twitter-signals" className="hover:text-amber-500 transition-colors">
-            Twitter Signals
-          </Link>
-          <Link href="/news-signals" className="hover:text-amber-500 transition-colors">
-            News Signals
-          </Link>
-          <Link href="/trade-signals" className="hover:text-amber-500 transition-colors">
-            Trade Signals
-          </Link>
+      <body className="bg-[#0a0b14] text-white min-h-screen">
+        <nav className="bg-[#0a0b14] border-b border-gray-800 px-6 py-4">
+          <div className="max-w-[1200px] mx-auto flex space-x-6">
+            <Link href="/" className="text-white hover:text-amber-400 transition-colors">
+              Home
+            </Link>
+            <Link href="/google-trend-signals" className="text-white hover:text-amber-400 transition-colors">
+              Google Trends
+            </Link>
+            <Link href="/twitter-signals" className="text-white hover:text-amber-400 transition-colors">
+              Twitter Signals
+            </Link>
+            <Link href="/news-signals" className="text-white hover:text-amber-400 transition-colors">
+              News Signals
+            </Link>
+            <Link href="/trade-signals" className="text-white hover:text-amber-400 transition-colors">
+              Trade Signals
+            </Link>
+          </div>
         </nav>
         {children}
       </body>
