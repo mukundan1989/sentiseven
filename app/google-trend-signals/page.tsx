@@ -26,21 +26,41 @@ export default function GoogleTrendSignalsPage() {
     lastUpdate: "",
   })
 
+  // Helper function to format dates
+  const formatDate = (dateString) => {
+    if (!dateString) return ""
+    // If it's already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString
+
+    try {
+      const date = new Date(dateString)
+      return date.toISOString().split("T")[0] // Returns YYYY-MM-DD
+    } catch (e) {
+      return dateString // Return original if parsing fails
+    }
+  }
+
   useEffect(() => {
     fetch("/api/gtrend-signals")
       .then((res) => res.json())
       .then((data) => {
-        setData(data)
-        setFilteredData(data)
+        // Format dates in the data
+        const formattedData = data.map((item) => ({
+          ...item,
+          date: formatDate(item.date),
+        }))
+
+        setData(formattedData)
+        setFilteredData(formattedData)
         setLoading(false)
 
-        // Generate summary stats
+        // Generate summary stats with formatted date
         const stats = {
           total: data.length,
           positive: data.filter((item) => item.sentiment.toLowerCase() === "positive").length,
           negative: data.filter((item) => item.sentiment.toLowerCase() === "negative").length,
           neutral: data.filter((item) => item.sentiment.toLowerCase() === "neutral").length,
-          lastUpdate: data.length > 0 ? data[0].date : "N/A",
+          lastUpdate: data.length > 0 ? formatDate(data[0].date) : "N/A",
         }
         setSummaryStats(stats)
 
