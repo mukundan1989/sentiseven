@@ -126,24 +126,24 @@ export default function GoogleTrendSignalsPage() {
   }
 
   return (
-    <div className="bg-[#0a0b14] min-h-screen">
-      <div className="max-w-[1200px] mx-auto p-6">
+    <div className="bg-gray-50 min-h-screen">
+      <div className="container mx-auto p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white">Google Trends Signals</h1>
-          <p className="text-gray-400 mt-1">View the latest Google Trends sentiment signals for each stock.</p>
+          <h1 className="text-3xl font-bold text-gray-900">Google Trends Signals</h1>
+          <p className="text-gray-500 mt-1">View the latest Google Trends sentiment signals for each stock.</p>
         </div>
 
         {/* Summary Stats Card */}
-        <Card className="bg-gradient-to-br from-gray-900 to-black border-gray-800 mb-6">
+        <Card className="bg-white border border-gray-200 shadow-sm mb-6">
           <CardContent className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="flex flex-col">
-                <span className="text-gray-400 text-sm">Total Signals</span>
-                <span className="text-white text-2xl font-bold">{summaryStats.total}</span>
+                <span className="text-gray-500 text-sm">Total Signals</span>
+                <span className="text-gray-900 text-2xl font-bold">{summaryStats.total}</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-gray-400 text-sm">Positive/Negative Ratio</span>
-                <span className="text-white text-2xl font-bold">
+                <span className="text-gray-500 text-sm">Positive/Negative Ratio</span>
+                <span className="text-gray-900 text-2xl font-bold">
                   {summaryStats.negative > 0
                     ? (summaryStats.positive / summaryStats.negative).toFixed(2)
                     : summaryStats.positive > 0
@@ -152,65 +152,69 @@ export default function GoogleTrendSignalsPage() {
                 </span>
               </div>
               <div className="flex flex-col">
-                <span className="text-gray-400 text-sm">Positive Signals</span>
-                <span className="text-green-500 text-2xl font-bold">{summaryStats.positive}</span>
+                <span className="text-gray-500 text-sm">Positive Signals</span>
+                <span className="text-green-600 text-2xl font-bold">{summaryStats.positive}</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-gray-400 text-sm">Negative Signals</span>
-                <span className="text-red-500 text-2xl font-bold">{summaryStats.negative}</span>
+                <span className="text-gray-500 text-sm">Negative Signals</span>
+                <span className="text-red-600 text-2xl font-bold">{summaryStats.negative}</span>
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-800 flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Last updated: {summaryStats.lastUpdate}</span>
+            <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
+              <span className="text-gray-500 text-sm">Last updated: {summaryStats.lastUpdate}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Filters and Controls */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search by symbol or keywords..."
-                className="pl-10 bg-gray-900 border-gray-700"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+        <Card className="bg-white border border-gray-200 shadow-sm mb-6">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search by symbol or keywords..."
+                    className="pl-10 bg-white border-gray-200"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Select value={sentimentFilter} onValueChange={setSentimentFilter}>
+                  <SelectTrigger className="w-[180px] bg-white border-gray-200">
+                    <SelectValue placeholder="Filter by sentiment" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sentiments</SelectItem>
+                    <SelectItem value="positive">Positive</SelectItem>
+                    <SelectItem value="negative">Negative</SelectItem>
+                    <SelectItem value="neutral">Neutral</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[180px] bg-white border-gray-200">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Date</SelectItem>
+                    <SelectItem value="symbol">Symbol</SelectItem>
+                    <SelectItem value="sentiment_score">Sentiment Score</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="bg-white border-gray-200"
+                  onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                >
+                  {sortOrder === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <Select value={sentimentFilter} onValueChange={setSentimentFilter}>
-              <SelectTrigger className="w-[180px] bg-gray-900 border-gray-700">
-                <SelectValue placeholder="Filter by sentiment" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-gray-700">
-                <SelectItem value="all">All Sentiments</SelectItem>
-                <SelectItem value="positive">Positive</SelectItem>
-                <SelectItem value="negative">Negative</SelectItem>
-                <SelectItem value="neutral">Neutral</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[180px] bg-gray-900 border-gray-700">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-gray-700">
-                <SelectItem value="date">Date</SelectItem>
-                <SelectItem value="symbol">Symbol</SelectItem>
-                <SelectItem value="sentiment_score">Sentiment Score</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              variant="outline"
-              size="icon"
-              className="bg-gray-900 border-gray-700"
-              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-            >
-              {sortOrder === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Table View */}
         <Card className="bg-white rounded-lg shadow-lg overflow-hidden border-0 mb-6">
@@ -389,27 +393,29 @@ export default function GoogleTrendSignalsPage() {
         </Card>
 
         {/* Signal Source Comparison */}
-        <Card className="bg-gradient-to-br from-gray-900 to-black border-gray-800">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-gray-400" />
-              <CardTitle className="text-white">Signal Source Comparison</CardTitle>
+              <Calendar className="h-5 w-5 text-gray-500" />
+              <CardTitle className="text-gray-900">Signal Source Comparison</CardTitle>
             </div>
-            <CardDescription>Compare Google Trends with Twitter and News signals</CardDescription>
+            <CardDescription className="text-gray-500">
+              Compare Google Trends with Twitter and News signals
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={comparisonData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis dataKey="symbol" stroke="#94a3b8" tick={{ fill: "#94a3b8" }} />
-                  <YAxis stroke="#94a3b8" tick={{ fill: "#94a3b8" }} domain={[-1, 1]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="symbol" stroke="#6b7280" tick={{ fill: "#6b7280" }} />
+                  <YAxis stroke="#6b7280" tick={{ fill: "#6b7280" }} domain={[-1, 1]} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "rgba(15, 23, 42, 0.9)",
-                      borderColor: "#334155",
+                      backgroundColor: "white",
+                      borderColor: "#e5e7eb",
                       borderRadius: "0.375rem",
-                      color: "#f8fafc",
+                      color: "#111827",
                     }}
                     formatter={(value) => [value.toFixed(2), "Sentiment Score"]}
                   />
