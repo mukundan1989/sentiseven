@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { ArrowUp, DollarSign, TrendingUp, BarChart } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowUp, DollarSign, TrendingUp, BarChart, Calendar } from "lucide-react"
 import {
   LineChart,
   Line,
@@ -15,7 +15,6 @@ import {
   Pie,
   Cell,
 } from "recharts"
-import Image from "next/image"
 
 // Function to generate mock stock price data
 const generateStockPriceData = () => {
@@ -54,11 +53,11 @@ const GaugeChart = ({ value, size = 200 }) => {
   const needleX = radius + needleLength * Math.cos((needleAngle * Math.PI) / 180)
   const needleY = radius + needleLength * Math.sin((needleAngle * Math.PI) / 180)
 
-  // Create gauge segments data
+  // Create gauge segments data with updated colors
   const gaugeData = [
-    { name: "Low", value: 50, color: "#cddc39" },
-    { name: "Medium", value: 25, color: "#8bc34a" },
-    { name: "High", value: 25, color: "#006400" },
+    { name: "Low", value: 50, color: "#ef4444" },
+    { name: "Medium", value: 25, color: "#f59e0b" },
+    { name: "High", value: 25, color: "#10b981" },
   ]
 
   return (
@@ -84,14 +83,14 @@ const GaugeChart = ({ value, size = 200 }) => {
       {/* Needle */}
       <div className="absolute top-0 left-0 w-full h-full">
         <svg width={size} height={size}>
-          <line x1={radius} y1={radius} x2={needleX} y2={needleY} stroke="#ffffff" strokeWidth={2} />
-          <circle cx={radius} cy={radius} r={5} fill="#ffffff" />
+          <line x1={radius} y1={radius} x2={needleX} y2={needleY} stroke="#6b7280" strokeWidth={2} />
+          <circle cx={radius} cy={radius} r={5} fill="#6b7280" />
         </svg>
       </div>
 
       {/* Value text */}
       <div className="absolute bottom-8 left-0 w-full text-center">
-        <span className="text-xl font-bold text-white">{value}%</span>
+        <span className="text-xl font-bold text-gray-900">{value}%</span>
       </div>
     </div>
   )
@@ -105,91 +104,83 @@ export default function StockSignalPage() {
     setStockPriceData(generateStockPriceData())
   }, [])
 
-  // Twitter sentiment data for donut chart
+  // Twitter sentiment data for donut chart with updated colors
   const twitterSentimentData = [
-    { name: "Positive", value: 45, color: "#00ff00" },
-    { name: "Negative", value: 30, color: "#ff0000" },
-    { name: "Neutral", value: 25, color: "#808080" },
+    { name: "Positive", value: 45, color: "#10b981" },
+    { name: "Negative", value: 30, color: "#ef4444" },
+    { name: "Neutral", value: 25, color: "#f59e0b" },
   ]
 
   return (
-    <div className="bg-[#0a0b14] min-h-screen">
-      <div className="max-w-[1200px] mx-auto p-6">
-        <div className="flex items-center justify-center gap-4 mb-6">
-          <Image
-            src="https://raw.githubusercontent.com/mukundan1989/stock-signals-app/refs/heads/main/images/stocksignal-icon.png"
-            alt="Stock Signal Logo"
-            width={70}
-            height={70}
-            className="rounded-md"
-          />
-          <div>
-            <h1 className="text-3xl font-bold text-white text-center">Stock Signal Page</h1>
-            <p className="text-gray-400 mt-1 text-center">Insights and Analysis from various models.</p>
-          </div>
+    <div className="bg-gradient-to-br from-slate-950 to-slate-900 text-slate-50 min-h-screen">
+      <div className="container mx-auto p-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-white">Stock Signal</h1>
+          <p className="text-gray-400 mt-1">Insights and Analysis from various models.</p>
         </div>
 
-        {/* Company Information Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-lg overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-start">
-                <div className="rounded-full bg-gray-800 p-3 mr-4">
-                  <BarChart className="h-6 w-6 text-white opacity-70" />
+        {/* Summary Stats Card */}
+        <Card className="bg-white rounded-lg shadow-lg overflow-hidden border-0 mb-6">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-full bg-gray-100 p-2">
+                    <BarChart className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <span className="text-gray-500 text-sm">Stock Symbol</span>
                 </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-white">AAPL</h2>
-                  <p className="text-gray-400">Apple Inc.</p>
-                </div>
+                <span className="text-gray-900 text-2xl font-bold mt-1">AAPL</span>
+                <span className="text-gray-500 text-sm">Apple Inc.</span>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-lg overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-start">
-                <div className="rounded-full bg-gray-800 p-3 mr-4">
-                  <DollarSign className="h-6 w-6 text-white opacity-70" />
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-full bg-gray-100 p-2">
+                    <DollarSign className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <span className="text-gray-500 text-sm">Current Price</span>
                 </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-white">$175.34</h2>
-                  <p className="text-gray-400">Current Price</p>
-                </div>
+                <span className="text-gray-900 text-2xl font-bold mt-1">$175.34</span>
+                <span className="text-green-600 text-sm">+2.5% today</span>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-lg overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-start">
-                <div className="rounded-full bg-gray-800 p-3 mr-4">
-                  <TrendingUp className="h-6 w-6 text-white opacity-70" />
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-full bg-gray-100 p-2">
+                    <TrendingUp className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <span className="text-gray-500 text-sm">Sentiment Score</span>
                 </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-white">70%</h2>
-                  <p className="text-gray-400">Sentiment Score</p>
-                </div>
+                <span className="text-gray-900 text-2xl font-bold mt-1">70%</span>
+                <span className="text-green-600 text-sm">Positive</span>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Stock Price Trend Chart */}
-        <Card className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-lg overflow-hidden mb-8">
-          <CardContent className="p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Stock Price Trend</h2>
+        <Card className="bg-white rounded-lg shadow-lg overflow-hidden border-0 mb-6">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-gray-500" />
+              <CardTitle className="text-gray-900">Stock Price Trend</CardTitle>
+            </div>
+            <CardDescription className="text-gray-500">Historical price movement over the last 30 days</CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stockPriceData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: "#6b7280" }} />
                   <YAxis stroke="#6b7280" tick={{ fill: "#6b7280" }} domain={["auto", "auto"]} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "rgba(0,0,0,0.8)",
-                      borderColor: "#333",
+                      backgroundColor: "white",
+                      borderColor: "#e5e7eb",
                       borderRadius: "0.375rem",
-                      color: "#fff",
+                      color: "#111827",
                     }}
                     formatter={(value) => [`$${value}`, "Price"]}
                     labelFormatter={(label) => `Date: ${label}`}
@@ -197,7 +188,7 @@ export default function StockSignalPage() {
                   <Line
                     type="monotone"
                     dataKey="price"
-                    stroke="#00ff9f"
+                    stroke="#3b82f6"
                     strokeWidth={2}
                     dot={false}
                     activeDot={{ r: 6 }}
@@ -209,14 +200,21 @@ export default function StockSignalPage() {
         </Card>
 
         {/* Twitter Sentiment Block */}
-        <h2 className="text-2xl font-bold text-white mb-4">Twitter Sentiment</h2>
-        <Card className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-lg overflow-hidden mb-8">
-          <CardContent className="p-6">
+        <Card className="bg-white rounded-lg shadow-lg overflow-hidden border-0 mb-6">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-gray-500" />
+              <CardTitle className="text-gray-900">Twitter Sentiment</CardTitle>
+            </div>
+            <CardDescription className="text-gray-500">Analysis of sentiment from Twitter mentions</CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
               {/* Keywords Analyzed */}
-              <div className="flex flex-col items-center justify-center">
-                <h3 className="text-lg font-medium text-white mb-2">Keywords Analyzed</h3>
-                <p className="text-3xl font-bold text-white">145</p>
+              <div className="flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-lg font-medium text-gray-700 mb-2">Keywords Analyzed</h3>
+                <p className="text-3xl font-bold text-gray-900">145</p>
+                <p className="text-sm text-gray-500 mt-1">Last 7 days</p>
               </div>
 
               {/* Donut Chart */}
@@ -239,35 +237,47 @@ export default function StockSignalPage() {
                       </Pie>
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "rgba(0,0,0,0.8)",
-                          borderColor: "#333",
+                          backgroundColor: "white",
+                          borderColor: "#e5e7eb",
                           borderRadius: "0.375rem",
-                          color: "#fff",
+                          color: "#111827",
                         }}
-                        formatter={(value) => [`${value}%`, ""]}
+                        formatter={(value) => [`${value}%`, (entry) => entry.name]}
                       />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
-              {/* Arrow Indicator */}
-              <div className="flex justify-center">
-                <ArrowUp className="h-24 w-24 text-green-400" />
+              {/* Sentiment Summary */}
+              <div className="flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-lg font-medium text-gray-700 mb-2">Overall Sentiment</h3>
+                <div className="flex items-center gap-2">
+                  <ArrowUp className="h-6 w-6 text-green-600" />
+                  <p className="text-3xl font-bold text-gray-900">Positive</p>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">Based on 145 tweets</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* News Sentiment Block */}
-        <h2 className="text-2xl font-bold text-white mb-4">News Sentiment</h2>
-        <Card className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-lg overflow-hidden mb-8">
-          <CardContent className="p-6">
+        <Card className="bg-white rounded-lg shadow-lg overflow-hidden border-0 mb-6">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-gray-500" />
+              <CardTitle className="text-gray-900">News Sentiment</CardTitle>
+            </div>
+            <CardDescription className="text-gray-500">Analysis of sentiment from news articles</CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
               {/* Positive Sentiment */}
-              <div className="flex flex-col items-center justify-center">
-                <h3 className="text-lg font-medium text-white mb-2">Positive Sentiment</h3>
-                <p className="text-3xl font-bold text-white">70%</p>
+              <div className="flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-lg font-medium text-gray-700 mb-2">Positive Sentiment</h3>
+                <p className="text-3xl font-bold text-gray-900">70%</p>
+                <p className="text-sm text-gray-500 mt-1">Based on 32 articles</p>
               </div>
 
               {/* Speedometer */}
@@ -275,9 +285,14 @@ export default function StockSignalPage() {
                 <GaugeChart value={70} />
               </div>
 
-              {/* Arrow Indicator */}
-              <div className="flex justify-center">
-                <ArrowUp className="h-24 w-24 text-green-400" />
+              {/* Sentiment Summary */}
+              <div className="flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-lg font-medium text-gray-700 mb-2">Overall Sentiment</h3>
+                <div className="flex items-center gap-2">
+                  <ArrowUp className="h-6 w-6 text-green-600" />
+                  <p className="text-3xl font-bold text-gray-900">Positive</p>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">Based on recent news</p>
               </div>
             </div>
           </CardContent>
