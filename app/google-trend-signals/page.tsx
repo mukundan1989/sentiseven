@@ -1,25 +1,12 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, ChevronDown, ChevronUp, Search, Calendar } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Legend,
-} from "recharts"
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts"
 
 export default function GoogleTrendSignalsPage() {
   const [data, setData] = useState([])
@@ -231,155 +218,35 @@ export default function GoogleTrendSignalsPage() {
                     <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
                       <th className="px-6 py-4 font-medium">Date</th>
                       <th className="px-6 py-4 font-medium">Symbol</th>
+                      <th className="px-6 py-4 font-medium">Analyzed Keywords</th>
+                      <th className="px-6 py-4 font-medium text-right">Sentiment Score</th>
                       <th className="px-6 py-4 text-center font-medium">Sentiment</th>
+                      <th className="px-6 py-4 font-medium text-right">Entry Price</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredData.map((row, i) => (
-                      <React.Fragment key={i}>
-                        <tr
-                          className={`border-b ${
-                            expandedRows[i] ? "border-transparent" : "border-gray-200"
-                          } hover:bg-gray-50 transition-colors cursor-pointer`}
-                          onClick={() => toggleRow(i)}
-                        >
-                          <td className="px-6 py-4 text-gray-800">{row.date}</td>
-                          <td className="px-6 py-4 font-medium text-gray-900">{row.comp_symbol}</td>
-                          <td className="px-6 py-4 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <span
-                                className={`px-3 py-1 rounded-full text-xs font-medium inline-block
-                                  ${
-                                    row.sentiment.toLowerCase() === "positive"
-                                      ? "bg-green-100 text-green-800 border border-green-200"
-                                      : row.sentiment.toLowerCase() === "negative"
-                                        ? "bg-red-100 text-red-800 border border-red-200"
-                                        : "bg-amber-100 text-amber-800 border border-amber-200"
-                                  }`}
-                              >
-                                {row.sentiment}
-                              </span>
-                              {expandedRows[i] ? (
-                                <ChevronUp className="h-4 w-4 text-gray-400" />
-                              ) : (
-                                <ChevronDown className="h-4 w-4 text-gray-400" />
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                        <AnimatePresence>
-                          {expandedRows[i] && (
-                            <tr>
-                              <td colSpan={3} className="p-0 border-b border-gray-200">
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: "auto", opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  transition={{ duration: 0.2 }}
-                                  className="overflow-hidden bg-gray-50"
-                                >
-                                  <div className="p-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                      <div>
-                                        <h4 className="text-sm font-medium text-gray-900 mb-2">Analyzed Keywords</h4>
-                                        <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                                          {row.analyzed_keywords}
-                                        </p>
-
-                                        <div className="mt-4">
-                                          <h4 className="text-sm font-medium text-gray-900 mb-2">
-                                            Keyword Sentiment Breakdown
-                                          </h4>
-                                          <div className="bg-white p-3 rounded border border-gray-200">
-                                            <div className="grid grid-cols-2 gap-2">
-                                              {row.analyzed_keywords &&
-                                                row.analyzed_keywords
-                                                  .split(",")
-                                                  .slice(0, 6)
-                                                  .map((keyword, idx) => (
-                                                    <div key={idx} className="flex justify-between items-center">
-                                                      <span className="text-xs text-gray-700">{keyword.trim()}</span>
-                                                      <Badge
-                                                        className={`${Math.random() > 0.5 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-                                                      >
-                                                        {(Math.random() * 2 - 1).toFixed(2)}
-                                                      </Badge>
-                                                    </div>
-                                                  ))}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-
-                                      <div>
-                                        <div className="grid grid-cols-2 gap-4 mb-4">
-                                          <div>
-                                            <h4 className="text-sm font-medium text-gray-900 mb-2">Sentiment Score</h4>
-                                            <p className="text-sm text-gray-600">{row.sentiment_score}</p>
-                                          </div>
-                                          <div>
-                                            <h4 className="text-sm font-medium text-gray-900 mb-2">Entry Price</h4>
-                                            <p className="text-sm text-gray-600">${row.entry_price}</p>
-                                          </div>
-                                        </div>
-
-                                        <div>
-                                          <h4 className="text-sm font-medium text-gray-900 mb-2">
-                                            Price Action After Signal
-                                          </h4>
-                                          <div className="h-[150px] bg-white p-2 rounded border border-gray-200">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                              <LineChart
-                                                data={[
-                                                  { day: 1, price: row.entry_price },
-                                                  {
-                                                    day: 2,
-                                                    price: row.entry_price * (1 + (Math.random() * 0.02 - 0.01)),
-                                                  },
-                                                  {
-                                                    day: 3,
-                                                    price: row.entry_price * (1 + (Math.random() * 0.04 - 0.02)),
-                                                  },
-                                                  {
-                                                    day: 4,
-                                                    price: row.entry_price * (1 + (Math.random() * 0.06 - 0.03)),
-                                                  },
-                                                  {
-                                                    day: 5,
-                                                    price: row.entry_price * (1 + (Math.random() * 0.08 - 0.04)),
-                                                  },
-                                                ]}
-                                              >
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-                                                <XAxis
-                                                  dataKey="day"
-                                                  label={{
-                                                    value: "Days After Signal",
-                                                    position: "insideBottom",
-                                                    offset: -5,
-                                                  }}
-                                                />
-                                                <YAxis domain={["auto", "auto"]} />
-                                                <Tooltip formatter={(value) => [`${value.toFixed(2)}`, "Price"]} />
-                                                <Line
-                                                  type="monotone"
-                                                  dataKey="price"
-                                                  stroke="#10b981"
-                                                  strokeWidth={2}
-                                                />
-                                              </LineChart>
-                                            </ResponsiveContainer>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              </td>
-                            </tr>
-                          )}
-                        </AnimatePresence>
-                      </React.Fragment>
+                      <tr key={i} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 text-gray-800">{row.date}</td>
+                        <td className="px-6 py-4 font-medium text-gray-900">{row.comp_symbol}</td>
+                        <td className="px-6 py-4 text-gray-800 max-w-xs truncate">{row.analyzed_keywords}</td>
+                        <td className="px-6 py-4 text-right text-gray-800">{row.sentiment_score}</td>
+                        <td className="px-6 py-4 text-center">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium inline-block
+                      ${
+                        row.sentiment.toLowerCase() === "positive"
+                          ? "bg-green-100 text-green-800 border border-green-200"
+                          : row.sentiment.toLowerCase() === "negative"
+                            ? "bg-red-100 text-red-800 border border-red-200"
+                            : "bg-amber-100 text-amber-800 border border-amber-200"
+                      }`}
+                          >
+                            {row.sentiment}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right text-gray-800">${row.entry_price}</td>
+                      </tr>
                     ))}
                   </tbody>
                 </table>
