@@ -122,42 +122,7 @@ const SentimentDashboard = () => {
 
   // Function to handle saving stocks from the stock selector
   const handleSaveStocks = (newStocks) => {
-    // Preserve allocations for existing stocks
-    const updatedStocks = newStocks.map((newStock) => {
-      const existingStock = stocks.find((s) => s.id === newStock.id)
-      return {
-        ...newStock,
-        allocation: existingStock?.allocation || Math.floor(100 / newStocks.length),
-        locked: existingStock?.locked || false,
-      }
-    })
-
-    // Normalize allocations to ensure they sum to 100%
-    const totalAllocation = updatedStocks.reduce((sum, stock) => sum + stock.allocation, 0)
-    if (totalAllocation !== 100) {
-      const unlockedStocks = updatedStocks.filter((stock) => !stock.locked)
-      const lockedAllocation = updatedStocks
-        .filter((stock) => stock.locked)
-        .reduce((sum, stock) => sum + stock.allocation, 0)
-      const remainingAllocation = 100 - lockedAllocation
-
-      if (unlockedStocks.length > 0) {
-        const perStockAllocation = Math.floor(remainingAllocation / unlockedStocks.length)
-        updatedStocks.forEach((stock) => {
-          if (!stock.locked) {
-            stock.allocation = perStockAllocation
-          }
-        })
-
-        // Adjust for any rounding errors
-        const newTotal = updatedStocks.reduce((sum, stock) => sum + stock.allocation, 0)
-        if (newTotal < 100) {
-          updatedStocks[0].allocation += 100 - newTotal
-        }
-      }
-    }
-
-    setStocks(updatedStocks)
+    setStocks(newStocks)
 
     // If basket was already locked, update the updated date
     if (basketLocked) {
@@ -923,4 +888,3 @@ function clamp(value, min, max) {
 }
 
 export default SentimentDashboard
-
