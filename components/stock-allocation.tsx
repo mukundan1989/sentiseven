@@ -55,13 +55,36 @@ export function StockAllocation({
     // Create a copy of the stocks
     let updatedStocks = [...localStocks]
 
+    // Find unlocked stocks to adjust (excluding the one being modified)
+    const unlockedStocks = updatedStocks.filter((s) => !s.locked && s.id !== stockId)
+
+    // Check if we can make this change
+    if (difference > 0) {
+      // We're increasing allocation - check if we have enough room from unlocked stocks
+      const totalUnlockedAllocation = unlockedStocks.reduce((sum, s) => sum + s.allocation, 0)
+
+      if (totalUnlockedAllocation < difference) {
+        // Not enough room to increase - cap at what's available
+        const maxPossibleAllocation = currentStock.allocation + totalUnlockedAllocation
+        updatedStocks = updatedStocks.map((stock) =>
+          stock.id === stockId ? { ...stock, allocation: maxPossibleAllocation } : stock,
+        )
+
+        // Set all unlocked stocks to 0
+        updatedStocks = updatedStocks.map((stock) =>
+          !stock.locked && stock.id !== stockId ? { ...stock, allocation: 0 } : stock,
+        )
+
+        setLocalStocks(updatedStocks)
+        setTotalAllocation(100) // Should still be 100%
+        return
+      }
+    }
+
     // Update the allocation for the selected stock
     updatedStocks = updatedStocks.map((stock) =>
       stock.id === stockId ? { ...stock, allocation: newAllocation } : stock,
     )
-
-    // Find unlocked stocks to adjust (excluding the one being modified)
-    const unlockedStocks = updatedStocks.filter((s) => !s.locked && s.id !== stockId)
 
     if (unlockedStocks.length > 0 && difference !== 0) {
       // Get the total allocation of unlocked stocks (excluding the one being modified)
@@ -74,20 +97,15 @@ export function StockAllocation({
           if (!stock.locked && stock.id !== stockId) {
             // Calculate the proportion this stock represents of all unlocked stocks
             const proportion = stock.allocation / totalUnlockedAllocation
-            // Reduce this stock's allocation proportionally
+            // Reduce this stock's allocation proportionally, but never below 0
+            const newStockAllocation = Math.max(0, stock.allocation - difference * proportion)
             return {
               ...stock,
-              allocation: Math.max(0, stock.allocation - difference * proportion),
+              allocation: newStockAllocation,
             }
           }
           return stock
         })
-      } else if (difference < 0) {
-        // If no unlocked stocks to distribute to, prevent increasing allocation
-        updatedStocks = updatedStocks.map((stock) =>
-          stock.id === stockId ? { ...stock, allocation: currentStock.allocation } : stock,
-        )
-        return // Exit early as we can't make this change
       }
     } else if (unlockedStocks.length === 0 && difference !== 0) {
       // If there are no unlocked stocks to adjust and we're trying to change allocation,
@@ -98,11 +116,24 @@ export function StockAllocation({
       return // Exit early as we can't make this change
     }
 
-    setLocalStocks(updatedStocks)
+    // After adjustments, ensure no stock has negative allocation
+    updatedStocks = updatedStocks.map((stock) => ({
+      ...stock,
+      allocation: Math.max(0, stock.allocation),
+    }))
 
-    // Calculate total allocation
+    // Recalculate total and adjust if needed
     const newTotal = updatedStocks.reduce((sum, stock) => sum + stock.allocation, 0)
-    setTotalAllocation(newTotal)
+
+    // If total is not 100%, adjust the current stock to make it 100%
+    if (Math.abs(newTotal - 100) > 0.01) {
+      updatedStocks = updatedStocks.map((stock) =>
+        stock.id === stockId ? { ...stock, allocation: stock.allocation + (100 - newTotal) } : stock,
+      )
+    }
+
+    setLocalStocks(updatedStocks)
+    setTotalAllocation(100) // Should always be 100% after adjustments
   }
 
   // Handle toggle lock
