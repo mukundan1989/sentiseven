@@ -1,22 +1,9 @@
 "use server"
 
 import { cookies } from "next/headers"
-import { createClient } from 'redis'
+import { kv } from "@vercel/kv"
 import { redirect } from "next/navigation"
 import { createHash } from "crypto"
-
-// Initialize Redis client
-const redis = createClient({
-  url: process.env.REDIS_URL
-})
-
-// Connect to Redis (this is needed for the standard Redis client)
-const getRedisClient = async () => {
-  if (!redis.isOpen) {
-    await redis.connect()
-  }
-  return redis
-}
 
 // Helper function to hash passwords
 function hashPassword(password: string): string {
@@ -26,21 +13,16 @@ function hashPassword(password: string): string {
 // Login function
 export async function login(email: string, password: string) {
   try {
-    const client = await getRedisClient()
-    
-    // Get user from Redis
-    const userJson = await client.get(`user:${email}`)
+    // Get user from KV store
+    const user = await kv.get(`user:${email}`)
 
-    if (!userJson) {
+    if (!user) {
       return { success: false, error: "Invalid email or password" }
     }
 
-    // Parse the JSON string
-    const user = JSON.parse(userJson)
-
     // Check password
     const hashedPassword = hashPassword(password)
-    if (hashedPassword !== user.password) {
+    if (hashedPassword !== (user as any).password) {
       return { success: false, error: "Invalid email or password" }
     }
 
@@ -53,8 +35,8 @@ export async function login(email: string, password: string) {
       expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
     }
 
-    // Store session in Redis (stringify the object)
-    await client.set(`session:${sessionId}`, JSON.stringify(session))
+    // Store session in KV
+    await kv.set(`session:${sessionId}`, session)
 
     // Set session cookie
     cookies().set("session_id", sessionId, {
@@ -62,6 +44,7 @@ export async function login(email: string, password: string) {
       secure: process.env.NODE_ENV === "production",
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: "/",
+      sameSite: "lax",
     })
 
     return { success: true }
@@ -76,13 +59,8 @@ export async function logout() {
   const sessionId = cookies().get("session_id")?.value
 
   if (sessionId) {
-    try {
-      const client = await getRedisClient()
-      // Delete session from Redis
-      await client.del(`session:${sessionId}`)
-    } catch (error) {
-      console.error("Logout error:", error)
-    }
+    // Delete session from KV
+    await kv.del(`session:${sessionId}`)
 
     // Delete cookie
     cookies().delete("session_id")
@@ -94,10 +72,8 @@ export async function logout() {
 // Register function
 export async function register(email: string, password: string, name: string) {
   try {
-    const client = await getRedisClient()
-    
     // Check if user already exists
-    const existingUser = await client.get(`user:${email}`)
+    const existingUser = await kv.get(`user:${email}`)
 
     if (existingUser) {
       return { success: false, error: "Email already in use" }
@@ -111,11 +87,11 @@ export async function register(email: string, password: string, name: string) {
       createdAt: Date.now(),
     }
 
-    // Store user in Redis (stringify the object)
-    await client.set(`user:${email}`, JSON.stringify(user))
+    // Store user in KV
+    await kv.set(`user:${email}`, user)
 
     // Create empty basket for user
-    await client.set(`basket:${email}`, JSON.stringify([]))
+    await kv.set(`basket:${email}`, [])
 
     return { success: true }
   } catch (error) {
@@ -133,35 +109,27 @@ export async function getCurrentUser() {
   }
 
   try {
-    const client = await getRedisClient()
-    
-    const sessionJson = await client.get(`session:${sessionId}`)
+    const session = await kv.get(`session:${sessionId}`)
 
-    if (!sessionJson) {
+    if (!session) {
       return null
     }
 
-    // Parse the JSON string
-    const session = JSON.parse(sessionJson)
-
     // Check if session is expired
-    if (session.expiresAt < Date.now()) {
-      await client.del(`session:${sessionId}`)
+    if ((session as any).expiresAt < Date.now()) {
+      await kv.del(`session:${sessionId}`)
       cookies().delete("session_id")
       return null
     }
 
-    const userJson = await client.get(`user:${session.email}`)
+    const user = await kv.get(`user:${(session as any).email}`)
 
-    if (!userJson) {
+    if (!user) {
       return null
     }
 
-    // Parse the JSON string
-    const user = JSON.parse(userJson)
-
     // Return user without password
-    const { password, ...userWithoutPassword } = user
+    const { password, ...userWithoutPassword } = user as any
     return userWithoutPassword
   } catch (error) {
     console.error("Get current user error:", error)
