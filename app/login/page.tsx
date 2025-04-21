@@ -1,28 +1,36 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Loader2, AlertCircle, CheckCircle } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { login } from "@/app/actions/auth-actions"
 
 export default function LoginPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
-  // Check if user just registered
-  const justRegistered = searchParams.get("registered") === "true"
+  const [justRegistered, setJustRegistered] = useState(false)
+  const [redirectPath, setRedirectPath] = useState("/")
+
+  // Use useEffect to safely access window object
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    setJustRegistered(searchParams.get("registered") === "true")
+
+    const redirect = searchParams.get("redirect")
+    if (redirect) {
+      setRedirectPath(decodeURIComponent(redirect))
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,9 +41,7 @@ export default function LoginPage() {
       const result = await login(email, password)
 
       if (result.success) {
-        // Get redirect URL from query params or default to dashboard
-        const redirectTo = searchParams.get("redirect") || "/"
-        router.push(decodeURIComponent(redirectTo))
+        router.push(redirectPath)
         router.refresh() // Refresh to update auth state
       } else {
         setError(result.error || "Login failed. Please check your credentials.")
@@ -64,14 +70,14 @@ export default function LoginPage() {
               <AlertDescription>Registration successful! You can now log in.</AlertDescription>
             </Alert>
           )}
-          
+
           {error && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
