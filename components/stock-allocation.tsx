@@ -270,4 +270,3 @@ export function StockAllocation({
     </Dialog>
   )
 }
-
