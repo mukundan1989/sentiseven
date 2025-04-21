@@ -1,8 +1,8 @@
 import type React from "react"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { AuthStatus } from "./components/auth-status"
 import "./globals.css"
+import { AuthStatus } from "./components/auth-status"
 
 export const metadata: Metadata = {
   title: "Sentiment Dashboard",
@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-[#0a0b14] text-white min-h-screen">
         <nav className="bg-[#0a0b14] border-b border-gray-800 px-6 py-4">
-          <div className="max-w-[1200px] mx-auto flex items-center">
+          <div className="max-w-[1200px] mx-auto flex justify-between">
             <div className="flex space-x-6 overflow-x-auto">
               <Link href="/" className="text-white hover:text-amber-400 transition-colors whitespace-nowrap">
                 Home
@@ -36,20 +36,29 @@ export default function RootLayout({
               >
                 Twitter Signals
               </Link>
-              <Link href="/news-signals" className="text-white hover:text-amber-400 transition-colors whitespace-nowrap">
+              <Link
+                href="/news-signals"
+                className="text-white hover:text-amber-400 transition-colors whitespace-nowrap"
+              >
                 News Signals
               </Link>
-              <Link href="/trade-signals" className="text-white hover:text-amber-400 transition-colors whitespace-nowrap">
+              <Link
+                href="/trade-signals"
+                className="text-white hover:text-amber-400 transition-colors whitespace-nowrap"
+              >
                 Trade Signals
               </Link>
               <Link href="/performance" className="text-white hover:text-amber-400 transition-colors whitespace-nowrap">
                 Performance
               </Link>
-              <Link href="/stock-signal" className="text-white hover:text-amber-400 transition-colors whitespace-nowrap">
+              <Link
+                href="/stock-signal"
+                className="text-white hover:text-amber-400 transition-colors whitespace-nowrap"
+              >
                 Stock Signal
               </Link>
             </div>
-            <div className="ml-auto">
+            <div>
               <AuthStatus />
             </div>
           </div>
