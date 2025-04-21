@@ -120,6 +120,8 @@ const SentimentDashboard = () => {
     })
   }
 
+  // Update the handleSaveStocks function to ensure new stocks start with 0% allocation
+
   // Function to handle saving stocks from the stock selector
   const handleSaveStocks = (newStocks) => {
     // If these are stocks from the StockAllocation component, just update them directly
@@ -152,59 +154,15 @@ const SentimentDashboard = () => {
       }
     })
 
-    // Calculate total allocation of continuing stocks
-    const continuingAllocation = updatedContinuingStocks.reduce((sum, stock) => sum + (stock.allocation || 0), 0)
-
     // Set new stocks to 0% allocation by default
     const updatedNewStocks = brandNewStocks.map((stock) => ({
       ...stock,
-      allocation: 0,
+      allocation: 0, // Always start new stocks at 0%
       locked: false,
     }))
 
     // Combine continuing and new stocks
-    let finalStocks = [...updatedContinuingStocks, ...updatedNewStocks]
-
-    // If continuing allocation is less than 100% (due to rounding or other issues),
-    // distribute the remaining to unlocked continuing stocks
-    if (continuingAllocation < 100 && updatedContinuingStocks.length > 0) {
-      const unlockedContinuingStocks = updatedContinuingStocks.filter((stock) => !stock.locked)
-
-      if (unlockedContinuingStocks.length > 0) {
-        const remainingAllocation = 100 - continuingAllocation
-        const perStockAdjustment = remainingAllocation / unlockedContinuingStocks.length
-
-        finalStocks = finalStocks.map((stock) => {
-          if (!stock.locked && existingStockIds.includes(stock.id)) {
-            return {
-              ...stock,
-              allocation: stock.allocation + perStockAdjustment,
-            }
-          }
-          return stock
-        })
-      }
-    }
-
-    // Ensure all allocations are valid numbers and rounded
-    finalStocks = finalStocks.map((stock) => ({
-      ...stock,
-      allocation: Math.round(stock.allocation || 0),
-    }))
-
-    // Final check to ensure exactly 100% for existing stocks
-    const totalAllocation = finalStocks
-      .filter((s) => existingStockIds.includes(s.id))
-      .reduce((sum, stock) => sum + stock.allocation, 0)
-
-    if (totalAllocation !== 100 && updatedContinuingStocks.length > 0) {
-      // Find an unlocked continuing stock to adjust
-      const adjustmentStock = finalStocks.find((stock) => !stock.locked && existingStockIds.includes(stock.id))
-
-      if (adjustmentStock) {
-        adjustmentStock.allocation += 100 - totalAllocation
-      }
-    }
+    const finalStocks = [...updatedContinuingStocks, ...updatedNewStocks]
 
     setStocks(finalStocks)
 
