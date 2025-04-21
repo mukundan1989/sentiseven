@@ -122,6 +122,21 @@ const SentimentDashboard = () => {
 
   // Function to handle saving stocks from the stock selector
   const handleSaveStocks = (newStocks) => {
+    // If these are stocks from the StockAllocation component, just update them directly
+    if (newStocks.length > 0 && newStocks[0].hasOwnProperty("allocation")) {
+      setStocks(newStocks)
+
+      // If basket was already locked, update the updated date
+      if (basketLocked) {
+        setBasketDates({
+          ...basketDates,
+          updated: new Date(),
+        })
+      }
+      return
+    }
+
+    // Otherwise, this is from the StockSelector - handle adding new stocks
     // First, identify which stocks are new and which already exist
     const existingStockIds = stocks.map((stock) => stock.id)
     const brandNewStocks = newStocks.filter((stock) => !existingStockIds.includes(stock.id))
