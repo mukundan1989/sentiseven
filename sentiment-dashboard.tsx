@@ -122,7 +122,70 @@ const SentimentDashboard = () => {
 
   // Function to handle saving stocks from the stock selector
   const handleSaveStocks = (newStocks) => {
-    setStocks(newStocks)
+    // First, identify which stocks are new and which already exist
+    const existingStockIds = stocks.map((stock) => stock.id)
+    const brandNewStocks = newStocks.filter((stock) => !existingStockIds.includes(stock.id))
+    const continuingStocks = newStocks.filter((stock) => existingStockIds.includes(stock.id))
+
+    // Preserve allocations and locked status for existing stocks
+    const updatedContinuingStocks = continuingStocks.map((newStock) => {
+      const existingStock = stocks.find((s) => s.id === newStock.id)
+      return {
+        ...newStock,
+        allocation: existingStock?.allocation || 0,
+        locked: existingStock?.locked || false,
+      }
+    })
+
+    // Calculate total allocation of continuing stocks
+    const continuingAllocation = updatedContinuingStocks.reduce((sum, stock) => sum + (stock.allocation || 0), 0)
+
+    // Calculate remaining allocation for new stocks
+    const remainingAllocation = Math.max(0, 100 - continuingAllocation)
+
+    // Distribute remaining allocation evenly among new stocks
+    let updatedNewStocks = []
+    if (brandNewStocks.length > 0) {
+      const perStockAllocation = Math.floor(remainingAllocation / brandNewStocks.length)
+      updatedNewStocks = brandNewStocks.map((stock) => ({
+        ...stock,
+        allocation: perStockAllocation,
+        locked: false,
+      }))
+    }
+
+    // Combine continuing and new stocks
+    let finalStocks = [...updatedContinuingStocks, ...updatedNewStocks]
+
+    // Ensure total allocation is exactly 100%
+    const totalAllocation = finalStocks.reduce((sum, stock) => sum + (stock.allocation || 0), 0)
+    if (totalAllocation !== 100 && finalStocks.length > 0) {
+      // Find an unlocked stock to adjust
+      const adjustmentStock = finalStocks.find((stock) => !stock.locked)
+      if (adjustmentStock) {
+        adjustmentStock.allocation += 100 - totalAllocation
+      } else if (finalStocks.length > 0) {
+        // If all stocks are locked, adjust the first one
+        finalStocks[0].allocation += 100 - totalAllocation
+      }
+    }
+
+    // Ensure all allocations are valid numbers and at least 1%
+    finalStocks = finalStocks.map((stock) => ({
+      ...stock,
+      allocation: Math.max(1, Math.round(stock.allocation || 0)),
+    }))
+
+    // Final normalization to ensure exactly 100%
+    const finalTotal = finalStocks.reduce((sum, stock) => sum + stock.allocation, 0)
+    if (finalTotal !== 100 && finalStocks.length > 0) {
+      const diff = 100 - finalTotal
+      // Find the stock with the largest allocation to adjust
+      finalStocks.sort((a, b) => b.allocation - a.allocation)
+      finalStocks[0].allocation += diff
+    }
+
+    setStocks(finalStocks)
 
     // If basket was already locked, update the updated date
     if (basketLocked) {
