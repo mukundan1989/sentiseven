@@ -103,9 +103,16 @@ export function StockSelector({
     }
   }
 
-  // Handle save
+  // Function to handle saving
   const handleSave = () => {
-    onSave(selectedStocks)
+    // Ensure all selected stocks have valid properties
+    const stocksToSave = selectedStocks.map((stock) => ({
+      ...stock,
+      allocation: stock.allocation || Math.floor(100 / selectedStocks.length), // Default allocation if not set
+      locked: stock.locked || false, // Default to unlocked if not set
+    }))
+
+    onSave(stocksToSave)
     onOpenChange(false)
   }
 
@@ -276,4 +283,3 @@ export function StockSelector({
     </Dialog>
   )
 }
-
