@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Slider } from "@/components/ui/slider"
@@ -18,13 +18,21 @@ import {
   RotateCw,
   ChevronDown,
   ChevronUp,
+  Loader2,
 } from "lucide-react"
 import { StockSelector } from "./components/stock-selector"
 import { StockDetailView } from "./components/stock-detail-view"
 import { CorrelationChart } from "./components/correlation-chart"
 import { StockAllocation } from "./components/stock-allocation"
+import { useAuth } from "@/context/auth-context"
+import { saveBasket, getMostRecentBasket, type StockBasket, type BasketStock } from "@/lib/basket-service"
+import { useToast } from "@/hooks/use-toast"
 
 const SentimentDashboard = () => {
+  // Auth context
+  const { user } = useAuth()
+  const { toast } = useToast()
+
   // State for time period and source weights
   const [timePeriod, setTimePeriod] = useState("1w")
   const [weights, setWeights] = useState({
@@ -53,6 +61,12 @@ const SentimentDashboard = () => {
     created: null,
     updated: null,
   })
+
+  // State for basket ID (for database operations)
+  const [basketId, setBasketId] = useState<string | null>(null)
+
+  // State for loading
+  const [isLoading, setIsLoading] = useState(false)
 
   // Sample sentiment data
   const sentimentData = {
@@ -112,6 +126,138 @@ const SentimentDashboard = () => {
     tracking: false,
   })
 
+  // Load the user's most recent basket when the component mounts
+  useEffect(() => {
+    if (user) {
+      loadMostRecentBasket()
+    }
+  }, [user])
+
+  // Load the most recent basket
+  const loadMostRecentBasket = async () => {
+    setIsLoading(true)
+    try {
+      const { basket, stocks: basketStocks, error } = await getMostRecentBasket()
+
+      if (error) {
+        console.error("Error loading basket:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load your basket. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (basket) {
+        // Update the state with the loaded basket
+        setBasketId(basket.id)
+        setBasketName(basket.name)
+        setBasketLocked(basket.is_locked)
+        setWeights(basket.source_weights)
+
+        // Convert dates
+        if (basket.created_at) {
+          setBasketDates({
+            created: new Date(basket.created_at),
+            updated: basket.updated_at ? new Date(basket.updated_at) : null,
+          })
+        }
+
+        // Convert stocks format
+        if (basketStocks && basketStocks.length > 0) {
+          const formattedStocks = basketStocks.map((stock) => ({
+            id: stock.id,
+            symbol: stock.symbol,
+            name: stock.name,
+            sector: stock.sector,
+            allocation: stock.allocation,
+            locked: stock.is_locked,
+          }))
+          setStocks(formattedStocks)
+        }
+      }
+    } catch (error) {
+      console.error("Error in loadMostRecentBasket:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Save the current basket to the database
+  const saveCurrentBasket = async (isLocked = false) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to save your basket.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Format the basket data
+      const basketData: StockBasket = {
+        id: basketId,
+        name: basketName,
+        source_weights: weights,
+        is_locked: isLocked,
+      }
+
+      // Format the stocks data
+      const stocksData: BasketStock[] = stocks.map((stock) => ({
+        symbol: stock.symbol,
+        name: stock.name,
+        sector: stock.sector || "Unknown",
+        allocation: stock.allocation,
+        is_locked: stock.locked,
+      }))
+
+      // Save the basket
+      const { error, basketId: newBasketId } = await saveBasket(basketData, stocksData)
+
+      if (error) {
+        console.error("Error saving basket:", error)
+        toast({
+          title: "Error",
+          description: "Failed to save your basket. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Update the basket ID
+      if (newBasketId) {
+        setBasketId(newBasketId)
+      }
+
+      toast({
+        title: "Success",
+        description: "Your basket has been saved.",
+      })
+
+      // If locking the basket, update the state
+      if (isLocked) {
+        setBasketLocked(true)
+        const now = new Date()
+        setBasketDates({
+          created: basketDates.created || now,
+          updated: now,
+        })
+      }
+    } catch (error) {
+      console.error("Error in saveCurrentBasket:", error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   // Toggle section collapse
   const toggleSection = (section) => {
     setSectionsCollapsed({
@@ -121,20 +267,14 @@ const SentimentDashboard = () => {
   }
 
   // Update the handleSaveStocks function to ensure new stocks start with 0% allocation
-
   // Function to handle saving stocks from the stock selector
   const handleSaveStocks = (newStocks) => {
     // If these are stocks from the StockAllocation component, just update them directly
     if (newStocks.length > 0 && newStocks[0].hasOwnProperty("allocation")) {
       setStocks(newStocks)
 
-      // If basket was already locked, update the updated date
-      if (basketLocked) {
-        setBasketDates({
-          ...basketDates,
-          updated: new Date(),
-        })
-      }
+      // Save the updated basket to the database
+      saveCurrentBasket(basketLocked)
       return
     }
 
@@ -166,13 +306,8 @@ const SentimentDashboard = () => {
 
     setStocks(finalStocks)
 
-    // If basket was already locked, update the updated date
-    if (basketLocked) {
-      setBasketDates({
-        ...basketDates,
-        updated: new Date(),
-      })
-    }
+    // Save the updated basket to the database
+    saveCurrentBasket(basketLocked)
   }
 
   // Generate weighted composite sentiment
@@ -236,6 +371,11 @@ const SentimentDashboard = () => {
     }
 
     setWeights(newWeights)
+
+    // Save the updated weights to the database if the basket is already saved
+    if (basketId) {
+      saveCurrentBasket(basketLocked)
+    }
   }
 
   // Function to handle clicking on a stock
@@ -254,7 +394,13 @@ const SentimentDashboard = () => {
 
   // Function to toggle lock status of a stock
   const handleToggleLock = (stockId) => {
-    setStocks(stocks.map((stock) => (stock.id === stockId ? { ...stock, locked: !stock.locked } : stock)))
+    const updatedStocks = stocks.map((stock) => (stock.id === stockId ? { ...stock, locked: !stock.locked } : stock))
+    setStocks(updatedStocks)
+
+    // Save the updated stocks to the database if the basket is already saved
+    if (basketId) {
+      saveCurrentBasket(basketLocked)
+    }
   }
 
   // Function to reset allocations to equal distribution
@@ -297,6 +443,11 @@ const SentimentDashboard = () => {
     }
 
     setStocks(updatedStocks)
+
+    // Save the updated stocks to the database if the basket is already saved
+    if (basketId) {
+      saveCurrentBasket(basketLocked)
+    }
   }
 
   // Function to update stock allocation
@@ -349,6 +500,11 @@ const SentimentDashboard = () => {
     })
 
     setStocks(updatedStocks)
+
+    // Save the updated stocks to the database if the basket is already saved
+    if (basketId) {
+      saveCurrentBasket(basketLocked)
+    }
   }
 
   // Generate stock performance data
@@ -409,17 +565,8 @@ const SentimentDashboard = () => {
 
   // Function to handle locking in the basket
   const handleLockBasket = () => {
-    // Set basket as locked
-    setBasketLocked(true)
-
-    // Set creation date if this is the first time locking
-    if (!basketDates.created) {
-      const now = new Date()
-      setBasketDates({
-        created: now,
-        updated: now,
-      })
-    }
+    // Save the basket with locked status
+    saveCurrentBasket(true)
 
     // Scroll to the basket tracking section
     setTimeout(() => {
@@ -438,6 +585,14 @@ const SentimentDashboard = () => {
 
   return (
     <div className="bg-gradient-to-br from-slate-950 to-slate-900 text-slate-50 min-h-screen p-6">
+      {isLoading && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 p-6 rounded-lg shadow-xl flex items-center gap-3">
+            <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+            <span>Saving your basket...</span>
+          </div>
+        </div>
+      )}
       {selectedStock ? (
         <StockDetailView stock={selectedStock} onBack={() => setSelectedStock(null)} timePeriod={timePeriod} />
       ) : (
@@ -634,8 +789,9 @@ const SentimentDashboard = () => {
                     size="lg"
                     className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 px-8 py-6 text-lg w-full md:w-auto mt-4 md:mt-6"
                     onClick={handleLockBasket}
-                    disabled={!basketName.trim()}
+                    disabled={!basketName.trim() || isLoading}
                   >
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Lock in Basket
                   </Button>
                 </div>
@@ -775,78 +931,6 @@ const SentimentDashboard = () => {
                     </CardContent>
                   </Card>
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* Premium Insights Section - Only shown after basket is locked */}
-          {basketLocked && (
-            <div className="mb-8" id="insights-section">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold">Premium Insights</h2>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleSection("insights")}>
-                  {sectionsCollapsed.insights ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
-                </Button>
-              </div>
-
-              {!sectionsCollapsed.insights && (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    {premiumFeatures.map((feature, index) => (
-                      <Card
-                        key={index}
-                        className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 border-slate-700 relative overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
-                      >
-                        <div className="absolute top-0 right-0 bg-amber-500/20 text-amber-500 px-2 py-1 text-xs font-medium rounded-bl">
-                          PREMIUM
-                        </div>
-                        <CardContent className="p-6 flex flex-col items-center text-center mt-4">
-                          <div className="rounded-full bg-amber-500/20 p-3 mb-4">
-                            <div className="text-amber-500">{feature.icon}</div>
-                          </div>
-                          <h3 className="text-xl font-bold mb-1">{feature.title}</h3>
-                          <p className="text-sm text-slate-400 mb-4">{feature.description}</p>
-                          <div className="text-3xl font-bold text-amber-500 mb-1">{feature.value}</div>
-                          <p className="text-sm text-slate-400">{feature.comparison}</p>
-                        </CardContent>
-                        <div className="absolute inset-0 bg-slate-900/80 flex items-center justify-center backdrop-blur-sm">
-                          <div className="text-center p-6">
-                            <Lock className="h-8 w-8 text-amber-500 mx-auto mb-3" />
-                            <h3 className="text-lg font-bold mb-2">Premium Feature</h3>
-                            <p className="text-sm text-slate-400 mb-4">
-                              Unlock detailed insights with a premium subscription
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-
-                  <Card className="mb-8 border-amber-500/20 bg-gradient-to-br from-slate-800 to-slate-900 shadow-lg overflow-hidden">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Activity className="h-5 w-5 text-amber-500" />
-                        Detailed Sentiment-Price Analysis
-                      </CardTitle>
-                      <CardDescription>
-                        Premium users get access to advanced correlation analysis between sentiment and price movements
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="h-[300px] flex items-center justify-center bg-slate-800/50 rounded-md">
-                      <div className="text-center p-6 max-w-md">
-                        <Lock className="h-10 w-10 text-amber-500 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold mb-2">Premium Chart</h3>
-                        <p className="text-sm text-slate-400 mb-6">
-                          Unlock detailed sentiment-price correlation charts, historical benchmarks, and predictive
-                          indicators
-                        </p>
-                        <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700">
-                          Upgrade to Premium
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </>
               )}
             </div>
           )}
