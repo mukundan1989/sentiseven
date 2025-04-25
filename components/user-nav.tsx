@@ -57,13 +57,17 @@ export function UserNav() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-slate-800" />
-        <DropdownMenuItem className="text-slate-200 focus:bg-slate-800 focus:text-slate-200 cursor-pointer">
-          <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
+        <DropdownMenuItem className="text-slate-200 focus:bg-slate-800 focus:text-slate-200 cursor-pointer" asChild>
+          <Link href="/profile">
+            <User className="mr-2 h-4 w-4" />
+            <span>Profile</span>
+          </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem className="text-slate-200 focus:bg-slate-800 focus:text-slate-200 cursor-pointer">
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
+        <DropdownMenuItem className="text-slate-200 focus:bg-slate-800 focus:text-slate-200 cursor-pointer" asChild>
+          <Link href="/settings">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-slate-800" />
         <DropdownMenuItem
