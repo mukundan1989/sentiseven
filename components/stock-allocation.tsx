@@ -170,7 +170,7 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-50">
         <AlertDialogHeader>
           <AlertDialogTitle>Stock Allocation</AlertDialogTitle>
           <AlertDialogDescription>
@@ -180,16 +180,28 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
 
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Badge variant={Math.abs(totalAllocation - 100) < 0.01 ? "success" : "destructive"}>
+            <Badge
+              className={Math.abs(totalAllocation - 100) < 0.01 ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}
+            >
               Total: {totalAllocation.toFixed(1)}%
             </Badge>
             {error && <span className="text-sm text-red-500">{error}</span>}
           </div>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={resetAllocations}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={resetAllocations}
+              className="bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700"
+            >
               Reset Equal
             </Button>
-            <Button size="sm" variant="outline" onClick={distributeRemaining}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={distributeRemaining}
+              className="bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700"
+            >
               Distribute Remaining
             </Button>
           </div>
@@ -198,7 +210,7 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
         <div className="grid gap-4 py-4">
           {localStocks.map((stock) => (
             <div key={stock.id} className="grid grid-cols-12 items-center gap-4">
-              <Label htmlFor={`stock-${stock.id}`} className="col-span-3 truncate">
+              <Label htmlFor={`stock-${stock.id}`} className="col-span-3 truncate text-slate-200">
                 {stock.symbol ? `${stock.symbol} - ${stock.name}` : stock.name}
               </Label>
               <div className="col-span-2">
@@ -212,7 +224,7 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
                       handleAllocationChange(stock.id, newAllocation)
                     }
                   }}
-                  className="w-full"
+                  className="w-full bg-slate-800 border-slate-700 text-slate-200"
                   step="0.1"
                   min="0"
                   max="100"
@@ -226,10 +238,11 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
                   onValueChange={(value) => {
                     handleAllocationChange(stock.id, value[0])
                   }}
+                  className="[&>span]:bg-amber-500"
                 />
               </div>
               <div className="col-span-2 flex items-center justify-end gap-2">
-                <span className="text-sm">{stock.locked ? "Locked" : "Unlocked"}</span>
+                <span className="text-sm text-slate-300">{stock.locked ? "Locked" : "Unlocked"}</span>
                 <Switch checked={stock.locked} onCheckedChange={() => handleLockChange(stock.id)} />
               </div>
             </div>
@@ -237,8 +250,14 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
         </div>
 
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleSave} disabled={Math.abs(totalAllocation - 100) > 0.01}>
+          <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleSave}
+            disabled={Math.abs(totalAllocation - 100) > 0.01}
+            className="bg-amber-600 text-white hover:bg-amber-700 disabled:bg-slate-700"
+          >
             Save
           </AlertDialogAction>
         </AlertDialogFooter>
