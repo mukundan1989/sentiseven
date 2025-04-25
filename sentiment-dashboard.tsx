@@ -24,7 +24,7 @@ import {
 import { StockSelector } from "./components/stock-selector"
 import { StockDetailView } from "./components/stock-detail-view"
 import { CorrelationChart } from "./components/correlation-chart"
-import { StockAllocation } from "./components/stock-allocation"
+import StockAllocation from "./components/stock-allocation"
 import { useAuth } from "@/context/auth-context"
 import { saveBasket, getMostRecentBasket, type StockBasket, type BasketStock } from "@/lib/basket-service"
 import { useToast } from "@/hooks/use-toast"
