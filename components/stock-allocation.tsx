@@ -16,9 +16,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 interface Stock {
-  id: string
+  id: string | number
+  symbol?: string
   name: string
   allocation: number
   locked: boolean
@@ -29,39 +32,113 @@ interface StockAllocationProps {
   onOpenChange: (open: boolean) => void
   stocks: Stock[]
   onSave: (stocks: Stock[]) => void
+  onAllocationChange?: (stockId: string | number, newAllocation: number) => void
+  onToggleLock?: (stockId: string | number) => void
 }
 
-const StockAllocation: React.FC<StockAllocationProps> = ({ open, onOpenChange, stocks, onSave }) => {
-  const [localStocks, setLocalStocks] = useState<Stock[]>([...stocks])
+const StockAllocation: React.FC<StockAllocationProps> = ({
+  open,
+  onOpenChange,
+  stocks,
+  onSave,
+  onAllocationChange,
+  onToggleLock,
+}) => {
+  const [localStocks, setLocalStocks] = useState<Stock[]>([])
   const [totalAllocation, setTotalAllocation] = useState<number>(0)
+  const [error, setError] = useState<string | null>(null)
 
+  // Reset local stocks when the dialog opens or stocks prop changes
   useEffect(() => {
-    setLocalStocks([...stocks])
-  }, [stocks])
+    if (open) {
+      setLocalStocks(stocks.map((stock) => ({ ...stock })))
+    }
+  }, [stocks, open])
 
+  // Calculate total allocation whenever local stocks change
   useEffect(() => {
-    setTotalAllocation(localStocks.reduce((sum, stock) => sum + stock.allocation, 0))
+    const total = localStocks.reduce((sum, stock) => sum + stock.allocation, 0)
+    setTotalAllocation(total)
+
+    // Clear error if total is 100%
+    if (Math.abs(total - 100) < 0.01) {
+      setError(null)
+    } else {
+      setError(`Total allocation must be 100%. Current total: ${total.toFixed(1)}%`)
+    }
   }, [localStocks])
 
-  const handleAllocationChange = (id: string, allocation: number) => {
-    setLocalStocks((prevStocks) =>
-      prevStocks.map((stock) => (stock.id === id ? { ...stock, allocation: allocation } : stock)),
-    )
+  const handleAllocationChange = (id: string | number, allocation: number) => {
+    // Ensure allocation is not negative
+    const newAllocation = Math.max(0, allocation)
+
+    setLocalStocks((prevStocks) => {
+      // Create a copy of the stocks
+      const updatedStocks = prevStocks.map((stock) =>
+        stock.id === id ? { ...stock, allocation: newAllocation } : stock,
+      )
+
+      return updatedStocks
+    })
   }
 
-  const handleLockChange = (id: string) => {
+  const handleLockChange = (id: string | number) => {
     setLocalStocks((prevStocks) =>
       prevStocks.map((stock) => (stock.id === id ? { ...stock, locked: !stock.locked } : stock)),
     )
   }
 
+  // Distribute remaining allocation to reach 100%
+  const distributeRemaining = () => {
+    // Find unlocked stocks
+    const unlockedStocks = localStocks.filter((stock) => !stock.locked)
+
+    if (unlockedStocks.length === 0) {
+      setError("Cannot adjust allocations - all stocks are locked")
+      return
+    }
+
+    // Calculate how much allocation is needed to reach 100%
+    const remaining = 100 - totalAllocation
+
+    // Distribute evenly among unlocked stocks
+    const distributionPerStock = remaining / unlockedStocks.length
+
+    setLocalStocks((prevStocks) =>
+      prevStocks.map((stock) =>
+        !stock.locked ? { ...stock, allocation: stock.allocation + distributionPerStock } : stock,
+      ),
+    )
+  }
+
+  // Reset allocations to be equal among unlocked stocks
+  const resetAllocations = () => {
+    // Calculate total allocation of locked stocks
+    const lockedStocks = localStocks.filter((stock) => stock.locked)
+    const lockedAllocation = lockedStocks.reduce((sum, stock) => sum + stock.allocation, 0)
+
+    // Calculate number of unlocked stocks
+    const unlockedStocks = localStocks.filter((stock) => !stock.locked)
+    const unlockedCount = unlockedStocks.length
+
+    if (unlockedCount === 0) {
+      setError("Cannot reset allocations - all stocks are locked")
+      return
+    }
+
+    // Calculate equal distribution for unlocked stocks
+    const remainingAllocation = 100 - lockedAllocation
+    const equalAllocation = remainingAllocation / unlockedCount
+
+    setLocalStocks((prevStocks) =>
+      prevStocks.map((stock) => (!stock.locked ? { ...stock, allocation: equalAllocation } : stock)),
+    )
+  }
+
   // Handle save
   const handleSave = () => {
-    // Create a copy of the stocks
-    let stocksToSave = [...localStocks]
-
     // Round all allocations to integers
-    stocksToSave = stocksToSave.map((stock) => ({
+    const stocksToSave = localStocks.map((stock) => ({
       ...stock,
       allocation: Math.round(stock.allocation),
     }))
@@ -82,62 +159,86 @@ const StockAllocation: React.FC<StockAllocationProps> = ({ open, onOpenChange, s
         }
       } else {
         // If all stocks are locked, we can't adjust to 100%
-        // In this case, we'll show an error or warning to the user
-        alert("Cannot adjust allocations to 100% because all stocks are locked.")
+        setError("Cannot adjust allocations to 100% because all stocks are locked.")
         return
       }
     }
 
-    console.log("Saving stocks with allocations:", stocksToSave)
     onSave(stocksToSave)
     onOpenChange(false)
   }
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <AlertDialogHeader>
           <AlertDialogTitle>Stock Allocation</AlertDialogTitle>
           <AlertDialogDescription>
-            Allocate percentages to each stock. Total allocation must be 100%. Current total: {totalAllocation}%
+            Allocate percentages to each stock. Total allocation must be 100%.
           </AlertDialogDescription>
         </AlertDialogHeader>
+
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Badge variant={Math.abs(totalAllocation - 100) < 0.01 ? "success" : "destructive"}>
+              Total: {totalAllocation.toFixed(1)}%
+            </Badge>
+            {error && <span className="text-sm text-red-500">{error}</span>}
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={resetAllocations}>
+              Reset Equal
+            </Button>
+            <Button size="sm" variant="outline" onClick={distributeRemaining}>
+              Distribute Remaining
+            </Button>
+          </div>
+        </div>
+
         <div className="grid gap-4 py-4">
           {localStocks.map((stock) => (
-            <div key={stock.id} className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor={stock.id}>{stock.name}</Label>
-              <Input
-                type="number"
-                id={stock.id}
-                value={stock.allocation}
-                onChange={(e) => {
-                  const newAllocation = Number.parseFloat(e.target.value)
-                  if (!isNaN(newAllocation)) {
-                    handleAllocationChange(stock.id, newAllocation)
-                  }
-                }}
-                className="col-span-1"
-              />
-              <Slider
-                defaultValue={[stock.allocation]}
-                max={100}
-                step={1}
-                onValueChange={(value) => {
-                  handleAllocationChange(stock.id, value[0])
-                }}
-                className="col-span-1"
-              />
-              <Switch
-                id={`lock-${stock.id}`}
-                checked={stock.locked}
-                onCheckedChange={() => handleLockChange(stock.id)}
-              />
+            <div key={stock.id} className="grid grid-cols-12 items-center gap-4">
+              <Label htmlFor={`stock-${stock.id}`} className="col-span-3 truncate">
+                {stock.symbol ? `${stock.symbol} - ${stock.name}` : stock.name}
+              </Label>
+              <div className="col-span-2">
+                <Input
+                  type="number"
+                  id={`stock-${stock.id}`}
+                  value={stock.allocation}
+                  onChange={(e) => {
+                    const newAllocation = Number.parseFloat(e.target.value)
+                    if (!isNaN(newAllocation)) {
+                      handleAllocationChange(stock.id, newAllocation)
+                    }
+                  }}
+                  className="w-full"
+                  step="0.1"
+                  min="0"
+                  max="100"
+                />
+              </div>
+              <div className="col-span-5">
+                <Slider
+                  value={[stock.allocation]}
+                  max={100}
+                  step={0.1}
+                  onValueChange={(value) => {
+                    handleAllocationChange(stock.id, value[0])
+                  }}
+                />
+              </div>
+              <div className="col-span-2 flex items-center justify-end gap-2">
+                <span className="text-sm">{stock.locked ? "Locked" : "Unlocked"}</span>
+                <Switch checked={stock.locked} onCheckedChange={() => handleLockChange(stock.id)} />
+              </div>
             </div>
           ))}
         </div>
+
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleSave} disabled={totalAllocation !== 100}>
+          <AlertDialogAction onClick={handleSave} disabled={Math.abs(totalAllocation - 100) > 0.01}>
             Save
           </AlertDialogAction>
         </AlertDialogFooter>
