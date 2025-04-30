@@ -1,189 +1,173 @@
 "use client"
 
 import { useState } from "react"
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  ScatterChart,
-  Scatter,
-  ZAxis,
-} from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { InfoIcon as InfoCircle } from "lucide-react"
 
 export function CorrelationChart({ stocks, weights }) {
-  // State to track which chart to display
-  const [activeTab, setActiveTab] = useState("sources")
+  // State for the selected basket
+  const [selectedBasket, setSelectedBasket] = useState("all")
 
   // Generate correlation data for sources
   const sourceCorrelationData = [
-    { name: "Twitter", correlation: 0.68 * weights.twitter },
-    { name: "Google Trends", correlation: 0.42 * weights.googleTrends },
-    { name: "News", correlation: 0.53 * weights.news },
-    { name: "Composite", correlation: weights.twitter * 0.68 + weights.googleTrends * 0.42 + weights.news * 0.53 },
+    {
+      name: "Google Trends",
+      correlation: 0.92,
+      impact: "Strong Positive",
+      color: "#10b981", // emerald-500
+    },
+    {
+      name: "Twitter",
+      correlation: 0.65,
+      impact: "Moderate Positive",
+      color: "#f59e0b", // amber-500
+    },
+    {
+      name: "Composite",
+      correlation: 0.58,
+      impact: "Moderate Positive",
+      color: "#3b82f6", // blue-500
+    },
+    {
+      name: "News",
+      correlation: 0.15,
+      impact: "Poor Correlation",
+      color: "#ef4444", // red-500
+    },
   ]
 
-  // Generate correlation data for stocks
-  const stockCorrelationData = stocks.map((stock) => ({
-    name: stock.symbol,
-    correlation: Number.parseFloat((Math.random() * 0.6 + 0.2).toFixed(2)), // Between 0.2 and 0.8
-  }))
+  // Define the correlation scale
+  const correlationScale = [
+    { label: "Poor", range: "0.0-0.29", color: "#ef4444" },
+    { label: "Weak", range: "0.3-0.49", color: "#f59e0b" },
+    { label: "Moderate", range: "0.5-0.79", color: "#eab308" },
+    { label: "Strong", range: "0.8-1.0", color: "#10b981" },
+  ]
 
-  // Generate scatter data for sentiment vs performance
-  const scatterData = stocks.map((stock) => {
-    const sentiment = Number.parseFloat((Math.random() * 2 - 1).toFixed(2)) // Between -1 and 1
-    const performance = Number.parseFloat((sentiment * 5 + (Math.random() * 6 - 3)).toFixed(2)) // Correlated with some noise
+  // Helper function to get the width percentage based on correlation value
+  const getWidthPercentage = (value) => {
+    return `${Math.min(value * 100, 100)}%`
+  }
 
-    return {
-      name: stock.symbol,
-      sentiment,
-      performance,
-      z: 10, // Size
-    }
-  })
+  // Helper function to get the color based on correlation value
+  const getCorrelationColor = (value) => {
+    if (value >= 0.8) return "#10b981" // Strong - emerald
+    if (value >= 0.5) return "#f59e0b" // Moderate - amber
+    if (value >= 0.3) return "#eab308" // Weak - yellow
+    return "#ef4444" // Poor - red
+  }
+
+  // Helper function to get the text description based on correlation value
+  const getCorrelationText = (value) => {
+    if (value >= 0.8) return "Strong Positive"
+    if (value >= 0.5) return "Moderate Positive"
+    if (value >= 0.3) return "Weak Positive"
+    return "Poor Correlation"
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">Sentiment-Price Correlation</CardTitle>
-            <CardDescription>Relationship between sentiment and price movement</CardDescription>
-          </div>
-          <Tabs defaultValue="sources" value={activeTab} onValueChange={setActiveTab} className="w-[240px]">
-            <TabsList className="grid grid-cols-2">
-              <TabsTrigger value="sources">Sources</TabsTrigger>
-              <TabsTrigger value="stocks">Stocks</TabsTrigger>
-            </TabsList>
-
-            {/* These TabsContent elements are required for the Tabs component to work properly */}
-            <TabsContent value="sources" className="hidden" />
-            <TabsContent value="stocks" className="hidden" />
-          </Tabs>
+    <Card className="w-full">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle className="text-2xl font-bold">Sentiment-Price Correlation</CardTitle>
+          <CardDescription className="mt-1 text-slate-400">
+            This table shows the relationship between the source of information and historical price
+          </CardDescription>
         </div>
+        <Select value={selectedBasket} onValueChange={setSelectedBasket}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select Basket" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Basket (All Stocks)</SelectItem>
+            <SelectItem value="tech">Tech Stocks</SelectItem>
+            <SelectItem value="finance">Finance Stocks</SelectItem>
+          </SelectContent>
+        </Select>
       </CardHeader>
       <CardContent>
-        {activeTab === "sources" ? (
-          <div className="h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={sourceCorrelationData}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={true} vertical={false} />
-                <XAxis
-                  type="number"
-                  domain={[0, 1]}
-                  stroke="#94a3b8"
-                  tick={{ fill: "#94a3b8" }}
-                  axisLine={{ stroke: "#334155" }}
-                  tickLine={{ stroke: "#334155" }}
-                />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  stroke="#94a3b8"
-                  tick={{ fill: "#94a3b8" }}
-                  axisLine={{ stroke: "#334155" }}
-                  tickLine={{ stroke: "#334155" }}
-                />
-                <Tooltip
-                  formatter={(value) => [value.toFixed(2), "Correlation"]}
-                  contentStyle={{
-                    backgroundColor: "#1e293b",
-                    borderColor: "#334155",
-                    borderRadius: "0.375rem",
-                    color: "#f8fafc",
-                  }}
-                />
-                <Bar dataKey="correlation" radius={[0, 4, 4, 0]} barSize={20}>
-                  {sourceCorrelationData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={
-                        entry.correlation > 0.6
-                          ? "#10b981"
-                          : entry.correlation > 0.4
-                            ? "#3b82f6"
-                            : entry.correlation > 0.2
-                              ? "#f59e0b"
-                              : "#ef4444"
-                      }
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="space-y-6">
+          {/* Header row */}
+          <div className="grid grid-cols-2 gap-4 py-2 text-sm font-medium text-slate-400">
+            <div>Source</div>
+            <div className="flex items-center justify-end">
+              Correlation Impact
+              <InfoCircle className="ml-1 h-4 w-4" />
+            </div>
           </div>
-        ) : (
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis
-                  type="number"
-                  dataKey="sentiment"
-                  name="Sentiment"
-                  domain={[-1, 1]}
-                  stroke="#94a3b8"
-                  tick={{ fill: "#94a3b8" }}
-                  axisLine={{ stroke: "#334155" }}
-                  tickLine={{ stroke: "#334155" }}
-                  label={{ value: "Sentiment Score", position: "bottom", fill: "#94a3b8" }}
-                />
-                <YAxis
-                  type="number"
-                  dataKey="performance"
-                  name="Performance"
-                  stroke="#94a3b8"
-                  tick={{ fill: "#94a3b8" }}
-                  axisLine={{ stroke: "#334155" }}
-                  tickLine={{ stroke: "#334155" }}
-                  label={{ value: "Price Change (%)", angle: -90, position: "left", fill: "#94a3b8" }}
-                />
-                <ZAxis type="number" dataKey="z" range={[60, 200]} />
-                <Tooltip
-                  cursor={{ strokeDasharray: "3 3" }}
-                  contentStyle={{
-                    backgroundColor: "#1e293b",
-                    borderColor: "#334155",
-                    borderRadius: "0.375rem",
-                    color: "#f8fafc",
+
+          {/* Divider */}
+          <div className="h-px bg-slate-800"></div>
+
+          {/* Source rows */}
+          {sourceCorrelationData.map((source, index) => (
+            <div key={index} className="space-y-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-lg font-medium">{source.name}</div>
+                <div className="flex items-center justify-end text-lg font-medium" style={{ color: source.color }}>
+                  {source.correlation.toFixed(2)} - {source.impact}
+                </div>
+              </div>
+
+              {/* Progress bar background */}
+              <div className="h-4 w-full rounded-full bg-slate-800/50">
+                {/* Progress bar fill */}
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: getWidthPercentage(source.correlation),
+                    backgroundColor: source.color,
                   }}
-                  formatter={(value, name, props) => {
-                    if (name === "Sentiment") return [value.toFixed(2), name]
-                    if (name === "Performance") return [`${value.toFixed(2)}%`, "Price Change"]
-                    return [value, name]
+                ></div>
+              </div>
+
+              {/* Scale labels */}
+              <div className="grid grid-cols-5 text-xs text-slate-400">
+                <div>Poor (0.0)</div>
+                <div className="text-center">Weak (0.3)</div>
+                <div className="text-center">Moderate (0.5)</div>
+                <div className="text-center">Strong (0.8)</div>
+                <div className="text-right">Perfect (1.0)</div>
+              </div>
+            </div>
+          ))}
+
+          {/* Divider */}
+          <div className="h-px bg-slate-800"></div>
+
+          {/* Correlation Impact Scale */}
+          <div className="space-y-2">
+            <div className="text-lg font-medium">Correlation Impact Scale</div>
+
+            {/* Scale bar */}
+            <div className="flex h-6 w-full rounded-full overflow-hidden">
+              {correlationScale.map((segment, index) => (
+                <div
+                  key={index}
+                  className="h-full"
+                  style={{
+                    backgroundColor: segment.color,
+                    width: "25%", // Equal width for each segment
                   }}
-                  labelFormatter={(value) => scatterData[value].name}
-                />
-                <Scatter name="Stocks" data={scatterData} fill="#8884d8">
-                  {scatterData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={
-                        entry.sentiment > 0.3 && entry.performance > 0
-                          ? "#10b981"
-                          : entry.sentiment < -0.3 && entry.performance < 0
-                            ? "#ef4444"
-                            : "#f59e0b"
-                      }
-                    />
-                  ))}
-                </Scatter>
-              </ScatterChart>
-            </ResponsiveContainer>
+                ></div>
+              ))}
+            </div>
+
+            {/* Scale labels */}
+            <div className="grid grid-cols-4 text-sm">
+              {correlationScale.map((segment, index) => (
+                <div key={index} className={index === 0 ? "" : index === 3 ? "text-right" : "text-center"}>
+                  <div className="font-medium" style={{ color: segment.color }}>
+                    {segment.label}
+                  </div>
+                  <div className="text-xs text-slate-400">{segment.range}</div>
+                </div>
+              ))}
+            </div>
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   )
 }
-
