@@ -68,8 +68,8 @@ export function CorrelationChart({ stocks, weights }) {
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <div>
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 space-y-2 sm:space-y-0">
+        <div className="max-w-[70%] sm:max-w-[60%]">
           <CardTitle className="text-2xl font-bold">Sentiment-Price Correlation</CardTitle>
           <CardDescription className="mt-1 text-slate-400">
             This table shows the relationship between the source of information and historical price
