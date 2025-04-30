@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,6 +27,7 @@ import StockAllocation from "./components/stock-allocation"
 import { useAuth } from "@/context/auth-context"
 import { saveBasket, getMostRecentBasket, type StockBasket, type BasketStock } from "@/lib/basket-service"
 import { useToast } from "@/hooks/use-toast"
+import { SourceWeighting } from "./components/source-weighting"
 
 const SentimentDashboard = () => {
   // Auth context
@@ -337,55 +337,6 @@ const SentimentDashboard = () => {
   const weightedData = calculateWeightedSentiment()
 
   // Update the handleWeightChange function to ensure weights sum to 100%
-  const handleWeightChange = (source, value) => {
-    const newValue = Number.parseFloat(value[0])
-
-    // Calculate how much we need to adjust other weights to maintain sum = 1
-    const otherSources = Object.keys(weights).filter((key) => key !== source)
-
-    // Calculate the total weight that should be distributed among other sources
-    const remainingWeight = 1 - newValue
-
-    // Calculate the current sum of other weights
-    const currentOtherSum = otherSources.reduce((sum, key) => sum + weights[key], 0)
-
-    // Create new weights object
-    const newWeights = { ...weights, [source]: newValue }
-
-    // If other weights sum to zero, distribute evenly
-    if (currentOtherSum === 0) {
-      const evenDistribution = remainingWeight / otherSources.length
-      otherSources.forEach((key) => {
-        newWeights[key] = evenDistribution
-      })
-    } else {
-      // Otherwise, distribute proportionally
-      otherSources.forEach((key) => {
-        const proportion = weights[key] / currentOtherSum
-        newWeights[key] = remainingWeight * proportion
-      })
-    }
-
-    // Ensure all weights are non-negative and sum to 1
-    Object.keys(newWeights).forEach((key) => {
-      newWeights[key] = Math.max(0, newWeights[key])
-    })
-
-    // Normalize to ensure sum is exactly 1
-    const sum = Object.values(newWeights).reduce((a, b) => a + b, 0)
-    if (sum > 0) {
-      Object.keys(newWeights).forEach((key) => {
-        newWeights[key] = newWeights[key] / sum
-      })
-    }
-
-    setWeights(newWeights)
-
-    // Save the updated weights to the database if the basket is already saved
-    if (basketId) {
-      saveCurrentBasket(basketLocked)
-    }
-  }
 
   // Function to handle clicking on a stock
   const handleStockClick = (stock) => {
@@ -743,68 +694,15 @@ const SentimentDashboard = () => {
                 {/* Source Weighting and Correlation */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Source Weighting Controls */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Activity className="h-5 w-5 text-primary" />
-                        Source Weighting
-                      </CardTitle>
-                      <CardDescription>
-                        Adjust the influence of each data source on the composite sentiment
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="space-y-4">
-                        <div>
-                          <div className="flex justify-between mb-2">
-                            <label className="text-sm text-slate-400 font-medium">Twitter</label>
-                            <span className="text-sm font-medium bg-slate-800 px-2 py-0.5 rounded">
-                              {(weights.twitter * 100).toFixed(0)}%
-                            </span>
-                          </div>
-                          <Slider
-                            defaultValue={[weights.twitter]}
-                            max={1}
-                            step={0.05}
-                            onValueChange={(value) => handleWeightChange("twitter", value)}
-                            className="py-1"
-                          />
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between mb-2">
-                            <label className="text-sm text-slate-400 font-medium">Google Trends</label>
-                            <span className="text-sm font-medium bg-slate-800 px-2 py-0.5 rounded">
-                              {(weights.googleTrends * 100).toFixed(0)}%
-                            </span>
-                          </div>
-                          <Slider
-                            defaultValue={[weights.googleTrends]}
-                            max={1}
-                            step={0.05}
-                            onValueChange={(value) => handleWeightChange("googleTrends", value)}
-                            className="py-1"
-                          />
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between mb-2">
-                            <label className="text-sm text-slate-400 font-medium">News</label>
-                            <span className="text-sm font-medium bg-slate-800 px-2 py-0.5 rounded">
-                              {(weights.news * 100).toFixed(0)}%
-                            </span>
-                          </div>
-                          <Slider
-                            defaultValue={[weights.news]}
-                            max={1}
-                            step={0.05}
-                            onValueChange={(value) => handleWeightChange("news", value)}
-                            className="py-1"
-                          />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <SourceWeighting
+                    initialWeights={weights}
+                    onWeightsChange={(newWeights) => {
+                      setWeights(newWeights)
+                      if (basketId) {
+                        saveCurrentBasket(basketLocked)
+                      }
+                    }}
+                  />
 
                   {/* Sentiment-Performance Correlation */}
                   <CorrelationChart stocks={stocks} weights={weights} />
