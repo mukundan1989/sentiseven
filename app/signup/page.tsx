@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/context/auth-context"
+import { getSupabase } from "@/utils/supabaseClient"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,7 +18,6 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const { signUp, signInWithGoogle, signInWithGithub } = useAuth()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,19 +33,23 @@ export default function SignupPage() {
     }
 
     try {
-      // Properly handle the response from signUp
-      const result = await signUp(email, password, name)
+      const supabase = getSupabase()
 
-      if (result.error) {
-        setError(result.error.message || "An error occurred during sign up")
-      } else if (result.data?.user?.identities?.length === 0) {
-        // This means the user already exists
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+        },
+      })
+
+      if (signUpError) {
+        setError(signUpError.message)
+      } else if (data?.user?.identities?.length === 0) {
         setError("An account with this email already exists")
-      } else if (result.data?.user && !result.data.session) {
-        // This means email confirmation is required
+      } else if (data?.user && !data.session) {
         setSuccessMessage("Check your email for a confirmation link to complete your registration")
-      } else if (result.data?.session) {
-        // Successfully signed up and logged in
+      } else if (data?.session) {
         router.push("/")
       }
     } catch (err: any) {
@@ -57,16 +60,33 @@ export default function SignupPage() {
     }
   }
 
-  const handleOAuthSignIn = async (provider: "google" | "github") => {
+  const handleGoogleSignIn = async () => {
     try {
-      if (provider === "google") {
-        await signInWithGoogle()
-      } else {
-        await signInWithGithub()
-      }
+      const supabase = getSupabase()
+      const redirectUrl = `${process.env.NEXT_PUBLIC_URL || window.location.origin}/auth/callback`
+
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: redirectUrl },
+      })
     } catch (err: any) {
-      console.error(`${provider} sign in error:`, err)
-      setError(`Error signing in with ${provider}`)
+      console.error("Google sign in error:", err)
+      setError("Error signing in with Google")
+    }
+  }
+
+  const handleGithubSignIn = async () => {
+    try {
+      const supabase = getSupabase()
+      const redirectUrl = `${process.env.NEXT_PUBLIC_URL || window.location.origin}/auth/callback`
+
+      await supabase.auth.signInWithOAuth({
+        provider: "github",
+        options: { redirectTo: redirectUrl },
+      })
+    } catch (err: any) {
+      console.error("GitHub sign in error:", err)
+      setError("Error signing in with GitHub")
     }
   }
 
@@ -94,7 +114,7 @@ export default function SignupPage() {
             <Button
               variant="outline"
               className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-white"
-              onClick={() => handleOAuthSignIn("google")}
+              onClick={handleGoogleSignIn}
               disabled={isLoading}
             >
               <Mail className="mr-2 h-4 w-4" />
@@ -103,7 +123,7 @@ export default function SignupPage() {
             <Button
               variant="outline"
               className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-white"
-              onClick={() => handleOAuthSignIn("github")}
+              onClick={handleGithubSignIn}
               disabled={isLoading}
             >
               <Github className="mr-2 h-4 w-4" />
