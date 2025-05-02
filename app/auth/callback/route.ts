@@ -7,22 +7,27 @@ export async function GET(req: NextRequest) {
   try {
     const requestUrl = new URL(req.url)
     const code = requestUrl.searchParams.get("code")
+    const next = requestUrl.searchParams.get("next") || "/"
 
     if (code) {
       const cookieStore = cookies()
-
-      // For route handlers, we need to use createRouteHandlerClient
-      // which is different from our client-side implementation
       const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
 
       // Exchange the code for a session
-      await supabase.auth.exchangeCodeForSession(code)
-    }
-  } catch (error) {
-    console.error("Auth callback error:", error)
-    // Continue with redirect even if there's an error
-  }
+      const { error } = await supabase.auth.exchangeCodeForSession(code)
 
-  // Redirect to the home page
-  return NextResponse.redirect(new URL("/", req.url))
+      if (error) {
+        console.error("Auth callback error:", error)
+        // Redirect to login page with error
+        return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, req.url))
+      }
+    }
+
+    // Redirect to the home page or the next page if specified
+    return NextResponse.redirect(new URL(next, req.url))
+  } catch (error) {
+    console.error("Unexpected auth callback error:", error)
+    // Redirect to login page with generic error
+    return NextResponse.redirect(new URL("/login?error=Authentication%20failed", req.url))
+  }
 }
