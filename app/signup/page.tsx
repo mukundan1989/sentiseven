@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,6 +19,7 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const { signUp, signInWithGoogle, signInWithGithub } = useAuth()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,21 +34,39 @@ export default function SignupPage() {
     }
 
     try {
-      const { error, data } = await signUp(email, password, name)
+      // Properly handle the response from signUp
+      const result = await signUp(email, password, name)
 
-      if (error) {
-        setError(error.message)
-      } else if (data?.user?.identities?.length === 0) {
+      if (result.error) {
+        setError(result.error.message || "An error occurred during sign up")
+      } else if (result.data?.user?.identities?.length === 0) {
         // This means the user already exists
         setError("An account with this email already exists")
-      } else if (data?.user && !data.session) {
+      } else if (result.data?.user && !result.data.session) {
         // This means email confirmation is required
         setSuccessMessage("Check your email for a confirmation link to complete your registration")
+      } else if (result.data?.session) {
+        // Successfully signed up and logged in
+        router.push("/")
       }
     } catch (err: any) {
+      console.error("Signup error:", err)
       setError(err.message || "An error occurred during sign up")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleOAuthSignIn = async (provider: "google" | "github") => {
+    try {
+      if (provider === "google") {
+        await signInWithGoogle()
+      } else {
+        await signInWithGithub()
+      }
+    } catch (err: any) {
+      console.error(`${provider} sign in error:`, err)
+      setError(`Error signing in with ${provider}`)
     }
   }
 
@@ -74,7 +94,7 @@ export default function SignupPage() {
             <Button
               variant="outline"
               className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-white"
-              onClick={signInWithGoogle}
+              onClick={() => handleOAuthSignIn("google")}
               disabled={isLoading}
             >
               <Mail className="mr-2 h-4 w-4" />
@@ -83,7 +103,7 @@ export default function SignupPage() {
             <Button
               variant="outline"
               className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-white"
-              onClick={signInWithGithub}
+              onClick={() => handleOAuthSignIn("github")}
               disabled={isLoading}
             >
               <Github className="mr-2 h-4 w-4" />
