@@ -34,15 +34,16 @@ export default function SignupPage() {
 
     try {
       const supabase = getSupabase()
-      const origin = window.location.origin
-      const redirectTo = `${origin}/auth/confirm`
+
+      // Get the current site URL
+      const siteUrl = window.location.origin
 
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: { name },
-          emailRedirectTo: redirectTo,
+          emailRedirectTo: `${siteUrl}/auth/callback`,
         },
       })
 
@@ -66,12 +67,11 @@ export default function SignupPage() {
   const handleGoogleSignIn = async () => {
     try {
       const supabase = getSupabase()
-      const origin = window.location.origin
-      const redirectTo = `${origin}/auth/callback`
+      const siteUrl = window.location.origin
 
       await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo },
+        options: { redirectTo: `${siteUrl}/auth/callback` },
       })
     } catch (err: any) {
       console.error("Google sign in error:", err)
@@ -82,12 +82,11 @@ export default function SignupPage() {
   const handleGithubSignIn = async () => {
     try {
       const supabase = getSupabase()
-      const origin = window.location.origin
-      const redirectTo = `${origin}/auth/callback`
+      const siteUrl = window.location.origin
 
       await supabase.auth.signInWithOAuth({
         provider: "github",
-        options: { redirectTo },
+        options: { redirectTo: `${siteUrl}/auth/callback` },
       })
     } catch (err: any) {
       console.error("GitHub sign in error:", err)
