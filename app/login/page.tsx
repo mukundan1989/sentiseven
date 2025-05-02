@@ -4,7 +4,8 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { useAuth } from "@/context/auth-context"
+import { useRouter } from "next/navigation"
+import { getSupabase } from "@/utils/supabaseClient"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,7 +16,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { signIn, signInWithGoogle, signInWithGithub } = useAuth()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,14 +24,52 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await signIn(email, password)
-      if (error) {
-        setError(error.message)
+      const supabase = getSupabase()
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (signInError) {
+        setError(signInError.message)
+      } else {
+        router.push("/")
       }
     } catch (err: any) {
-      setError(err.message || "An error occurred during sign in")
+      console.error("Login error:", err)
+      setError(err.message || "An error occurred during login")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const supabase = getSupabase()
+      const redirectUrl = `${process.env.NEXT_PUBLIC_URL || window.location.origin}/auth/callback`
+
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: redirectUrl },
+      })
+    } catch (err: any) {
+      console.error("Google sign in error:", err)
+      setError("Error signing in with Google")
+    }
+  }
+
+  const handleGithubSignIn = async () => {
+    try {
+      const supabase = getSupabase()
+      const redirectUrl = `${process.env.NEXT_PUBLIC_URL || window.location.origin}/auth/callback`
+
+      await supabase.auth.signInWithOAuth({
+        provider: "github",
+        options: { redirectTo: redirectUrl },
+      })
+    } catch (err: any) {
+      console.error("GitHub sign in error:", err)
+      setError("Error signing in with GitHub")
     }
   }
 
@@ -38,9 +77,9 @@ export default function LoginPage() {
     <div className="bg-gradient-to-br from-slate-950 to-slate-900 text-slate-50 min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-slate-900 border-slate-800">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Sign in</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
           <CardDescription className="text-center text-slate-400">
-            Enter your email and password to access your account
+            Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -52,7 +91,7 @@ export default function LoginPage() {
             <Button
               variant="outline"
               className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-white"
-              onClick={signInWithGoogle}
+              onClick={handleGoogleSignIn}
               disabled={isLoading}
             >
               <Mail className="mr-2 h-4 w-4" />
@@ -61,7 +100,7 @@ export default function LoginPage() {
             <Button
               variant="outline"
               className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-white"
-              onClick={signInWithGithub}
+              onClick={handleGithubSignIn}
               disabled={isLoading}
             >
               <Github className="mr-2 h-4 w-4" />
