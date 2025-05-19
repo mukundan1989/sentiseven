@@ -10,9 +10,9 @@ export default function PerformancePage() {
     {
       symbol: "AAPL",
       name: "Apple Inc.",
-      lookDate: "2025-01-30",
-      lookPrice: 184.37,
-      lookSentiment: "positive",
+      lockDate: "2025-01-30",
+      lockPrice: 184.37,
+      lockSentiment: "positive",
       currentPrice: 189.98,
       change: 5.61,
       changePercent: 3.04,
@@ -21,9 +21,9 @@ export default function PerformancePage() {
     {
       symbol: "MSFT",
       name: "Microsoft Corp.",
-      lookDate: "2024-12-30",
-      lookPrice: 378.04,
-      lookSentiment: "positive",
+      lockDate: "2024-12-30",
+      lockPrice: 378.04,
+      lockSentiment: "positive",
       currentPrice: 401.92,
       change: 23.88,
       changePercent: 6.88,
@@ -32,9 +32,9 @@ export default function PerformancePage() {
     {
       symbol: "GOOGL",
       name: "Alphabet Inc.",
-      lookDate: "2024-10-30",
-      lookPrice: 142.45,
-      lookSentiment: "positive",
+      lockDate: "2024-10-30",
+      lockPrice: 142.45,
+      lockSentiment: "positive",
       currentPrice: 165.72,
       change: 23.27,
       changePercent: 16.34,
@@ -43,9 +43,9 @@ export default function PerformancePage() {
     {
       symbol: "AMZN",
       name: "Amazon.com Inc.",
-      lookDate: "2024-09-30",
-      lookPrice: 178.08,
-      lookSentiment: "negative",
+      lockDate: "2024-09-30",
+      lockPrice: 178.08,
+      lockSentiment: "negative",
       currentPrice: 182.41,
       change: 4.33,
       changePercent: 2.43,
@@ -54,9 +54,9 @@ export default function PerformancePage() {
     {
       symbol: "META",
       name: "Meta Platforms Inc.",
-      lookDate: "2024-06-30",
-      lookPrice: 474.99,
-      lookSentiment: "positive",
+      lockDate: "2024-06-30",
+      lockPrice: 474.99,
+      lockSentiment: "positive",
       currentPrice: 481.73,
       change: 6.74,
       changePercent: 1.42,
@@ -119,10 +119,10 @@ export default function PerformancePage() {
                     <th colSpan={2} className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">
                       Stock
                     </th>
-                    <th colSpan={2} className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">
-                      Looked
+                    <th colSpan={2} className="px-6 py-3 bg-blue-100 text-gray-700 border-b border-gray-200">
+                      Locked
                     </th>
-                    <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Sentiment</th>
+                    <th className="px-6 py-3 bg-blue-100 text-gray-700 border-b border-gray-200">Sentiment</th>
                     <th colSpan={3} className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">
                       Current
                     </th>
@@ -130,9 +130,9 @@ export default function PerformancePage() {
                   <tr>
                     <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Symbol</th>
                     <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Name</th>
-                    <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Date</th>
-                    <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Price</th>
-                    <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Sentiment</th>
+                    <th className="px-6 py-3 bg-blue-100 text-gray-700 border-b border-gray-200">Date</th>
+                    <th className="px-6 py-3 bg-blue-100 text-gray-700 border-b border-gray-200">Price</th>
+                    <th className="px-6 py-3 bg-blue-100 text-gray-700 border-b border-gray-200">Sentiment</th>
                     <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Price</th>
                     <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Change</th>
                     <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Sentiment</th>
@@ -143,17 +143,17 @@ export default function PerformancePage() {
                     <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
                       <td className="px-6 py-4 font-medium text-gray-900">{stock.symbol}</td>
                       <td className="px-6 py-4 text-gray-700">{stock.name}</td>
-                      <td className="px-6 py-4 text-gray-700">{stock.lookDate}</td>
-                      <td className="px-6 py-4 text-gray-700">${stock.lookPrice.toFixed(2)}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-gray-700 bg-blue-50">{stock.lockDate}</td>
+                      <td className="px-6 py-4 text-gray-700 bg-blue-50">${stock.lockPrice.toFixed(2)}</td>
+                      <td className="px-6 py-4 bg-blue-50">
                         <span
                           className={`px-2 py-1 text-xs font-medium rounded-md ${
-                            stock.lookSentiment === "positive"
+                            stock.lockSentiment === "positive"
                               ? "bg-green-100 text-green-800"
                               : "bg-red-100 text-red-800"
                           }`}
                         >
-                          {stock.lookSentiment}
+                          {stock.lockSentiment}
                         </span>
                       </td>
                       <td className="px-6 py-4 font-medium text-gray-900">${stock.currentPrice.toFixed(2)}</td>
