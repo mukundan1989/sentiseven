@@ -9,6 +9,8 @@ export async function GET(req: NextRequest) {
     const code = requestUrl.searchParams.get("code")
     const next = requestUrl.searchParams.get("next") || "/"
 
+    console.log("Auth callback received with code:", code ? "present" : "missing")
+
     if (code) {
       const cookieStore = cookies()
       const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
@@ -19,12 +21,16 @@ export async function GET(req: NextRequest) {
       if (error) {
         console.error("Auth callback error:", error)
         // Redirect to login page with error
-        return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, req.url))
+        return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin))
       }
+
+      console.log("Auth callback successful, redirecting to:", next)
+    } else {
+      console.warn("No code found in callback URL")
     }
 
     // Redirect to the home page or the next page if specified
-    return NextResponse.redirect(new URL(next, req.url))
+    return NextResponse.redirect(new URL(next, requestUrl.origin))
   } catch (error) {
     console.error("Unexpected auth callback error:", error)
     // Redirect to login page with generic error
