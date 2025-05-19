@@ -2,9 +2,9 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { getSupabase } from "@/utils/supabaseClient"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,26 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Check for error in URL params
+    const errorParam = searchParams?.get("error")
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam))
+    }
+
+    // Check if we're already logged in
+    const checkSession = async () => {
+      const supabase = getSupabase()
+      const { data } = await supabase.auth.getSession()
+      if (data.session) {
+        router.push("/")
+      }
+    }
+
+    checkSession()
+  }, [router, searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,31 +65,64 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     try {
+      setIsLoading(true)
       const supabase = getSupabase()
-      const redirectUrl = `${process.env.NEXT_PUBLIC_URL || window.location.origin}/auth/callback`
 
-      await supabase.auth.signInWithOAuth({
+      // Get the origin for the redirect URL
+      const origin = process.env.NEXT_PUBLIC_URL || window.location.origin
+      const redirectTo = `${origin}/auth/callback`
+
+      console.log("Signing in with Google, redirect to:", redirectTo)
+
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: redirectUrl },
+        options: {
+          redirectTo,
+          queryParams: {
+            prompt: "select_account", // Forces Google to show the account selector
+          },
+        },
       })
+
+      if (error) {
+        console.error("Google sign in error:", error)
+        setError(error.message)
+        setIsLoading(false)
+      }
+      // Don't set isLoading to false here as we're redirecting away
     } catch (err: any) {
       console.error("Google sign in error:", err)
-      setError("Error signing in with Google")
+      setError(err.message || "Error signing in with Google")
+      setIsLoading(false)
     }
   }
 
   const handleGithubSignIn = async () => {
     try {
+      setIsLoading(true)
       const supabase = getSupabase()
-      const redirectUrl = `${process.env.NEXT_PUBLIC_URL || window.location.origin}/auth/callback`
 
-      await supabase.auth.signInWithOAuth({
+      // Get the origin for the redirect URL
+      const origin = process.env.NEXT_PUBLIC_URL || window.location.origin
+      const redirectTo = `${origin}/auth/callback`
+
+      console.log("Signing in with GitHub, redirect to:", redirectTo)
+
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "github",
-        options: { redirectTo: redirectUrl },
+        options: { redirectTo },
       })
+
+      if (error) {
+        console.error("GitHub sign in error:", error)
+        setError(error.message)
+        setIsLoading(false)
+      }
+      // Don't set isLoading to false here as we're redirecting away
     } catch (err: any) {
       console.error("GitHub sign in error:", err)
-      setError("Error signing in with GitHub")
+      setError(err.message || "Error signing in with GitHub")
+      setIsLoading(false)
     }
   }
 
