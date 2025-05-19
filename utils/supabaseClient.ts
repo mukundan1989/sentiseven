@@ -15,11 +15,18 @@ export function getSupabase() {
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
       if (!supabaseUrl || !supabaseAnonKey) {
+        console.error("Supabase URL and Anon Key are required")
         throw new Error("Supabase URL and Anon Key are required")
       }
 
       // Create the Supabase client
-      supabaseInstance = createClient(supabaseUrl, supabaseAnonKey)
+      supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        },
+      })
     }
     return supabaseInstance
   }
@@ -32,3 +39,6 @@ export function getSupabase() {
     },
   } as unknown as SupabaseClient
 }
+
+// For backward compatibility
+export const supabase = typeof window !== "undefined" ? getSupabase() : null
