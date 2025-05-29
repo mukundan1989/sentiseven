@@ -19,41 +19,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
-// Sample stock data
-const allStocks = [
-  { id: 1, symbol: "AAPL", name: "Apple Inc.", sector: "Technology", price: 182.52, change: 1.25 },
-  { id: 2, symbol: "MSFT", name: "Microsoft Corp.", sector: "Technology", price: 417.88, change: -0.52 },
-  { id: 3, symbol: "AMZN", name: "Amazon.com Inc.", sector: "Consumer Cyclical", price: 178.75, change: 2.34 },
-  { id: 4, symbol: "TSLA", name: "Tesla Inc.", sector: "Automotive", price: 175.34, change: -1.23 },
-  { id: 5, symbol: "META", name: "Meta Platforms Inc.", sector: "Technology", price: 474.99, change: 3.45 },
-  { id: 6, symbol: "GOOGL", name: "Alphabet Inc.", sector: "Technology", price: 147.68, change: 0.87 },
-  { id: 7, symbol: "NFLX", name: "Netflix Inc.", sector: "Entertainment", price: 602.75, change: 1.56 },
-  { id: 8, symbol: "NVDA", name: "NVIDIA Corp.", sector: "Technology", price: 950.02, change: 5.23 },
-  { id: 9, symbol: "JPM", name: "JPMorgan Chase & Co.", sector: "Financial Services", price: 198.47, change: -0.34 },
-  { id: 10, symbol: "V", name: "Visa Inc.", sector: "Financial Services", price: 275.31, change: 0.45 },
-  { id: 11, symbol: "WMT", name: "Walmart Inc.", sector: "Consumer Defensive", price: 59.86, change: 0.21 },
-  { id: 12, symbol: "PG", name: "Procter & Gamble Co.", sector: "Consumer Defensive", price: 162.45, change: -0.12 },
-  { id: 13, symbol: "DIS", name: "Walt Disney Co.", sector: "Entertainment", price: 112.73, change: 1.02 },
-  { id: 14, symbol: "KO", name: "Coca-Cola Co.", sector: "Consumer Defensive", price: 60.12, change: 0.34 },
-  { id: 15, symbol: "PEP", name: "PepsiCo Inc.", sector: "Consumer Defensive", price: 172.98, change: -0.25 },
-  { id: 16, symbol: "ADBE", name: "Adobe Inc.", sector: "Technology", price: 492.46, change: 2.15 },
-  { id: 17, symbol: "INTC", name: "Intel Corp.", sector: "Technology", price: 42.37, change: -1.45 },
-  { id: 18, symbol: "CRM", name: "Salesforce Inc.", sector: "Technology", price: 284.89, change: 1.78 },
-  { id: 19, symbol: "AMD", name: "Advanced Micro Devices Inc.", sector: "Technology", price: 158.76, change: 3.21 },
-  { id: 20, symbol: "PYPL", name: "PayPal Holdings Inc.", sector: "Financial Services", price: 62.34, change: -0.87 },
-]
+// Import stock data from the separate file
+import { allStocks, getSectors } from "@/data/stocks"
 
-// Group stocks by sector
-const stocksBySector = allStocks.reduce((acc, stock) => {
-  if (!acc[stock.sector]) {
-    acc[stock.sector] = []
-  }
-  acc[stock.sector].push(stock)
-  return acc
-}, {})
-
-// Sort sectors alphabetically
-const sectors = Object.keys(stocksBySector).sort()
+// Get all sectors
+const sectors = getSectors()
 
 export function StockSelector({
   open,
@@ -118,10 +88,12 @@ export function StockSelector({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col bg-white border-gray-200">
         <DialogHeader>
-          <DialogTitle>Edit Stock Basket</DialogTitle>
-          <DialogDescription>Select stocks to include in your sentiment analysis basket.</DialogDescription>
+          <DialogTitle className="text-gray-900">Edit Stock Basket</DialogTitle>
+          <DialogDescription className="text-gray-600">
+            Select stocks to include in your sentiment analysis basket.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col md:flex-row gap-6 flex-1 overflow-hidden">
@@ -132,22 +104,28 @@ export function StockSelector({
                 placeholder="Search stocks..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1"
-                prefix={<Search className="h-4 w-4 text-muted-foreground" />}
+                className="flex-1 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
+                prefix={<Search className="h-4 w-4 text-gray-400" />}
               />
 
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
                     {sectorFilter || "All Sectors"}
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0" align="end">
-                  <Command>
+                <PopoverContent className="w-[200px] p-0 bg-white border-gray-200" align="end">
+                  <Command className="bg-white">
                     <CommandList>
                       <CommandGroup>
-                        <CommandItem onSelect={() => setSectorFilter(null)} className="flex items-center gap-2">
+                        <CommandItem
+                          onSelect={() => setSectorFilter(null)}
+                          className="flex items-center gap-2 text-gray-700 hover:bg-gray-100"
+                        >
                           {!sectorFilter && <Check className="h-4 w-4" />}
                           <span className={!sectorFilter ? "font-medium" : ""}>All Sectors</span>
                         </CommandItem>
@@ -155,7 +133,7 @@ export function StockSelector({
                           <CommandItem
                             key={sector}
                             onSelect={() => setSectorFilter(sector)}
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 text-gray-700 hover:bg-gray-100"
                           >
                             {sectorFilter === sector && <Check className="h-4 w-4" />}
                             <span className={sectorFilter === sector ? "font-medium" : ""}>{sector}</span>
@@ -168,44 +146,48 @@ export function StockSelector({
               </Popover>
             </div>
 
-            <Card className="flex-1 overflow-hidden">
+            <Card className="flex-1 overflow-hidden bg-white border-gray-200">
               <CardHeader className="p-4">
-                <CardTitle className="text-base">Available Stocks</CardTitle>
+                <CardTitle className="text-base text-gray-900">Available Stocks</CardTitle>
               </CardHeader>
               <ScrollArea className="flex-1 h-[300px]">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[80px]">Symbol</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead className="hidden md:table-cell">Sector</TableHead>
-                      <TableHead className="text-right">Price</TableHead>
+                    <TableRow className="border-gray-200">
+                      <TableHead className="w-[80px] text-gray-600">Symbol</TableHead>
+                      <TableHead className="text-gray-600">Name</TableHead>
+                      <TableHead className="hidden md:table-cell text-gray-600">Sector</TableHead>
+                      <TableHead className="text-right text-gray-600">Price</TableHead>
                       <TableHead className="w-[100px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredStocks.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                        <TableCell colSpan={5} className="text-center py-6 text-gray-500">
                           No stocks found matching your criteria
                         </TableCell>
                       </TableRow>
                     ) : (
                       filteredStocks.map((stock) => (
-                        <TableRow key={stock.id} className="group">
-                          <TableCell className="font-medium">{stock.symbol}</TableCell>
-                          <TableCell>{stock.name}</TableCell>
-                          <TableCell className="hidden md:table-cell text-muted-foreground">{stock.sector}</TableCell>
+                        <TableRow key={stock.id} className="group border-gray-200 hover:bg-gray-50">
+                          <TableCell className="font-medium text-gray-900">{stock.symbol}</TableCell>
+                          <TableCell className="text-gray-700">{stock.name}</TableCell>
+                          <TableCell className="hidden md:table-cell text-gray-500">{stock.sector}</TableCell>
                           <TableCell className="text-right">
-                            <span className={stock.change >= 0 ? "text-emerald-500" : "text-red-500"}>
+                            <span className={stock.change >= 0 ? "text-emerald-600" : "text-red-600"}>
                               ${stock.price.toFixed(2)}
                             </span>
                           </TableCell>
                           <TableCell>
                             <Button
-                              variant={isSelected(stock.id) ? "secondary" : "outline"}
+                              variant={isSelected(stock.id) ? "default" : "outline"}
                               size="sm"
-                              className="w-full"
+                              className={`w-full ${
+                                isSelected(stock.id)
+                                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                              }`}
                               onClick={() => toggleStock(stock)}
                             >
                               {isSelected(stock.id) ? "Remove" : "Add"}
@@ -223,21 +205,27 @@ export function StockSelector({
           {/* Right side - Selected stocks */}
           <div className="w-full md:w-[300px] flex flex-col">
             <div className="mb-4">
-              <label className="text-sm font-medium mb-1.5 block">Basket Name</label>
-              <Input value={basketName} onChange={(e) => setBasketName(e.target.value)} className="w-full" />
+              <label className="text-sm font-medium mb-1.5 block text-gray-700">Basket Name</label>
+              <Input
+                value={basketName}
+                onChange={(e) => setBasketName(e.target.value)}
+                className="w-full bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
+              />
             </div>
 
-            <Card className="flex-1">
+            <Card className="flex-1 bg-white border-gray-200">
               <CardHeader className="p-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Selected Stocks</CardTitle>
-                  <Badge variant="secondary">{selectedStocks.length}</Badge>
+                  <CardTitle className="text-base text-gray-900">Selected Stocks</CardTitle>
+                  <Badge variant="secondary" className="bg-gray-100 text-gray-700">
+                    {selectedStocks.length}
+                  </Badge>
                 </div>
               </CardHeader>
               <ScrollArea className="h-[300px]">
                 {selectedStocks.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 px-4 text-center text-muted-foreground">
-                    <div className="rounded-full bg-muted p-3 mb-3">
+                  <div className="flex flex-col items-center justify-center py-8 px-4 text-center text-gray-500">
+                    <div className="rounded-full bg-gray-100 p-3 mb-3">
                       <Plus className="h-6 w-6" />
                     </div>
                     <p>No stocks selected</p>
@@ -248,16 +236,16 @@ export function StockSelector({
                     {selectedStocks.map((stock) => (
                       <div
                         key={stock.id}
-                        className="flex items-center justify-between p-2 rounded-md bg-muted/50 hover:bg-muted group"
+                        className="flex items-center justify-between p-2 rounded-md bg-gray-50 hover:bg-gray-100 group"
                       >
                         <div>
-                          <div className="font-medium">{stock.symbol}</div>
-                          <div className="text-xs text-muted-foreground">{stock.name}</div>
+                          <div className="font-medium text-gray-900">{stock.symbol}</div>
+                          <div className="text-xs text-gray-500">{stock.name}</div>
                         </div>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 opacity-50 group-hover:opacity-100"
+                          className="h-7 w-7 opacity-50 group-hover:opacity-100 text-gray-500 hover:text-gray-700 hover:bg-gray-200"
                           onClick={() => toggleStock(stock)}
                         >
                           <X className="h-4 w-4" />
@@ -272,10 +260,18 @@ export function StockSelector({
         </div>
 
         <DialogFooter className="mt-6">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+          >
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={selectedStocks.length === 0}>
+          <Button
+            onClick={handleSave}
+            disabled={selectedStocks.length === 0}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
             Save Changes
           </Button>
         </DialogFooter>
