@@ -498,7 +498,7 @@ const SentimentDashboard = () => {
     }
   }
 
-  // Function to update stock allocation
+  // Function to update stock allocation using slider
   const handleAllocationChange = (stockId, newAllocation) => {
     // Create a copy of stocks
     const updatedStocks = [...stocks]
@@ -525,9 +525,10 @@ const SentimentDashboard = () => {
       updatedStocks.forEach((stock) => {
         if (!stock.locked && stock.id !== stockId) {
           // Calculate the proportion this stock represents of all unlocked stocks
-          const proportion = stock.allocation / totalUnlockedAllocation
+          const proportion =
+            totalUnlockedAllocation > 0 ? stock.allocation / totalUnlockedAllocation : 1 / unlockedStocks.length
           // Reduce this stock's allocation proportionally
-          stock.allocation = Math.max(1, stock.allocation - difference * proportion)
+          stock.allocation = Math.max(0, stock.allocation - difference * proportion)
         }
       })
 
@@ -702,16 +703,52 @@ const SentimentDashboard = () => {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         {stocks.map((stock) => {
                           const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
                           return (
-                            <div key={stock.id} className="flex items-center gap-4">
-                              <div className="w-20 font-medium text-foreground">{stock.symbol}</div>
-                              <div className="flex-1">
+                            <div key={stock.id} className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-16 font-medium text-foreground">{stock.symbol}</div>
+                                  <div className="text-sm text-muted-foreground">{stock.name}</div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <div className="text-sm font-medium text-foreground">{stock.allocation}%</div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => handleToggleLock(stock.id)}
+                                  >
+                                    {stock.locked ? (
+                                      <Lock className="h-4 w-4 text-amber-500" />
+                                    ) : (
+                                      <Unlock className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Allocation Slider */}
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-4">
+                                  <div className="flex-1">
+                                    <Slider
+                                      value={[stock.allocation]}
+                                      max={100}
+                                      step={1}
+                                      disabled={stock.locked}
+                                      onValueChange={(value) => handleAllocationChange(stock.id, value[0])}
+                                      className="py-1"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Visual Progress Bar */}
                                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                                   <div
-                                    className={`h-full ${
+                                    className={`h-full transition-all duration-300 ${
                                       stockData.compositeSentiment > 0.3
                                         ? "bg-emerald-500"
                                         : stockData.compositeSentiment > -0.3
@@ -722,19 +759,6 @@ const SentimentDashboard = () => {
                                   ></div>
                                 </div>
                               </div>
-                              <div className="w-12 text-right text-foreground">{stock.allocation}%</div>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleToggleLock(stock.id)}
-                              >
-                                {stock.locked ? (
-                                  <Lock className="h-4 w-4 text-amber-500" />
-                                ) : (
-                                  <Unlock className="h-4 w-4 text-muted-foreground" />
-                                )}
-                              </Button>
                             </div>
                           )
                         })}
