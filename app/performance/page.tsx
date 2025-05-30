@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { ChevronDown, Loader2 } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 interface StockSignal {
   date: string
@@ -215,128 +218,159 @@ export default function PerformancePage() {
   }, [])
 
   return (
-    <div className="bg-white min-h-screen">
-      <div className="container mx-auto p-6">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="bg-slate-900 text-white p-4 rounded-t-lg">
-          <h1 className="text-2xl font-bold">Performance Summary</h1>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Performance Summary</h1>
+          <p className="text-muted-foreground mt-2">
+            Performance data for stocks with signals in all three models (Google Trends, Twitter, News)
+          </p>
         </div>
 
-        {/* Main Content */}
-        <div className="bg-white border border-gray-200 rounded-b-lg shadow-sm">
-          {/* Table Header */}
-          <div className="p-4 border-b border-gray-200">
+        {/* Main Content Card */}
+        <Card className="mb-8">
+          <CardHeader className="pb-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h2 className="text-lg font-semibold text-gray-800">Stocks Performance Table</h2>
-                <p className="text-sm text-gray-500">
-                  Performance data for stocks with signals in all three models (Google Trends, Twitter, News)
-                </p>
+                <CardTitle className="text-xl">Stocks Performance Table</CardTitle>
+                <CardDescription>Performance data for stocks with signals in all three models</CardDescription>
               </div>
-              <div className="relative">
-                <button className="flex items-center justify-between w-full md:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none">
-                  <span>All Common Stocks</span>
-                  <span className="ml-2 text-xs text-gray-500">{performanceData.length} stocks</span>
-                  <ChevronDown className="ml-2 h-4 w-4 text-gray-500" />
-                </button>
-              </div>
+              <Button variant="outline" className="flex items-center gap-2">
+                <span>All Common Stocks</span>
+                <Badge variant="secondary" className="ml-2">
+                  {performanceData.length} stocks
+                </Badge>
+                <ChevronDown className="h-4 w-4" />
+              </Button>
             </div>
-          </div>
+          </CardHeader>
 
-          {/* Table */}
-          {loading ? (
-            <div className="flex justify-center items-center p-12">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-              <span className="ml-2 text-gray-600">Loading performance data...</span>
-            </div>
-          ) : error ? (
-            <div className="p-4 bg-red-50 text-red-600 border border-red-200 rounded-md m-4">{error}</div>
-          ) : performanceData.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">
-              No stocks found with signals in all three models (Google Trends, Twitter, News)
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead>
-                  <tr>
-                    <th colSpan={2} className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">
-                      Stock
-                    </th>
-                    <th colSpan={2} className="px-6 py-3 bg-blue-100 text-gray-700 border-b border-gray-200">
-                      Locked
-                    </th>
-                    <th className="px-6 py-3 bg-blue-100 text-gray-700 border-b border-gray-200">Sentiment</th>
-                    <th colSpan={3} className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">
-                      Current
-                    </th>
-                  </tr>
-                  <tr>
-                    <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Symbol</th>
-                    <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Name</th>
-                    <th className="px-6 py-3 bg-blue-100 text-gray-700 border-b border-gray-200">Date</th>
-                    <th className="px-6 py-3 bg-blue-100 text-gray-700 border-b border-gray-200">Price</th>
-                    <th className="px-6 py-3 bg-blue-100 text-gray-700 border-b border-gray-200">Sentiment</th>
-                    <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Price</th>
-                    <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Change</th>
-                    <th className="px-6 py-3 bg-blue-50 text-gray-700 border-b border-gray-200">Sentiment</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {performanceData.map((stock, index) => (
-                    <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
-                      <td className="px-6 py-4 font-medium text-gray-900">{stock.symbol}</td>
-                      <td className="px-6 py-4 text-gray-700">{stock.name}</td>
-                      <td className="px-6 py-4 text-gray-700 bg-blue-50">{stock.lockDate}</td>
-                      <td className="px-6 py-4 text-gray-700 bg-blue-50">${stock.lockPrice.toFixed(2)}</td>
-                      <td className="px-6 py-4 bg-blue-50">
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-md ${
-                            stock.lockSentiment.toLowerCase() === "positive"
-                              ? "bg-green-100 text-green-800"
-                              : stock.lockSentiment.toLowerCase() === "negative"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          {stock.lockSentiment}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 font-medium text-gray-900">${stock.currentPrice.toFixed(2)}</td>
-                      <td className={`px-6 py-4 font-medium ${stock.change >= 0 ? "text-green-600" : "text-red-600"}`}>
-                        {stock.change >= 0 ? (
-                          <>
-                            ↑ +{stock.change.toFixed(2)} (+{stock.changePercent.toFixed(2)}%)
-                          </>
-                        ) : (
-                          <>
-                            ↓ {stock.change.toFixed(2)} ({stock.changePercent.toFixed(2)}%)
-                          </>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-md ${
-                            stock.currentSentiment.toLowerCase() === "positive"
-                              ? "bg-green-100 text-green-800"
-                              : stock.currentSentiment.toLowerCase() === "negative"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          {stock.currentSentiment}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="p-4 text-xs text-gray-500 text-center border-t border-gray-200">
-                Stock data as of {lastUpdated}
+          <CardContent>
+            {/* Table */}
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Loading performance data...</span>
               </div>
-            </div>
-          )}
-        </div>
+            ) : error ? (
+              <div className="p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-md">
+                {error}
+              </div>
+            ) : performanceData.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                No stocks found with signals in all three models (Google Trends, Twitter, News)
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th
+                        colSpan={2}
+                        className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium"
+                      >
+                        Stock
+                      </th>
+                      <th
+                        colSpan={2}
+                        className="px-4 py-3 bg-muted/50 text-muted-foreground border-b text-left font-medium"
+                      >
+                        Locked
+                      </th>
+                      <th className="px-4 py-3 bg-muted/50 text-muted-foreground border-b text-left font-medium">
+                        Sentiment
+                      </th>
+                      <th
+                        colSpan={3}
+                        className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium"
+                      >
+                        Current
+                      </th>
+                    </tr>
+                    <tr>
+                      <th className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium">
+                        Symbol
+                      </th>
+                      <th className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium">Name</th>
+                      <th className="px-4 py-3 bg-muted/50 text-muted-foreground border-b text-left font-medium">
+                        Date
+                      </th>
+                      <th className="px-4 py-3 bg-muted/50 text-muted-foreground border-b text-left font-medium">
+                        Price
+                      </th>
+                      <th className="px-4 py-3 bg-muted/50 text-muted-foreground border-b text-left font-medium">
+                        Sentiment
+                      </th>
+                      <th className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium">Price</th>
+                      <th className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium">
+                        Change
+                      </th>
+                      <th className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium">
+                        Sentiment
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {performanceData.map((stock, index) => (
+                      <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-4 font-medium text-foreground">{stock.symbol}</td>
+                        <td className="px-4 py-4 text-muted-foreground">{stock.name}</td>
+                        <td className="px-4 py-4 text-muted-foreground bg-muted/20">{stock.lockDate}</td>
+                        <td className="px-4 py-4 text-muted-foreground bg-muted/20">${stock.lockPrice.toFixed(2)}</td>
+                        <td className="px-4 py-4 bg-muted/20">
+                          <Badge
+                            variant={
+                              stock.lockSentiment.toLowerCase() === "positive"
+                                ? "default"
+                                : stock.lockSentiment.toLowerCase() === "negative"
+                                  ? "destructive"
+                                  : "secondary"
+                            }
+                            className="text-xs"
+                          >
+                            {stock.lockSentiment}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-4 font-medium text-foreground">${stock.currentPrice.toFixed(2)}</td>
+                        <td
+                          className={`px-4 py-4 font-medium ${stock.change >= 0 ? "text-green-600" : "text-red-600"}`}
+                        >
+                          {stock.change >= 0 ? (
+                            <>
+                              ↑ +{stock.change.toFixed(2)} (+{stock.changePercent.toFixed(2)}%)
+                            </>
+                          ) : (
+                            <>
+                              ↓ {stock.change.toFixed(2)} ({stock.changePercent.toFixed(2)}%)
+                            </>
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
+                          <Badge
+                            variant={
+                              stock.currentSentiment.toLowerCase() === "positive"
+                                ? "default"
+                                : stock.currentSentiment.toLowerCase() === "negative"
+                                  ? "destructive"
+                                  : "secondary"
+                            }
+                            className="text-xs"
+                          >
+                            {stock.currentSentiment}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="p-4 text-xs text-muted-foreground text-center border-t">
+                  Stock data as of {lastUpdated}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
