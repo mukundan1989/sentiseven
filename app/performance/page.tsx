@@ -268,22 +268,19 @@ export default function PerformancePage() {
                     <tr>
                       <th
                         colSpan={2}
-                        className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium"
+                        className="px-4 py-3 bg-muted text-muted-foreground border-b text-center font-medium"
                       >
                         Stock
                       </th>
                       <th
-                        colSpan={2}
-                        className="px-4 py-3 bg-muted/50 text-muted-foreground border-b text-left font-medium"
+                        colSpan={3}
+                        className="px-4 py-3 bg-primary/10 text-primary-foreground border-b text-center font-medium"
                       >
                         Locked
                       </th>
-                      <th className="px-4 py-3 bg-muted/50 text-muted-foreground border-b text-left font-medium">
-                        Sentiment
-                      </th>
                       <th
                         colSpan={3}
-                        className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium"
+                        className="px-4 py-3 bg-muted text-muted-foreground border-b text-center font-medium"
                       >
                         Current
                       </th>
@@ -293,13 +290,13 @@ export default function PerformancePage() {
                         Symbol
                       </th>
                       <th className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium">Name</th>
-                      <th className="px-4 py-3 bg-muted/50 text-muted-foreground border-b text-left font-medium">
+                      <th className="px-4 py-3 bg-primary/10 text-primary-foreground border-b text-left font-medium">
                         Date
                       </th>
-                      <th className="px-4 py-3 bg-muted/50 text-muted-foreground border-b text-left font-medium">
+                      <th className="px-4 py-3 bg-primary/10 text-primary-foreground border-b text-left font-medium">
                         Price
                       </th>
-                      <th className="px-4 py-3 bg-muted/50 text-muted-foreground border-b text-left font-medium">
+                      <th className="px-4 py-3 bg-primary/10 text-primary-foreground border-b text-left font-medium">
                         Sentiment
                       </th>
                       <th className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium">Price</th>
@@ -316,9 +313,9 @@ export default function PerformancePage() {
                       <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-4 font-medium text-foreground">{stock.symbol}</td>
                         <td className="px-4 py-4 text-muted-foreground">{stock.name}</td>
-                        <td className="px-4 py-4 text-muted-foreground bg-muted/20">{stock.lockDate}</td>
-                        <td className="px-4 py-4 text-muted-foreground bg-muted/20">${stock.lockPrice.toFixed(2)}</td>
-                        <td className="px-4 py-4 bg-muted/20">
+                        <td className="px-4 py-4 text-foreground bg-primary/5">{stock.lockDate}</td>
+                        <td className="px-4 py-4 text-foreground bg-primary/5">${stock.lockPrice.toFixed(2)}</td>
+                        <td className="px-4 py-4 bg-primary/5">
                           <Badge
                             variant={
                               stock.lockSentiment.toLowerCase() === "positive"
