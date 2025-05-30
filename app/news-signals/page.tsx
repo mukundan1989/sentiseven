@@ -136,14 +136,14 @@ export default function NewsSignalsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6">
-        <div className="mb-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">News Signals</h1>
-          <p className="text-muted-foreground mt-1">View the latest News sentiment signals for each stock.</p>
+          <p className="text-muted-foreground mt-2">View the latest News sentiment signals for each stock.</p>
         </div>
 
         {/* Summary Stats Card */}
-        <Card className="mb-6">
+        <Card className="mb-8">
           <CardContent className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="flex flex-col">
@@ -176,7 +176,7 @@ export default function NewsSignalsPage() {
         </Card>
 
         {/* Filters and Controls */}
-        <Card className="mb-6">
+        <Card className="mb-8">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
@@ -225,7 +225,7 @@ export default function NewsSignalsPage() {
         </Card>
 
         {/* Table View */}
-        <Card className="mb-6">
+        <Card className="mb-8">
           <CardContent className="p-0">
             {loading ? (
               <div className="flex justify-center items-center h-64">
