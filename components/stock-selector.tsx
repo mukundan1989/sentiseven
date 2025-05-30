@@ -128,7 +128,7 @@ export function StockSelector({
               <Input
                 type="text"
                 placeholder="Search by symbol, name, or sector..."
-                className="pl-10 pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 border-muted-foreground/20"
+                className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
