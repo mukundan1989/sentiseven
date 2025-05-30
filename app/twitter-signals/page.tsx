@@ -53,8 +53,20 @@ export default function TwitterSignalsPage() {
   useEffect(() => {
     const fetchSignals = async () => {
       try {
+        console.log("Fetching Twitter signals...")
         const res = await fetch("/api/twitter-signals")
+        console.log("Response status:", res.status)
+
+        if (!res.ok) {
+          throw new Error(`API returned ${res.status}: ${res.statusText}`)
+        }
+
         const data = await res.json()
+        console.log("Twitter signals data:", data)
+
+        if (data.error) {
+          throw new Error(data.error)
+        }
 
         // Format dates in the data
         const formattedData = data.map((item: TwitterSignal) => ({
@@ -68,9 +80,9 @@ export default function TwitterSignalsPage() {
         // Generate summary stats with formatted date
         const stats = {
           total: data.length,
-          positive: data.filter((item: TwitterSignal) => item.sentiment.toLowerCase() === "positive").length,
-          negative: data.filter((item: TwitterSignal) => item.sentiment.toLowerCase() === "negative").length,
-          neutral: data.filter((item: TwitterSignal) => item.sentiment.toLowerCase() === "neutral").length,
+          positive: data.filter((item: TwitterSignal) => item.sentiment?.toLowerCase() === "positive").length,
+          negative: data.filter((item: TwitterSignal) => item.sentiment?.toLowerCase() === "negative").length,
+          neutral: data.filter((item: TwitterSignal) => item.sentiment?.toLowerCase() === "neutral").length,
           lastUpdate: data.length > 0 ? formatDate(data[0].date) : "N/A",
           totalTweets: data.reduce((sum: number, item: TwitterSignal) => sum + (item.analyzed_tweets || 0), 0),
         }
@@ -79,7 +91,8 @@ export default function TwitterSignalsPage() {
         // Generate comparison data
         setComparisonData(generateComparisonData())
       } catch (err: any) {
-        setError("Failed to load Twitter Signals.")
+        console.error("Error fetching Twitter signals:", err)
+        setError(`Failed to load Twitter Signals: ${err.message}`)
       } finally {
         setLoading(false)
       }
@@ -94,13 +107,13 @@ export default function TwitterSignalsPage() {
 
     // Apply sentiment filter
     if (sentimentFilter !== "all") {
-      result = result.filter((item) => item.sentiment.toLowerCase() === sentimentFilter.toLowerCase())
+      result = result.filter((item) => item.sentiment?.toLowerCase() === sentimentFilter.toLowerCase())
     }
 
     // Apply search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
-      result = result.filter((item) => item.comp_symbol.toLowerCase().includes(query))
+      result = result.filter((item) => item.comp_symbol?.toLowerCase().includes(query))
     }
 
     // Apply sorting
@@ -233,13 +246,13 @@ export default function TwitterSignalsPage() {
               </div>
             ) : error ? (
               <div className="flex justify-center items-center h-64">
-                <p className="text-destructive">{error}</p>
+                <p className="text-red-500">{error}</p>
               </div>
             ) : filteredData.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
                   <thead>
-                    <tr className="bg-muted/50 text-muted-foreground border-b border-border">
+                    <tr className="border-b border-border">
                       <th className="px-6 py-4 font-medium">Date</th>
                       <th className="px-6 py-4 font-medium">Symbol</th>
                       <th className="px-6 py-4 font-medium text-right">Analyzed Tweets</th>
@@ -251,25 +264,25 @@ export default function TwitterSignalsPage() {
                   <tbody>
                     {filteredData.map((signal, i) => (
                       <tr key={i} className="border-b border-border hover:bg-muted/50 transition-colors">
-                        <td className="px-6 py-4 text-foreground">{signal.date}</td>
-                        <td className="px-6 py-4 font-medium text-foreground">{signal.comp_symbol}</td>
-                        <td className="px-6 py-4 text-right text-foreground">{signal.analyzed_tweets}</td>
-                        <td className="px-6 py-4 text-right text-foreground">{signal.sentiment_score.toFixed(2)}</td>
+                        <td className="px-6 py-4">{signal.date}</td>
+                        <td className="px-6 py-4 font-medium">{signal.comp_symbol}</td>
+                        <td className="px-6 py-4 text-right">{signal.analyzed_tweets}</td>
+                        <td className="px-6 py-4 text-right">{signal.sentiment_score?.toFixed(2)}</td>
                         <td className="px-6 py-4 text-center">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium inline-block
                               ${
-                                signal.sentiment.toLowerCase() === "positive"
-                                  ? "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                                  : signal.sentiment.toLowerCase() === "negative"
-                                    ? "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-                                    : "bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
+                                signal.sentiment?.toLowerCase() === "positive"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-800"
+                                  : signal.sentiment?.toLowerCase() === "negative"
+                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-800"
+                                    : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
                               }`}
                           >
                             {signal.sentiment}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-right text-foreground">${signal.entry_price.toFixed(2)}</td>
+                        <td className="px-6 py-4 text-right">${signal.entry_price?.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -288,25 +301,23 @@ export default function TwitterSignalsPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-muted-foreground" />
-              <CardTitle className="text-foreground">Signal Source Comparison</CardTitle>
+              <CardTitle>Signal Source Comparison</CardTitle>
             </div>
-            <CardDescription className="text-muted-foreground">
-              Compare Twitter with Google Trends and News signals
-            </CardDescription>
+            <CardDescription>Compare Twitter with Google Trends and News signals</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={comparisonData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="symbol" className="fill-muted-foreground" />
-                  <YAxis className="fill-muted-foreground" domain={[-1, 1]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="symbol" stroke="var(--muted-foreground)" />
+                  <YAxis stroke="var(--muted-foreground)" domain={[-1, 1]} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      borderColor: "hsl(var(--border))",
+                      backgroundColor: "var(--background)",
+                      borderColor: "var(--border)",
                       borderRadius: "0.375rem",
-                      color: "hsl(var(--card-foreground))",
+                      color: "var(--foreground)",
                     }}
                     formatter={(value) => [value.toFixed(2), "Sentiment Score"]}
                   />
