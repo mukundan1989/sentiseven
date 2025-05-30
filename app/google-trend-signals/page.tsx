@@ -8,16 +8,26 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts"
 
+interface GTrendSignal {
+  date: string
+  comp_symbol: string
+  analyzed_keywords: string
+  sentiment_score: number
+  sentiment: string
+  entry_price: number
+}
+
 export default function GoogleTrendSignalsPage() {
-  const [data, setData] = useState([])
+  const [data, setData] = useState<GTrendSignal[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedRows, setExpandedRows] = useState({})
-  const [filteredData, setFilteredData] = useState([])
+  const [filteredData, setFilteredData] = useState<GTrendSignal[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [sentimentFilter, setSentimentFilter] = useState("all")
   const [sortBy, setSortBy] = useState("date")
   const [sortOrder, setSortOrder] = useState("desc")
   const [comparisonData, setComparisonData] = useState([])
+  const [error, setError] = useState<string | null>(null)
   const [summaryStats, setSummaryStats] = useState({
     total: 0,
     positive: 0,
@@ -27,7 +37,7 @@ export default function GoogleTrendSignalsPage() {
   })
 
   // Helper function to format dates
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     if (!dateString) return ""
     // If it's already in YYYY-MM-DD format, return as is
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString
@@ -41,11 +51,25 @@ export default function GoogleTrendSignalsPage() {
   }
 
   useEffect(() => {
-    fetch("/api/gtrend-signals")
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchSignals = async () => {
+      try {
+        console.log("Fetching Google Trend signals...")
+        const res = await fetch("/api/gtrend-signals")
+        console.log("Response status:", res.status)
+
+        if (!res.ok) {
+          throw new Error(`API returned ${res.status}: ${res.statusText}`)
+        }
+
+        const data = await res.json()
+        console.log("Google Trend signals data:", data)
+
+        if (data.error) {
+          throw new Error(data.error)
+        }
+
         // Format dates in the data
-        const formattedData = data.map((item) => ({
+        const formattedData = data.map((item: GTrendSignal) => ({
           ...item,
           date: formatDate(item.date),
         }))
@@ -57,20 +81,23 @@ export default function GoogleTrendSignalsPage() {
         // Generate summary stats with formatted date
         const stats = {
           total: data.length,
-          positive: data.filter((item) => item.sentiment.toLowerCase() === "positive").length,
-          negative: data.filter((item) => item.sentiment.toLowerCase() === "negative").length,
-          neutral: data.filter((item) => item.sentiment.toLowerCase() === "neutral").length,
+          positive: data.filter((item: GTrendSignal) => item.sentiment?.toLowerCase() === "positive").length,
+          negative: data.filter((item: GTrendSignal) => item.sentiment?.toLowerCase() === "negative").length,
+          neutral: data.filter((item: GTrendSignal) => item.sentiment?.toLowerCase() === "neutral").length,
           lastUpdate: data.length > 0 ? formatDate(data[0].date) : "N/A",
         }
         setSummaryStats(stats)
 
         // Generate comparison data
         setComparisonData(generateComparisonData())
-      })
-      .catch((err) => {
-        console.error("Error fetching data:", err)
+      } catch (err: any) {
+        console.error("Error fetching Google Trend signals:", err)
+        setError(`Failed to load Google Trend Signals: ${err.message}`)
         setLoading(false)
-      })
+      }
+    }
+
+    fetchSignals()
   }, [])
 
   useEffect(() => {
@@ -79,7 +106,7 @@ export default function GoogleTrendSignalsPage() {
 
     // Apply sentiment filter
     if (sentimentFilter !== "all") {
-      result = result.filter((item) => item.sentiment.toLowerCase() === sentimentFilter.toLowerCase())
+      result = result.filter((item) => item.sentiment?.toLowerCase() === sentimentFilter.toLowerCase())
     }
 
     // Apply search query
@@ -87,7 +114,7 @@ export default function GoogleTrendSignalsPage() {
       const query = searchQuery.toLowerCase()
       result = result.filter(
         (item) =>
-          item.comp_symbol.toLowerCase().includes(query) ||
+          item.comp_symbol?.toLowerCase().includes(query) ||
           (item.analyzed_keywords && item.analyzed_keywords.toLowerCase().includes(query)),
       )
     }
@@ -230,11 +257,15 @@ export default function GoogleTrendSignalsPage() {
                 <Loader2 className="animate-spin w-6 h-6 mr-2 text-primary" />
                 <span className="text-muted-foreground">Loading sentiment data...</span>
               </div>
+            ) : error ? (
+              <div className="flex justify-center items-center h-64">
+                <p className="text-red-500">{error}</p>
+              </div>
             ) : filteredData.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
                   <thead>
-                    <tr className="bg-muted/50 text-muted-foreground border-b border-border">
+                    <tr className="border-b border-border">
                       <th className="px-6 py-4 font-medium">Date</th>
                       <th className="px-6 py-4 font-medium">Symbol</th>
                       <th className="px-6 py-4 font-medium">Analyzed Keywords</th>
@@ -246,25 +277,25 @@ export default function GoogleTrendSignalsPage() {
                   <tbody>
                     {filteredData.map((row, i) => (
                       <tr key={i} className="border-b border-border hover:bg-muted/50 transition-colors">
-                        <td className="px-6 py-4 text-foreground">{row.date}</td>
-                        <td className="px-6 py-4 font-medium text-foreground">{row.comp_symbol}</td>
-                        <td className="px-6 py-4 text-foreground max-w-xs truncate">{row.analyzed_keywords}</td>
-                        <td className="px-6 py-4 text-right text-foreground">{row.sentiment_score}</td>
+                        <td className="px-6 py-4">{row.date}</td>
+                        <td className="px-6 py-4 font-medium">{row.comp_symbol}</td>
+                        <td className="px-6 py-4 max-w-xs truncate">{row.analyzed_keywords}</td>
+                        <td className="px-6 py-4 text-right">{row.sentiment_score}</td>
                         <td className="px-6 py-4 text-center">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium inline-block
-                              ${
-                                row.sentiment.toLowerCase() === "positive"
-                                  ? "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                                  : row.sentiment.toLowerCase() === "negative"
-                                    ? "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-                                    : "bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
-                              }`}
+                      ${
+                        row.sentiment?.toLowerCase() === "positive"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-800"
+                          : row.sentiment?.toLowerCase() === "negative"
+                            ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-800"
+                            : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                      }`}
                           >
                             {row.sentiment}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-right text-foreground">${row.entry_price}</td>
+                        <td className="px-6 py-4 text-right">${row.entry_price}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -283,25 +314,23 @@ export default function GoogleTrendSignalsPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-muted-foreground" />
-              <CardTitle className="text-foreground">Signal Source Comparison</CardTitle>
+              <CardTitle>Signal Source Comparison</CardTitle>
             </div>
-            <CardDescription className="text-muted-foreground">
-              Compare Google Trends with Twitter and News signals
-            </CardDescription>
+            <CardDescription>Compare Google Trends with Twitter and News signals</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={comparisonData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="symbol" className="fill-muted-foreground" />
-                  <YAxis className="fill-muted-foreground" domain={[-1, 1]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="symbol" stroke="var(--muted-foreground)" />
+                  <YAxis stroke="var(--muted-foreground)" domain={[-1, 1]} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      borderColor: "hsl(var(--border))",
+                      backgroundColor: "var(--background)",
+                      borderColor: "var(--border)",
                       borderRadius: "0.375rem",
-                      color: "hsl(var(--card-foreground))",
+                      color: "var(--foreground)",
                     }}
                     formatter={(value) => [value.toFixed(2), "Sentiment Score"]}
                   />
