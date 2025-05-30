@@ -1,29 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Check, ChevronDown, Plus, Search, X } from "lucide-react"
+import { Check, Plus, Search, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle } from "@/components/ui/card"
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-
-// Import stock data from the separate file
-import { allStocks, getSectors } from "@/data/stocks"
-
-// Get all sectors
-const sectors = getSectors()
 
 export function StockSelector({
   open,
@@ -36,244 +18,235 @@ export function StockSelector({
   initialStocks: any[]
   onSave: (stocks: any[]) => void
 }) {
-  const [selectedStocks, setSelectedStocks] = useState(initialStocks)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [sectorFilter, setSectorFilter] = useState<string | null>(null)
-  const [basketName, setBasketName] = useState("Tech Leaders")
+  const [selectedStocks, setSelectedStocks] = useState<any[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [filteredStocks, setFilteredStocks] = useState<any[]>([])
 
-  // Reset selected stocks when dialog opens
+  // Sample stock database for selection
+  const stockDatabase = [
+    { id: 101, symbol: "AAPL", name: "Apple Inc.", sector: "Technology" },
+    { id: 102, symbol: "MSFT", name: "Microsoft Corporation", sector: "Technology" },
+    { id: 103, symbol: "GOOGL", name: "Alphabet Inc.", sector: "Technology" },
+    { id: 104, symbol: "AMZN", name: "Amazon.com Inc.", sector: "Consumer Cyclical" },
+    { id: 105, symbol: "META", name: "Meta Platforms Inc.", sector: "Technology" },
+    { id: 106, symbol: "TSLA", name: "Tesla Inc.", sector: "Automotive" },
+    { id: 107, symbol: "NVDA", name: "NVIDIA Corporation", sector: "Technology" },
+    { id: 108, symbol: "JPM", name: "JPMorgan Chase & Co.", sector: "Financial Services" },
+    { id: 109, symbol: "V", name: "Visa Inc.", sector: "Financial Services" },
+    { id: 110, symbol: "WMT", name: "Walmart Inc.", sector: "Consumer Defensive" },
+    { id: 111, symbol: "JNJ", name: "Johnson & Johnson", sector: "Healthcare" },
+    { id: 112, symbol: "PG", name: "Procter & Gamble Co.", sector: "Consumer Defensive" },
+    { id: 113, symbol: "MA", name: "Mastercard Inc.", sector: "Financial Services" },
+    { id: 114, symbol: "UNH", name: "UnitedHealth Group Inc.", sector: "Healthcare" },
+    { id: 115, symbol: "HD", name: "Home Depot Inc.", sector: "Consumer Cyclical" },
+    { id: 116, symbol: "BAC", name: "Bank of America Corp.", sector: "Financial Services" },
+    { id: 117, symbol: "PFE", name: "Pfizer Inc.", sector: "Healthcare" },
+    { id: 118, symbol: "INTC", name: "Intel Corporation", sector: "Technology" },
+    { id: 119, symbol: "VZ", name: "Verizon Communications Inc.", sector: "Communication Services" },
+    { id: 120, symbol: "CSCO", name: "Cisco Systems Inc.", sector: "Technology" },
+  ]
+
+  // Initialize selected stocks from initialStocks
   useEffect(() => {
-    if (open) {
-      setSelectedStocks(initialStocks)
+    if (initialStocks && initialStocks.length > 0) {
+      setSelectedStocks([...initialStocks])
+    } else {
+      setSelectedStocks([])
     }
-  }, [open, initialStocks])
+  }, [initialStocks, open])
 
-  // Filter stocks based on search term and sector
-  const filteredStocks = allStocks.filter((stock) => {
-    const matchesSearch =
-      stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      stock.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter stocks based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredStocks([])
+      return
+    }
 
-    const matchesSector = !sectorFilter || stock.sector === sectorFilter
+    const query = searchQuery.toLowerCase()
+    const results = stockDatabase.filter(
+      (stock) =>
+        stock.symbol.toLowerCase().includes(query) ||
+        stock.name.toLowerCase().includes(query) ||
+        stock.sector.toLowerCase().includes(query),
+    )
+    setFilteredStocks(results)
+  }, [searchQuery])
 
-    return matchesSearch && matchesSector
-  })
-
-  // Check if a stock is selected
-  const isSelected = (stockId: number) => {
+  // Check if a stock is already selected
+  const isStockSelected = (stockId: number) => {
     return selectedStocks.some((stock) => stock.id === stockId)
   }
 
   // Toggle stock selection
-  const toggleStock = (stock) => {
-    if (isSelected(stock.id)) {
+  const toggleStockSelection = (stock: any) => {
+    if (isStockSelected(stock.id)) {
       setSelectedStocks(selectedStocks.filter((s) => s.id !== stock.id))
     } else {
       setSelectedStocks([...selectedStocks, stock])
     }
   }
 
-  // Function to handle saving
-  const handleSave = () => {
-    // Ensure all selected stocks have valid properties
-    const stocksToSave = selectedStocks.map((stock) => ({
-      ...stock,
-      allocation: stock.allocation || Math.floor(100 / selectedStocks.length), // Default allocation if not set
-      locked: stock.locked || false, // Default to unlocked if not set
-    }))
+  // Add a stock from search results
+  const handleAddStock = (stock: any) => {
+    if (!isStockSelected(stock.id)) {
+      setSelectedStocks([...selectedStocks, stock])
+    }
+    setSearchQuery("")
+    setFilteredStocks([])
+  }
 
-    onSave(stocksToSave)
+  // Remove a stock from selected stocks
+  const handleRemoveStock = (stockId: number) => {
+    setSelectedStocks(selectedStocks.filter((stock) => stock.id !== stockId))
+  }
+
+  // Handle save and close
+  const handleSave = () => {
+    onSave(selectedStocks)
     onOpenChange(false)
+  }
+
+  // Clear search query
+  const handleClearSearch = () => {
+    setSearchQuery("")
+    setFilteredStocks([])
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col bg-card border-border">
+      <DialogContent className="max-w-3xl bg-background">
         <DialogHeader>
-          <DialogTitle className="text-card-foreground">Edit Stock Basket</DialogTitle>
-          <DialogDescription className="text-muted-foreground">
-            Select stocks to include in your sentiment analysis basket.
-          </DialogDescription>
+          <DialogTitle className="text-xl font-bold">Edit Stock Basket</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col md:flex-row gap-6 flex-1 overflow-hidden">
-          {/* Left side - Available stocks */}
-          <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex items-center gap-2 mb-4">
+        <div className="space-y-6">
+          {/* Search for stocks */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Search for stocks</h3>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search stocks..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground"
-                prefix={<Search className="h-4 w-4 text-muted-foreground" />}
+                type="text"
+                placeholder="Search by symbol, name, or sector..."
+                className="pl-10 pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 border-muted-foreground/20"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-1 bg-background border-border text-foreground hover:bg-accent"
-                  >
-                    {sectorFilter || "All Sectors"}
-                    <ChevronDown className="h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0 bg-popover border-border" align="end">
-                  <Command className="bg-popover">
-                    <CommandList>
-                      <CommandGroup>
-                        <CommandItem
-                          onSelect={() => setSectorFilter(null)}
-                          className="flex items-center gap-2 text-popover-foreground hover:bg-accent"
-                        >
-                          {!sectorFilter && <Check className="h-4 w-4" />}
-                          <span className={!sectorFilter ? "font-medium" : ""}>All Sectors</span>
-                        </CommandItem>
-                        {sectors.map((sector) => (
-                          <CommandItem
-                            key={sector}
-                            onSelect={() => setSectorFilter(sector)}
-                            className="flex items-center gap-2 text-popover-foreground hover:bg-accent"
-                          >
-                            {sectorFilter === sector && <Check className="h-4 w-4" />}
-                            <span className={sectorFilter === sector ? "font-medium" : ""}>{sector}</span>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              {searchQuery && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+                  onClick={handleClearSearch}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
 
-            <Card className="flex-1 overflow-hidden bg-card border-border">
-              <CardHeader className="p-4">
-                <CardTitle className="text-base text-card-foreground">Available Stocks</CardTitle>
-              </CardHeader>
-              <ScrollArea className="flex-1 h-[300px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-border">
-                      <TableHead className="w-[80px] text-muted-foreground">Symbol</TableHead>
-                      <TableHead className="text-muted-foreground">Name</TableHead>
-                      <TableHead className="hidden md:table-cell text-muted-foreground">Sector</TableHead>
-                      <TableHead className="text-right text-muted-foreground">Price</TableHead>
-                      <TableHead className="w-[100px]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredStocks.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                          No stocks found matching your criteria
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredStocks.map((stock) => (
-                        <TableRow key={stock.id} className="group border-border hover:bg-accent">
-                          <TableCell className="font-medium text-card-foreground">{stock.symbol}</TableCell>
-                          <TableCell className="text-card-foreground">{stock.name}</TableCell>
-                          <TableCell className="hidden md:table-cell text-muted-foreground">{stock.sector}</TableCell>
-                          <TableCell className="text-right">
-                            <span className={stock.change >= 0 ? "text-emerald-600" : "text-red-600"}>
-                              ${stock.price.toFixed(2)}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant={isSelected(stock.id) ? "default" : "outline"}
-                              size="sm"
-                              className={`w-full ${
-                                isSelected(stock.id)
-                                  ? "bg-primary hover:bg-primary/90 text-primary-foreground"
-                                  : "bg-background border-border text-foreground hover:bg-accent"
-                              }`}
-                              onClick={() => toggleStock(stock)}
-                            >
-                              {isSelected(stock.id) ? "Remove" : "Add"}
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </Card>
+            {/* Search results */}
+            {filteredStocks.length > 0 && (
+              <div className="border rounded-md max-h-60 overflow-auto">
+                <ul className="divide-y">
+                  {filteredStocks.map((stock) => (
+                    <li
+                      key={stock.id}
+                      className={`px-4 py-3 flex items-center justify-between hover:bg-accent cursor-pointer ${
+                        isStockSelected(stock.id) ? "bg-accent/50" : ""
+                      }`}
+                      onClick={() => handleAddStock(stock)}
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{stock.symbol}</span>
+                          <Badge variant="outline" className="font-normal">
+                            {stock.sector}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground">{stock.name}</div>
+                      </div>
+                      <Button
+                        variant={isStockSelected(stock.id) ? "secondary" : "outline"}
+                        size="sm"
+                        className="h-8 gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleStockSelection(stock)
+                        }}
+                      >
+                        {isStockSelected(stock.id) ? (
+                          <>
+                            <Check className="h-3.5 w-3.5" />
+                            Added
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="h-3.5 w-3.5" />
+                            Add
+                          </>
+                        )}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
-          {/* Right side - Selected stocks */}
-          <div className="w-full md:w-[300px] flex flex-col">
-            <div className="mb-4">
-              <label className="text-sm font-medium mb-1.5 block text-muted-foreground">Basket Name</label>
-              <Input
-                value={basketName}
-                onChange={(e) => setBasketName(e.target.value)}
-                className="w-full bg-background border-border text-foreground placeholder:text-muted-foreground"
-              />
+          {/* Selected stocks */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium">Selected stocks</h3>
+              <Badge variant="outline" className="text-xs">
+                {selectedStocks.length} stocks
+              </Badge>
             </div>
 
-            <Card className="flex-1 bg-card border-border">
-              <CardHeader className="p-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base text-card-foreground">Selected Stocks</CardTitle>
-                  <Badge variant="secondary" className="bg-secondary text-secondary-foreground">
-                    {selectedStocks.length}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <ScrollArea className="h-[300px]">
-                {selectedStocks.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 px-4 text-center text-muted-foreground">
-                    <div className="rounded-full bg-muted p-3 mb-3">
-                      <Plus className="h-6 w-6" />
-                    </div>
-                    <p>No stocks selected</p>
-                    <p className="text-sm">Add stocks from the list on the left</p>
-                  </div>
-                ) : (
-                  <div className="p-4 space-y-2">
-                    {selectedStocks.map((stock) => (
-                      <div
-                        key={stock.id}
-                        className="flex items-center justify-between p-2 rounded-md bg-accent hover:bg-accent/80 group"
-                      >
-                        <div>
-                          <div className="font-medium text-card-foreground">{stock.symbol}</div>
-                          <div className="text-xs text-muted-foreground">{stock.name}</div>
+            {selectedStocks.length > 0 ? (
+              <div className="border rounded-md max-h-60 overflow-auto">
+                <ul className="divide-y">
+                  {selectedStocks.map((stock) => (
+                    <li key={stock.id} className="px-4 py-3 flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{stock.symbol}</span>
+                          <Badge variant="outline" className="font-normal">
+                            {stock.sector}
+                          </Badge>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 opacity-50 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted"
-                          onClick={() => toggleStock(stock)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                        <div className="text-sm text-muted-foreground">{stock.name}</div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-            </Card>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => handleRemoveStock(stock.id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <div className="border rounded-md p-8 text-center">
+                <p className="text-muted-foreground">No stocks selected. Search and add stocks above.</p>
+              </div>
+            )}
           </div>
         </div>
 
-        <DialogFooter className="mt-6">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="bg-background border-border text-foreground hover:bg-accent"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={selectedStocks.length === 0}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            Save Changes
-          </Button>
+        <DialogFooter className="flex justify-between items-center border-t pt-4 mt-4">
+          <div className="text-sm text-muted-foreground">
+            {selectedStocks.length} {selectedStocks.length === 1 ? "stock" : "stocks"} selected
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>Save Changes</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
