@@ -1,16 +1,13 @@
-import { NextResponse } from 'next/server';
-import mysql from 'mysql2/promise';
+import { Pool } from "pg"
+
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL,
+  ssl: { rejectUnauthorized: false },
+})
 
 export async function GET() {
   try {
-    const connection = await mysql.createConnection({
-      host: '13.233.224.119',
-      user: 'stockstream_two',
-      password: 'stockstream_two',
-      database: 'stockstream_two',
-    });
-
-    const [rows] = await connection.execute(`
+    const { rows } = await pool.query(`
       SELECT date, comp_symbol, analyzed_articles, sentiment_score, sentiment, entry_price
       FROM news_signals_full
       WHERE (comp_symbol, date) IN (
@@ -18,13 +15,12 @@ export async function GET() {
         FROM news_signals_full
         GROUP BY comp_symbol
       )
-    `);
+      ORDER BY comp_symbol
+    `)
 
-    await connection.end();
-
-    return NextResponse.json(rows);
+    return Response.json(rows)
   } catch (error) {
-    console.error('API error:', error);
-    return NextResponse.json({ error: 'Failed to fetch news signals' }, { status: 500 });
+    console.error("API error:", error)
+    return Response.json({ error: "Failed to fetch news signals" }, { status: 500 })
   }
 }
