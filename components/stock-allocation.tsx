@@ -170,10 +170,10 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
+      <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-gray-200">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-card-foreground">Stock Allocation</AlertDialogTitle>
-          <AlertDialogDescription className="text-muted-foreground">
+          <AlertDialogTitle className="text-gray-900">Stock Allocation</AlertDialogTitle>
+          <AlertDialogDescription className="text-gray-600">
             Allocate percentages to each stock. Total allocation must be 100%.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -182,21 +182,19 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
           <div className="flex items-center gap-2">
             <Badge
               className={
-                Math.abs(totalAllocation - 100) < 0.01
-                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
-                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                Math.abs(totalAllocation - 100) < 0.01 ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
               }
             >
               Total: {totalAllocation.toFixed(1)}%
             </Badge>
-            {error && <span className="text-sm text-destructive">{error}</span>}
+            {error && <span className="text-sm text-red-600">{error}</span>}
           </div>
           <div className="flex gap-2">
             <Button
               size="sm"
               variant="outline"
               onClick={resetAllocations}
-              className="bg-background text-foreground border-border hover:bg-accent"
+              className="bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
             >
               Reset Equal
             </Button>
@@ -204,7 +202,7 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
               size="sm"
               variant="outline"
               onClick={distributeRemaining}
-              className="bg-background text-foreground border-border hover:bg-accent"
+              className="bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
             >
               Distribute Remaining
             </Button>
@@ -214,7 +212,7 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
         <div className="grid gap-4 py-4">
           {localStocks.map((stock) => (
             <div key={stock.id} className="grid grid-cols-12 items-center gap-4">
-              <Label htmlFor={`stock-${stock.id}`} className="col-span-3 truncate text-foreground">
+              <Label htmlFor={`stock-${stock.id}`} className="col-span-3 truncate text-gray-700">
                 {stock.symbol ? `${stock.symbol} - ${stock.name}` : stock.name}
               </Label>
               <div className="col-span-2">
@@ -228,7 +226,7 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
                       handleAllocationChange(stock.id, newAllocation)
                     }
                   }}
-                  className="w-full bg-background border-border text-foreground"
+                  className="w-full bg-white border-gray-300 text-gray-900"
                   step="0.1"
                   min="0"
                   max="100"
@@ -245,7 +243,7 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
                 />
               </div>
               <div className="col-span-2 flex items-center justify-end gap-2">
-                <span className="text-sm text-muted-foreground">{stock.locked ? "Locked" : "Unlocked"}</span>
+                <span className="text-sm text-gray-600">{stock.locked ? "Locked" : "Unlocked"}</span>
                 <Switch checked={stock.locked} onCheckedChange={() => handleLockChange(stock.id)} />
               </div>
             </div>
@@ -253,13 +251,13 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
         </div>
 
         <AlertDialogFooter>
-          <AlertDialogCancel className="bg-background text-foreground border-border hover:bg-accent">
+          <AlertDialogCancel className="bg-white text-gray-700 border-gray-300 hover:bg-gray-50">
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleSave}
             disabled={Math.abs(totalAllocation - 100) > 0.01}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted"
+            className="bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300"
           >
             Save
           </AlertDialogAction>
