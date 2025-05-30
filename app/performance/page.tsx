@@ -5,6 +5,9 @@ import { ChevronDown, Loader2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { getMostRecentBasket } from "@/lib/basket-service"
+import { useAuth } from "@/context/auth-context"
 
 interface StockSignal {
   date: string
@@ -44,10 +47,13 @@ const companyNames: Record<string, string> = {
 }
 
 export default function PerformancePage() {
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [performanceData, setPerformanceData] = useState<PerformanceData[]>([])
   const [lastUpdated, setLastUpdated] = useState<string>("")
+  const [viewMode, setViewMode] = useState<"all" | "basket">("all")
+  const [basketStocks, setBasketStocks] = useState<string[]>([])
 
   // Format date to YYYY-MM-DD
   const formatDate = (dateString: string) => {
@@ -58,6 +64,21 @@ export default function PerformancePage() {
   // Get company name from symbol
   const getCompanyName = (symbol: string) => {
     return companyNames[symbol] || `${symbol} Inc.`
+  }
+
+  // Load user's basket stocks
+  const loadBasketStocks = async () => {
+    if (!user) return
+
+    try {
+      const { basket, stocks, error } = await getMostRecentBasket()
+      if (!error && stocks) {
+        const symbols = stocks.map((stock) => stock.symbol)
+        setBasketStocks(symbols)
+      }
+    } catch (error) {
+      console.error("Error loading basket stocks:", error)
+    }
   }
 
   // Fetch current stock price using Yahoo Finance API
@@ -91,6 +112,12 @@ export default function PerformancePage() {
   }
 
   useEffect(() => {
+    if (user) {
+      loadBasketStocks()
+    }
+  }, [user])
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
@@ -119,12 +146,21 @@ export default function PerformancePage() {
         const newsStocks = new Set(newsData.map((item: StockSignal) => item.comp_symbol))
 
         // Find stocks that appear in all three sources (intersection)
-        const commonStocks = [...googleStocks].filter((symbol) => twitterStocks.has(symbol) && newsStocks.has(symbol))
+        let commonStocks = [...googleStocks].filter((symbol) => twitterStocks.has(symbol) && newsStocks.has(symbol))
+
+        // Filter by basket stocks if basket mode is selected
+        if (viewMode === "basket" && basketStocks.length > 0) {
+          commonStocks = commonStocks.filter((symbol) => basketStocks.includes(symbol))
+        }
 
         if (commonStocks.length === 0) {
           setPerformanceData([])
           setLoading(false)
-          setError("No stocks found with signals in all three models")
+          if (viewMode === "basket") {
+            setError("No basket stocks found with signals in all three models")
+          } else {
+            setError("No stocks found with signals in all three models")
+          }
           return
         }
 
@@ -215,7 +251,7 @@ export default function PerformancePage() {
     }
 
     fetchData()
-  }, [])
+  }, [viewMode, basketStocks])
 
   return (
     <div className="min-h-screen bg-background">
@@ -236,13 +272,28 @@ export default function PerformancePage() {
                 <CardTitle className="text-xl">Stocks Performance Table</CardTitle>
                 <CardDescription>Performance data for stocks with signals in all three models</CardDescription>
               </div>
-              <Button variant="outline" className="flex items-center gap-2">
-                <span>All Common Stocks</span>
-                <Badge variant="secondary" className="ml-2">
-                  {performanceData.length} stocks
-                </Badge>
-                <ChevronDown className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <span>{viewMode === "all" ? "All Stocks" : "Basket Stocks"}</span>
+                    <Badge variant="secondary" className="ml-2">
+                      {performanceData.length} stocks
+                    </Badge>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setViewMode("all")}>All Stocks</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setViewMode("basket")} disabled={!user || basketStocks.length === 0}>
+                    Basket Stocks
+                    {(!user || basketStocks.length === 0) && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {!user ? "(Login required)" : "(No basket)"}
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </CardHeader>
 
@@ -259,7 +310,9 @@ export default function PerformancePage() {
               </div>
             ) : performanceData.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
-                No stocks found with signals in all three models (Google Trends, Twitter, News)
+                {viewMode === "basket"
+                  ? "No basket stocks found with signals in all three models (Google Trends, Twitter, News)"
+                  : "No stocks found with signals in all three models (Google Trends, Twitter, News)"}
               </div>
             ) : (
               <div className="overflow-x-auto">
