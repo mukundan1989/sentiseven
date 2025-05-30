@@ -287,15 +287,14 @@ const SentimentDashboard = () => {
   const handleSaveStocks = (newStocks) => {
     // If these are stocks from the StockAllocation component, just update them directly
     if (newStocks.length > 0 && newStocks[0].hasOwnProperty("allocation")) {
-      setStocks(newStocks)
-
-      // Save the updated basket to the database
+      // Remove duplicates by id before setting
+      const uniqueStocks = newStocks.filter((stock, index, self) => index === self.findIndex((s) => s.id === stock.id))
+      setStocks(uniqueStocks)
       saveCurrentBasket(basketLocked)
       return
     }
 
     // Otherwise, this is from the StockSelector - handle adding new stocks
-    // First, identify which stocks are new and which already exist
     const existingStockIds = stocks.map((stock) => stock.id)
     const brandNewStocks = newStocks.filter((stock) => !existingStockIds.includes(stock.id))
     const continuingStocks = newStocks.filter((stock) => existingStockIds.includes(stock.id))
@@ -313,16 +312,17 @@ const SentimentDashboard = () => {
     // Set new stocks to 0% allocation by default
     const updatedNewStocks = brandNewStocks.map((stock) => ({
       ...stock,
-      allocation: 0, // Always start new stocks at 0%
+      allocation: 0,
       locked: false,
     }))
 
-    // Combine continuing and new stocks
+    // Combine continuing and new stocks, ensuring no duplicates
     const finalStocks = [...updatedContinuingStocks, ...updatedNewStocks]
+    const uniqueFinalStocks = finalStocks.filter(
+      (stock, index, self) => index === self.findIndex((s) => s.id === stock.id),
+    )
 
-    setStocks(finalStocks)
-
-    // Save the updated basket to the database
+    setStocks(uniqueFinalStocks)
     saveCurrentBasket(basketLocked)
   }
 
@@ -574,7 +574,7 @@ const SentimentDashboard = () => {
       performance,
       twitterSentiment: weightedData[weightedData.length - 1].twitterSentiment,
       googleTrendsSentiment: weightedData[weightedData.length - 1].googleTrendsSentiment,
-      newsSentiment: weightedData[weightedData.length - 1].newsSentiment,
+      newsSentiment: weightedData[weightedData.length - 1].compositeSentiment,
       compositeSentiment: weightedData[weightedData.length - 1].compositeSentiment,
     }
   })
@@ -702,6 +702,7 @@ const SentimentDashboard = () => {
                         </Button>
                       </div>
                     </CardHeader>
+
                     <CardContent>
                       <div className="space-y-6">
                         {stocks.map((stock) => {
@@ -711,10 +712,12 @@ const SentimentDashboard = () => {
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <div className="w-16 font-medium text-foreground">{stock.symbol}</div>
-                                  <div className="text-sm text-muted-foreground">{stock.name}</div>
+                                  <div className="text-sm text-muted-foreground truncate">{stock.name}</div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <div className="text-sm font-medium text-foreground">{stock.allocation}%</div>
+                                  <div className="text-sm font-medium text-foreground min-w-[3rem] text-right">
+                                    {stock.allocation}%
+                                  </div>
                                   <Button
                                     variant="ghost"
                                     size="icon"
@@ -730,40 +733,42 @@ const SentimentDashboard = () => {
                                 </div>
                               </div>
 
-                              {/* Allocation Slider */}
+                              {/* Single Interactive Allocation Bar */}
                               <div className="space-y-2">
-                                <div className="flex items-center gap-4">
-                                  <div className="flex-1">
-                                    <Slider
-                                      value={[stock.allocation]}
-                                      max={100}
-                                      step={1}
-                                      disabled={stock.locked}
-                                      onValueChange={(value) => handleAllocationChange(stock.id, value[0])}
-                                      className="py-1"
-                                    />
-                                  </div>
-                                </div>
-
-                                {/* Visual Progress Bar */}
-                                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                <div className="relative">
+                                  <Slider
+                                    value={[stock.allocation]}
+                                    max={100}
+                                    step={1}
+                                    disabled={stock.locked}
+                                    onValueChange={(value) => handleAllocationChange(stock.id, value[0])}
+                                    className="py-1"
+                                  />
+                                  {/* Overlay the sentiment color on the slider track */}
                                   <div
-                                    className={`h-full transition-all duration-300 ${
+                                    className={`absolute top-1/2 left-0 h-2 rounded-full pointer-events-none transform -translate-y-1/2 transition-all duration-300 ${
                                       stockData.compositeSentiment > 0.3
-                                        ? "bg-emerald-500"
+                                        ? "bg-emerald-500/20"
                                         : stockData.compositeSentiment > -0.3
-                                          ? "bg-amber-500"
-                                          : "bg-red-500"
+                                          ? "bg-amber-500/20"
+                                          : "bg-red-500/20"
                                     }`}
                                     style={{ width: `${stock.allocation}%` }}
-                                  ></div>
+                                  />
                                 </div>
+                                {stock.locked && (
+                                  <div className="text-xs text-amber-600 flex items-center gap-1">
+                                    <Lock className="h-3 w-3" />
+                                    Position locked at {stock.allocation}%
+                                  </div>
+                                )}
                               </div>
                             </div>
                           )
                         })}
                       </div>
                     </CardContent>
+
                     <CardFooter className="flex justify-between border-t pt-4">
                       <div className="flex items-center gap-4">
                         <div className="text-sm text-muted-foreground">
