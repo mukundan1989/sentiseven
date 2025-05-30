@@ -242,7 +242,6 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
                   onValueChange={(value) => {
                     handleAllocationChange(stock.id, value[0])
                   }}
-                  className="[&>.SliderTrack]:bg-gray-300 dark:[&>.SliderTrack]:bg-gray-700"
                 />
               </div>
               <div className="col-span-2 flex items-center justify-end gap-2">
