@@ -1,28 +1,26 @@
-// /app/api/gtrend-signals/route.js
-import mysql from 'mysql2/promise';
+import { Pool } from "pg"
 
-export async function GET(req, res) {
-    const connection = await mysql.createConnection({
-        host: '13.233.224.119',
-        user: 'stockstream_two',
-        password: 'stockstream_two',
-        database: 'stockstream_two'
-    });
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL,
+  ssl: { rejectUnauthorized: false },
+})
 
-    try {
-        const [rows] = await connection.execute(`
-            SELECT date, comp_symbol, analyzed_keywords, sentiment_score, sentiment, entry_price
-            FROM gtrend_signals_full
-            WHERE (comp_symbol, date) IN (
-                SELECT comp_symbol, MAX(date)
-                FROM gtrend_signals_full
-                GROUP BY comp_symbol
-            );
-        `);
-        await connection.end();
-        return Response.json(rows);
-    } catch (error) {
-        await connection.end();
-        return Response.json({ error: error.message }, { status: 500 });
-    }
+export async function GET() {
+  try {
+    const { rows } = await pool.query(`
+      SELECT date, comp_symbol, analyzed_keywords, sentiment_score, sentiment, entry_price
+      FROM gtrend_signals_full
+      WHERE (comp_symbol, date) IN (
+        SELECT comp_symbol, MAX(date)
+        FROM gtrend_signals_full
+        GROUP BY comp_symbol
+      )
+      ORDER BY comp_symbol
+    `)
+
+    return Response.json(rows)
+  } catch (error) {
+    console.error("API error:", error)
+    return Response.json({ error: "Failed to fetch gtrend signals" }, { status: 500 })
+  }
 }
