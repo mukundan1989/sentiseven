@@ -27,7 +27,6 @@ import { useAuth } from "@/context/auth-context"
 import { saveBasket, getMostRecentBasket, type StockBasket, type BasketStock } from "@/lib/basket-service"
 import { useToast } from "@/hooks/use-toast"
 import { Slider } from "@/components/ui/slider"
-import { ThemeToggle } from "@/components/theme-toggle"
 
 const SentimentDashboard = () => {
   // Auth context
@@ -632,13 +631,13 @@ const SentimentDashboard = () => {
   }
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto p-6">
         {isLoading && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-card p-6 rounded-lg shadow-xl flex items-center gap-3">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="text-card-foreground">Saving your basket...</span>
+            <div className="bg-white p-6 rounded-lg shadow-xl flex items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+              <span className="text-gray-700">Saving your basket...</span>
             </div>
           </div>
         )}
@@ -649,12 +648,11 @@ const SentimentDashboard = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">Sentiment Analysis Dashboard</h1>
-                <p className="text-muted-foreground mt-1">Track market sentiment across multiple data sources</p>
+                <h1 className="text-3xl font-bold tracking-tight text-gray-900">Sentiment Analysis Dashboard</h1>
+                <p className="text-gray-600 mt-1">Track market sentiment across multiple data sources</p>
               </div>
 
               <div className="flex items-center gap-3">
-                <ThemeToggle />
                 <Badge className={`${overallSentiment.color} px-3 py-1.5 text-white`}>{overallSentiment.text}</Badge>
                 <Tabs defaultValue={timePeriod} onValueChange={setTimePeriod} className="w-[200px]">
                   <TabsList className="grid grid-cols-3">
@@ -669,7 +667,7 @@ const SentimentDashboard = () => {
             {/* Inputs Section */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-foreground">Inputs</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Inputs</h2>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleSection("inputs")}>
                   {sectionsCollapsed.inputs ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
                 </Button>
@@ -707,9 +705,9 @@ const SentimentDashboard = () => {
                           const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
                           return (
                             <div key={stock.id} className="flex items-center gap-4">
-                              <div className="w-20 font-medium text-foreground">{stock.symbol}</div>
+                              <div className="w-20 font-medium text-gray-900">{stock.symbol}</div>
                               <div className="flex-1">
-                                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                                   <div
                                     className={`h-full ${
                                       stockData.compositeSentiment > 0.3
@@ -722,7 +720,7 @@ const SentimentDashboard = () => {
                                   ></div>
                                 </div>
                               </div>
-                              <div className="w-12 text-right text-foreground">{stock.allocation}%</div>
+                              <div className="w-12 text-right text-gray-900">{stock.allocation}%</div>
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -732,7 +730,7 @@ const SentimentDashboard = () => {
                                 {stock.locked ? (
                                   <Lock className="h-4 w-4 text-amber-500" />
                                 ) : (
-                                  <Unlock className="h-4 w-4 text-muted-foreground" />
+                                  <Unlock className="h-4 w-4 text-gray-400" />
                                 )}
                               </Button>
                             </div>
@@ -740,11 +738,11 @@ const SentimentDashboard = () => {
                         })}
                       </div>
                     </CardContent>
-                    <CardFooter className="flex justify-between border-t pt-4">
+                    <CardFooter className="flex justify-between border-t border-gray-200 pt-4">
                       <div className="flex items-center gap-4">
-                        <div className="text-sm text-muted-foreground">
-                          <span className="font-medium text-foreground">{stocks.filter((s) => s.locked).length}</span>{" "}
-                          of {stocks.length} positions locked
+                        <div className="text-sm text-gray-600">
+                          <span className="font-medium text-gray-900">{stocks.filter((s) => s.locked).length}</span> of{" "}
+                          {stocks.length} positions locked
                         </div>
                         <Button size="sm" variant="outline" onClick={handleResetAllocations} className="gap-1">
                           <RotateCw className="h-3.5 w-3.5" />
@@ -774,9 +772,9 @@ const SentimentDashboard = () => {
                         <div className="space-y-4">
                           <div>
                             <div className="flex justify-between mb-2">
-                              <label className="text-sm text-muted-foreground font-medium">Twitter</label>
+                              <label className="text-sm text-gray-600 font-medium">Twitter</label>
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium bg-muted text-foreground px-2 py-0.5 rounded">
+                                <span className="text-sm font-medium bg-gray-100 text-gray-900 px-2 py-0.5 rounded">
                                   {(weights.twitter * 100).toFixed(0)}%
                                 </span>
                                 <Button
@@ -788,7 +786,7 @@ const SentimentDashboard = () => {
                                   {weightLocks.twitter ? (
                                     <Lock className="h-3.5 w-3.5 text-amber-500" />
                                   ) : (
-                                    <Unlock className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <Unlock className="h-3.5 w-3.5 text-gray-400" />
                                   )}
                                 </Button>
                               </div>
@@ -805,9 +803,9 @@ const SentimentDashboard = () => {
 
                           <div>
                             <div className="flex justify-between mb-2">
-                              <label className="text-sm text-muted-foreground font-medium">Google Trends</label>
+                              <label className="text-sm text-gray-600 font-medium">Google Trends</label>
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium bg-muted text-foreground px-2 py-0.5 rounded">
+                                <span className="text-sm font-medium bg-gray-100 text-gray-900 px-2 py-0.5 rounded">
                                   {(weights.googleTrends * 100).toFixed(0)}%
                                 </span>
                                 <Button
@@ -819,7 +817,7 @@ const SentimentDashboard = () => {
                                   {weightLocks.googleTrends ? (
                                     <Lock className="h-3.5 w-3.5 text-amber-500" />
                                   ) : (
-                                    <Unlock className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <Unlock className="h-3.5 w-3.5 text-gray-400" />
                                   )}
                                 </Button>
                               </div>
@@ -836,9 +834,9 @@ const SentimentDashboard = () => {
 
                           <div>
                             <div className="flex justify-between mb-2">
-                              <label className="text-sm text-muted-foreground font-medium">News</label>
+                              <label className="text-sm text-gray-600 font-medium">News</label>
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium bg-muted text-foreground px-2 py-0.5 rounded">
+                                <span className="text-sm font-medium bg-gray-100 text-gray-900 px-2 py-0.5 rounded">
                                   {(weights.news * 100).toFixed(0)}%
                                 </span>
                                 <Button
@@ -850,7 +848,7 @@ const SentimentDashboard = () => {
                                   {weightLocks.news ? (
                                     <Lock className="h-3.5 w-3.5 text-amber-500" />
                                   ) : (
-                                    <Unlock className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <Unlock className="h-3.5 w-3.5 text-gray-400" />
                                   )}
                                 </Button>
                               </div>
@@ -875,14 +873,14 @@ const SentimentDashboard = () => {
                   {/* Lock in Basket Section */}
                   <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-8">
                     <div className="w-full md:w-64">
-                      <label htmlFor="basket-name" className="text-sm font-medium text-muted-foreground mb-2 block">
+                      <label htmlFor="basket-name" className="text-sm font-medium text-gray-700 mb-2 block">
                         Basket Name
                       </label>
                       <Input
                         id="basket-name"
                         value={basketName}
                         onChange={(e) => setBasketName(e.target.value)}
-                        className="bg-background border-border"
+                        className="bg-white border-gray-300"
                         placeholder="Enter basket name"
                       />
                     </div>
@@ -899,7 +897,7 @@ const SentimentDashboard = () => {
                       </Button>
                       <Button
                         size="lg"
-                        className="bg-primary hover:bg-primary/90 px-8 py-6 text-lg w-full md:w-auto mt-4 md:mt-6"
+                        className="bg-blue-600 hover:bg-blue-700 px-8 py-6 text-lg w-full md:w-auto mt-4 md:mt-6"
                         onClick={handleLockBasket}
                         disabled={!basketName.trim() || isLoading}
                       >
@@ -916,7 +914,7 @@ const SentimentDashboard = () => {
             {basketLocked && (
               <div className="mb-8" id="tracking-section">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold text-foreground">Basket Tracking</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">Basket Tracking</h2>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleSection("tracking")}>
                     {sectionsCollapsed.tracking ? (
                       <ChevronDown className="h-5 w-5" />
@@ -950,27 +948,27 @@ const SentimentDashboard = () => {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-3">
-                          <div className="flex justify-between items-center py-1 border-b">
-                            <span className="text-muted-foreground">Name</span>
-                            <span className="font-medium text-foreground">{basketName}</span>
+                          <div className="flex justify-between items-center py-1 border-b border-gray-200">
+                            <span className="text-gray-600">Name</span>
+                            <span className="font-medium text-gray-900">{basketName}</span>
                           </div>
-                          <div className="flex justify-between items-center py-1 border-b">
-                            <span className="text-muted-foreground">Stocks</span>
-                            <span className="font-medium text-foreground">{stocks.length}</span>
+                          <div className="flex justify-between items-center py-1 border-b border-gray-200">
+                            <span className="text-gray-600">Stocks</span>
+                            <span className="font-medium text-gray-900">{stocks.length}</span>
                           </div>
-                          <div className="flex justify-between items-center py-1 border-b">
-                            <span className="text-muted-foreground">Locked Positions</span>
-                            <span className="font-medium text-foreground">
+                          <div className="flex justify-between items-center py-1 border-b border-gray-200">
+                            <span className="text-gray-600">Locked Positions</span>
+                            <span className="font-medium text-gray-900">
                               {stocks.filter((s) => s.locked).length} of {stocks.length}
                             </span>
                           </div>
-                          <div className="flex justify-between items-center py-1 border-b">
-                            <span className="text-muted-foreground">Created</span>
-                            <span className="font-medium text-foreground">{formatDate(basketDates.created)}</span>
+                          <div className="flex justify-between items-center py-1 border-b border-gray-200">
+                            <span className="text-gray-600">Created</span>
+                            <span className="font-medium text-gray-900">{formatDate(basketDates.created)}</span>
                           </div>
                           <div className="flex justify-between items-center py-1">
-                            <span className="text-muted-foreground">Last Updated</span>
-                            <span className="font-medium text-foreground">{formatDate(basketDates.updated)}</span>
+                            <span className="text-gray-600">Last Updated</span>
+                            <span className="font-medium text-gray-900">{formatDate(basketDates.updated)}</span>
                           </div>
                         </div>
                       </CardContent>
@@ -993,21 +991,21 @@ const SentimentDashboard = () => {
                         <div className="overflow-x-auto">
                           <table className="w-full">
                             <thead>
-                              <tr className="border-b">
-                                <th className="text-left py-3 px-4 font-medium text-muted-foreground">Symbol</th>
-                                <th className="text-right py-3 px-4 font-medium text-muted-foreground">Sentiment</th>
-                                <th className="text-right py-3 px-4 font-medium text-muted-foreground">Performance</th>
-                                <th className="text-center py-3 px-4 font-medium text-muted-foreground">Status</th>
+                              <tr className="border-b border-gray-200">
+                                <th className="text-left py-3 px-4 font-medium text-gray-600">Symbol</th>
+                                <th className="text-right py-3 px-4 font-medium text-gray-600">Sentiment</th>
+                                <th className="text-right py-3 px-4 font-medium text-gray-600">Performance</th>
+                                <th className="text-center py-3 px-4 font-medium text-gray-600">Status</th>
                               </tr>
                             </thead>
                             <tbody>
                               {stockPerformanceData.map((stock) => (
                                 <tr
                                   key={stock.id}
-                                  className="border-b hover:bg-accent transition-colors cursor-pointer"
+                                  className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                                   onClick={() => handleStockClick(stock)}
                                 >
-                                  <td className="py-3 px-4 font-medium text-foreground">{stock.symbol}</td>
+                                  <td className="py-3 px-4 font-medium text-gray-900">{stock.symbol}</td>
                                   <td className="py-3 px-4 text-right font-medium">
                                     <div className="flex items-center justify-end gap-1">
                                       {getSentimentIcon(stock.compositeSentiment)}
@@ -1035,10 +1033,7 @@ const SentimentDashboard = () => {
                                         Locked
                                       </Badge>
                                     ) : (
-                                      <Badge
-                                        variant="outline"
-                                        className="border-muted-foreground text-muted-foreground"
-                                      >
+                                      <Badge variant="outline" className="border-gray-400 text-gray-600">
                                         Flexible
                                       </Badge>
                                     )}
@@ -1056,7 +1051,7 @@ const SentimentDashboard = () => {
             )}
 
             {/* Footer */}
-            <div className="mt-8 pt-6 border-t text-center text-muted-foreground text-sm">
+            <div className="mt-8 pt-6 border-t border-gray-200 text-center text-gray-500 text-sm">
               <p>© 2025 Sentiment Analysis Dashboard. Data refreshes every 15 minutes.</p>
             </div>
             <StockSelector
