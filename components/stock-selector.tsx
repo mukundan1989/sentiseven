@@ -88,10 +88,10 @@ export function StockSelector({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col bg-card border-border">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col bg-white border-gray-200">
         <DialogHeader>
-          <DialogTitle className="text-card-foreground">Edit Stock Basket</DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+          <DialogTitle className="text-gray-900">Edit Stock Basket</DialogTitle>
+          <DialogDescription className="text-gray-600">
             Select stocks to include in your sentiment analysis basket.
           </DialogDescription>
         </DialogHeader>
@@ -104,27 +104,27 @@ export function StockSelector({
                 placeholder="Search stocks..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground"
-                prefix={<Search className="h-4 w-4 text-muted-foreground" />}
+                className="flex-1 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
+                prefix={<Search className="h-4 w-4 text-gray-400" />}
               />
 
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="flex items-center gap-1 bg-background border-border text-foreground hover:bg-accent"
+                    className="flex items-center gap-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                   >
                     {sectorFilter || "All Sectors"}
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0 bg-popover border-border" align="end">
-                  <Command className="bg-popover">
+                <PopoverContent className="w-[200px] p-0 bg-white border-gray-200" align="end">
+                  <Command className="bg-white">
                     <CommandList>
                       <CommandGroup>
                         <CommandItem
                           onSelect={() => setSectorFilter(null)}
-                          className="flex items-center gap-2 text-popover-foreground hover:bg-accent"
+                          className="flex items-center gap-2 text-gray-700 hover:bg-gray-100"
                         >
                           {!sectorFilter && <Check className="h-4 w-4" />}
                           <span className={!sectorFilter ? "font-medium" : ""}>All Sectors</span>
@@ -133,7 +133,7 @@ export function StockSelector({
                           <CommandItem
                             key={sector}
                             onSelect={() => setSectorFilter(sector)}
-                            className="flex items-center gap-2 text-popover-foreground hover:bg-accent"
+                            className="flex items-center gap-2 text-gray-700 hover:bg-gray-100"
                           >
                             {sectorFilter === sector && <Check className="h-4 w-4" />}
                             <span className={sectorFilter === sector ? "font-medium" : ""}>{sector}</span>
@@ -146,34 +146,34 @@ export function StockSelector({
               </Popover>
             </div>
 
-            <Card className="flex-1 overflow-hidden bg-card border-border">
+            <Card className="flex-1 overflow-hidden bg-white border-gray-200">
               <CardHeader className="p-4">
-                <CardTitle className="text-base text-card-foreground">Available Stocks</CardTitle>
+                <CardTitle className="text-base text-gray-900">Available Stocks</CardTitle>
               </CardHeader>
               <ScrollArea className="flex-1 h-[300px]">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-border">
-                      <TableHead className="w-[80px] text-muted-foreground">Symbol</TableHead>
-                      <TableHead className="text-muted-foreground">Name</TableHead>
-                      <TableHead className="hidden md:table-cell text-muted-foreground">Sector</TableHead>
-                      <TableHead className="text-right text-muted-foreground">Price</TableHead>
+                    <TableRow className="border-gray-200">
+                      <TableHead className="w-[80px] text-gray-600">Symbol</TableHead>
+                      <TableHead className="text-gray-600">Name</TableHead>
+                      <TableHead className="hidden md:table-cell text-gray-600">Sector</TableHead>
+                      <TableHead className="text-right text-gray-600">Price</TableHead>
                       <TableHead className="w-[100px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredStocks.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                        <TableCell colSpan={5} className="text-center py-6 text-gray-500">
                           No stocks found matching your criteria
                         </TableCell>
                       </TableRow>
                     ) : (
                       filteredStocks.map((stock) => (
-                        <TableRow key={stock.id} className="group border-border hover:bg-accent">
-                          <TableCell className="font-medium text-card-foreground">{stock.symbol}</TableCell>
-                          <TableCell className="text-card-foreground">{stock.name}</TableCell>
-                          <TableCell className="hidden md:table-cell text-muted-foreground">{stock.sector}</TableCell>
+                        <TableRow key={stock.id} className="group border-gray-200 hover:bg-gray-50">
+                          <TableCell className="font-medium text-gray-900">{stock.symbol}</TableCell>
+                          <TableCell className="text-gray-700">{stock.name}</TableCell>
+                          <TableCell className="hidden md:table-cell text-gray-500">{stock.sector}</TableCell>
                           <TableCell className="text-right">
                             <span className={stock.change >= 0 ? "text-emerald-600" : "text-red-600"}>
                               ${stock.price.toFixed(2)}
@@ -185,8 +185,8 @@ export function StockSelector({
                               size="sm"
                               className={`w-full ${
                                 isSelected(stock.id)
-                                  ? "bg-primary hover:bg-primary/90 text-primary-foreground"
-                                  : "bg-background border-border text-foreground hover:bg-accent"
+                                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                               }`}
                               onClick={() => toggleStock(stock)}
                             >
@@ -205,27 +205,27 @@ export function StockSelector({
           {/* Right side - Selected stocks */}
           <div className="w-full md:w-[300px] flex flex-col">
             <div className="mb-4">
-              <label className="text-sm font-medium mb-1.5 block text-muted-foreground">Basket Name</label>
+              <label className="text-sm font-medium mb-1.5 block text-gray-700">Basket Name</label>
               <Input
                 value={basketName}
                 onChange={(e) => setBasketName(e.target.value)}
-                className="w-full bg-background border-border text-foreground placeholder:text-muted-foreground"
+                className="w-full bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
               />
             </div>
 
-            <Card className="flex-1 bg-card border-border">
+            <Card className="flex-1 bg-white border-gray-200">
               <CardHeader className="p-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base text-card-foreground">Selected Stocks</CardTitle>
-                  <Badge variant="secondary" className="bg-secondary text-secondary-foreground">
+                  <CardTitle className="text-base text-gray-900">Selected Stocks</CardTitle>
+                  <Badge variant="secondary" className="bg-gray-100 text-gray-700">
                     {selectedStocks.length}
                   </Badge>
                 </div>
               </CardHeader>
               <ScrollArea className="h-[300px]">
                 {selectedStocks.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 px-4 text-center text-muted-foreground">
-                    <div className="rounded-full bg-muted p-3 mb-3">
+                  <div className="flex flex-col items-center justify-center py-8 px-4 text-center text-gray-500">
+                    <div className="rounded-full bg-gray-100 p-3 mb-3">
                       <Plus className="h-6 w-6" />
                     </div>
                     <p>No stocks selected</p>
@@ -236,16 +236,16 @@ export function StockSelector({
                     {selectedStocks.map((stock) => (
                       <div
                         key={stock.id}
-                        className="flex items-center justify-between p-2 rounded-md bg-accent hover:bg-accent/80 group"
+                        className="flex items-center justify-between p-2 rounded-md bg-gray-50 hover:bg-gray-100 group"
                       >
                         <div>
-                          <div className="font-medium text-card-foreground">{stock.symbol}</div>
-                          <div className="text-xs text-muted-foreground">{stock.name}</div>
+                          <div className="font-medium text-gray-900">{stock.symbol}</div>
+                          <div className="text-xs text-gray-500">{stock.name}</div>
                         </div>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 opacity-50 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted"
+                          className="h-7 w-7 opacity-50 group-hover:opacity-100 text-gray-500 hover:text-gray-700 hover:bg-gray-200"
                           onClick={() => toggleStock(stock)}
                         >
                           <X className="h-4 w-4" />
@@ -263,14 +263,14 @@ export function StockSelector({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="bg-background border-border text-foreground hover:bg-accent"
+            className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             disabled={selectedStocks.length === 0}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             Save Changes
           </Button>
