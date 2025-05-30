@@ -133,24 +133,24 @@ export default function GoogleTrendSignalsPage() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-slate-950 to-slate-900 text-slate-50 min-h-screen">
-      <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white">Google Trends Signals</h1>
-          <p className="text-gray-400 mt-1">View the latest Google Trends sentiment signals for each stock.</p>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground">Google Trends Signals</h1>
+          <p className="text-muted-foreground mt-2">View the latest Google Trends sentiment signals for each stock.</p>
         </div>
 
         {/* Summary Stats Card */}
-        <Card className="bg-white rounded-lg shadow-lg overflow-hidden border-0 mb-6">
+        <Card className="mb-8">
           <CardContent className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="flex flex-col">
-                <span className="text-gray-500 text-sm">Total Signals</span>
-                <span className="text-gray-900 text-2xl font-bold">{summaryStats.total}</span>
+                <span className="text-muted-foreground text-sm">Total Signals</span>
+                <span className="text-foreground text-2xl font-bold">{summaryStats.total}</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-gray-500 text-sm">Positive/Negative Ratio</span>
-                <span className="text-gray-900 text-2xl font-bold">
+                <span className="text-muted-foreground text-sm">Positive/Negative Ratio</span>
+                <span className="text-foreground text-2xl font-bold">
                   {summaryStats.negative > 0
                     ? (summaryStats.positive / summaryStats.negative).toFixed(2)
                     : summaryStats.positive > 0
@@ -159,30 +159,30 @@ export default function GoogleTrendSignalsPage() {
                 </span>
               </div>
               <div className="flex flex-col">
-                <span className="text-gray-500 text-sm">Positive Signals</span>
+                <span className="text-muted-foreground text-sm">Positive Signals</span>
                 <span className="text-green-600 text-2xl font-bold">{summaryStats.positive}</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-gray-500 text-sm">Negative Signals</span>
+                <span className="text-muted-foreground text-sm">Negative Signals</span>
                 <span className="text-red-600 text-2xl font-bold">{summaryStats.negative}</span>
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-              <span className="text-gray-500 text-sm">Last updated: {summaryStats.lastUpdate}</span>
+            <div className="mt-4 pt-4 border-t border-border flex justify-between items-center">
+              <span className="text-muted-foreground text-sm">Last updated: {summaryStats.lastUpdate}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Filters and Controls */}
-        <Card className="bg-white rounded-lg shadow-lg overflow-hidden border-0 mb-6">
+        <Card className="mb-8">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     placeholder="Search by symbol or keywords..."
-                    className="pl-10 bg-white border-gray-200"
+                    className="pl-10"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -190,7 +190,7 @@ export default function GoogleTrendSignalsPage() {
               </div>
               <div className="flex gap-2">
                 <Select value={sentimentFilter} onValueChange={setSentimentFilter}>
-                  <SelectTrigger className="w-[180px] bg-white border-gray-200">
+                  <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Filter by sentiment" />
                   </SelectTrigger>
                   <SelectContent>
@@ -201,7 +201,7 @@ export default function GoogleTrendSignalsPage() {
                   </SelectContent>
                 </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[180px] bg-white border-gray-200">
+                  <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
@@ -213,7 +213,6 @@ export default function GoogleTrendSignalsPage() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="bg-white border-gray-200"
                   onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
                 >
                   {sortOrder === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -224,18 +223,18 @@ export default function GoogleTrendSignalsPage() {
         </Card>
 
         {/* Table View */}
-        <Card className="bg-white rounded-lg shadow-lg overflow-hidden border-0 mb-6">
+        <Card className="mb-8">
           <CardContent className="p-0">
             {loading ? (
-              <div className="flex justify-center items-center h-64 bg-white">
-                <Loader2 className="animate-spin w-6 h-6 mr-2 text-amber-500" />
-                <span className="text-gray-600">Loading sentiment data...</span>
+              <div className="flex justify-center items-center h-64">
+                <Loader2 className="animate-spin w-6 h-6 mr-2 text-primary" />
+                <span className="text-muted-foreground">Loading sentiment data...</span>
               </div>
             ) : filteredData.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
                   <thead>
-                    <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
+                    <tr className="bg-muted/50 text-muted-foreground border-b border-border">
                       <th className="px-6 py-4 font-medium">Date</th>
                       <th className="px-6 py-4 font-medium">Symbol</th>
                       <th className="px-6 py-4 font-medium">Analyzed Keywords</th>
@@ -246,47 +245,47 @@ export default function GoogleTrendSignalsPage() {
                   </thead>
                   <tbody>
                     {filteredData.map((row, i) => (
-                      <tr key={i} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 text-gray-800">{row.date}</td>
-                        <td className="px-6 py-4 font-medium text-gray-900">{row.comp_symbol}</td>
-                        <td className="px-6 py-4 text-gray-800 max-w-xs truncate">{row.analyzed_keywords}</td>
-                        <td className="px-6 py-4 text-right text-gray-800">{row.sentiment_score}</td>
+                      <tr key={i} className="border-b border-border hover:bg-muted/50 transition-colors">
+                        <td className="px-6 py-4 text-foreground">{row.date}</td>
+                        <td className="px-6 py-4 font-medium text-foreground">{row.comp_symbol}</td>
+                        <td className="px-6 py-4 text-foreground max-w-xs truncate">{row.analyzed_keywords}</td>
+                        <td className="px-6 py-4 text-right text-foreground">{row.sentiment_score}</td>
                         <td className="px-6 py-4 text-center">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium inline-block
-                      ${
-                        row.sentiment.toLowerCase() === "positive"
-                          ? "bg-green-100 text-green-800 border border-green-200"
-                          : row.sentiment.toLowerCase() === "negative"
-                            ? "bg-red-100 text-red-800 border border-red-200"
-                            : "bg-amber-100 text-amber-800 border border-amber-200"
-                      }`}
+                              ${
+                                row.sentiment.toLowerCase() === "positive"
+                                  ? "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                                  : row.sentiment.toLowerCase() === "negative"
+                                    ? "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                                    : "bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
+                              }`}
                           >
                             {row.sentiment}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-right text-gray-800">${row.entry_price}</td>
+                        <td className="px-6 py-4 text-right text-foreground">${row.entry_price}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             ) : (
-              <div className="flex justify-center items-center h-64 bg-white">
-                <p className="text-gray-500">No Google Trends signals found matching your criteria.</p>
+              <div className="flex justify-center items-center h-64">
+                <p className="text-muted-foreground">No Google Trends signals found matching your criteria.</p>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Signal Source Comparison */}
-        <Card className="bg-white rounded-lg shadow-lg overflow-hidden border-0">
+        <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-gray-500" />
-              <CardTitle className="text-gray-900">Signal Source Comparison</CardTitle>
+              <Calendar className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="text-foreground">Signal Source Comparison</CardTitle>
             </div>
-            <CardDescription className="text-gray-500">
+            <CardDescription className="text-muted-foreground">
               Compare Google Trends with Twitter and News signals
             </CardDescription>
           </CardHeader>
@@ -294,15 +293,15 @@ export default function GoogleTrendSignalsPage() {
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={comparisonData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="symbol" stroke="#6b7280" tick={{ fill: "#6b7280" }} />
-                  <YAxis stroke="#6b7280" tick={{ fill: "#6b7280" }} domain={[-1, 1]} />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="symbol" className="fill-muted-foreground" />
+                  <YAxis className="fill-muted-foreground" domain={[-1, 1]} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "white",
-                      borderColor: "#e5e7eb",
+                      backgroundColor: "hsl(var(--card))",
+                      borderColor: "hsl(var(--border))",
                       borderRadius: "0.375rem",
-                      color: "#111827",
+                      color: "hsl(var(--card-foreground))",
                     }}
                     formatter={(value) => [value.toFixed(2), "Sentiment Score"]}
                   />
