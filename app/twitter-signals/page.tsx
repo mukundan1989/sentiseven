@@ -34,20 +34,36 @@ export default function TwitterSignalsPage() {
     lastUpdate: "",
     totalTweets: 0,
   })
-  const [comparisonData, setComparisonData] = useState([])
 
-  // Helper function to format dates
-  const formatDate = (dateString: string) => {
-    if (!dateString) return ""
-    // If it's already in YYYY-MM-DD format, return as is
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString
+  // Helper function to format dates safely
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "N/A"
 
     try {
+      // If it's already in YYYY-MM-DD format, return as is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString
+
       const date = new Date(dateString)
+      if (isNaN(date.getTime())) return "Invalid Date"
+
       return date.toISOString().split("T")[0] // Returns YYYY-MM-DD
     } catch (e) {
-      return dateString // Return original if parsing fails
+      console.error("Date formatting error:", e)
+      return "Invalid Date"
     }
+  }
+
+  // Helper function to safely get number value
+  const safeNumber = (value: any, defaultValue = 0): number => {
+    if (value === null || value === undefined) return defaultValue
+    const num = Number(value)
+    return isNaN(num) ? defaultValue : num
+  }
+
+  // Helper function to safely get string value
+  const safeString = (value: any, defaultValue = ""): string => {
+    if (value === null || value === undefined) return defaultValue
+    return String(value)
   }
 
   useEffect(() => {
@@ -58,41 +74,78 @@ export default function TwitterSignalsPage() {
         console.log("Response status:", res.status)
 
         if (!res.ok) {
-          throw new Error(`API returned ${res.status}: ${res.statusText}`)
+          const errorText = await res.text()
+          throw new Error(`API returned ${res.status}: ${errorText}`)
         }
 
-        const data = await res.json()
-        console.log("Twitter signals data:", data)
+        const rawData = await res.json()
+        console.log("Raw Twitter signals data:", rawData)
 
-        if (data.error) {
-          throw new Error(data.error)
+        if (!Array.isArray(rawData)) {
+          throw new Error("Invalid data format received from API")
         }
 
-        // Format dates in the data
-        const formattedData = data.map((item: TwitterSignal) => ({
-          ...item,
-          date: formatDate(item.date),
-        }))
+        // Safely process the data
+        const processedData = rawData.map((item: any, index: number) => {
+          try {
+            return {
+              date: formatDate(item.date),
+              comp_symbol: safeString(item.comp_symbol, `UNKNOWN_${index}`),
+              analyzed_tweets: safeNumber(item.analyzed_tweets, 0),
+              sentiment_score: safeNumber(item.sentiment_score, 0),
+              sentiment: safeString(item.sentiment, "neutral"),
+              entry_price: safeNumber(item.entry_price, 0),
+            }
+          } catch (itemError) {
+            console.error("Error processing item:", item, itemError)
+            return {
+              date: "Invalid Date",
+              comp_symbol: `ERROR_${index}`,
+              analyzed_tweets: 0,
+              sentiment_score: 0,
+              sentiment: "neutral",
+              entry_price: 0,
+            }
+          }
+        })
 
-        setData(formattedData)
-        setFilteredData(formattedData)
+        setData(processedData)
+        setFilteredData(processedData)
 
-        // Generate summary stats with formatted date
-        const stats = {
-          total: data.length,
-          positive: data.filter((item: TwitterSignal) => item.sentiment?.toLowerCase() === "positive").length,
-          negative: data.filter((item: TwitterSignal) => item.sentiment?.toLowerCase() === "negative").length,
-          neutral: data.filter((item: TwitterSignal) => item.sentiment?.toLowerCase() === "neutral").length,
-          lastUpdate: data.length > 0 ? formatDate(data[0].date) : "N/A",
-          totalTweets: data.reduce((sum: number, item: TwitterSignal) => sum + (item.analyzed_tweets || 0), 0),
+        // Generate summary stats safely
+        try {
+          const stats = {
+            total: processedData.length,
+            positive: processedData.filter(
+              (item: TwitterSignal) => safeString(item.sentiment).toLowerCase() === "positive",
+            ).length,
+            negative: processedData.filter(
+              (item: TwitterSignal) => safeString(item.sentiment).toLowerCase() === "negative",
+            ).length,
+            neutral: processedData.filter(
+              (item: TwitterSignal) => safeString(item.sentiment).toLowerCase() === "neutral",
+            ).length,
+            lastUpdate: processedData.length > 0 ? processedData[0].date : "N/A",
+            totalTweets: processedData.reduce(
+              (sum: number, item: TwitterSignal) => sum + safeNumber(item.analyzed_tweets, 0),
+              0,
+            ),
+          }
+          setSummaryStats(stats)
+        } catch (statsError) {
+          console.error("Error generating stats:", statsError)
+          setSummaryStats({
+            total: 0,
+            positive: 0,
+            negative: 0,
+            neutral: 0,
+            lastUpdate: "N/A",
+            totalTweets: 0,
+          })
         }
-        setSummaryStats(stats)
-
-        // Generate comparison data
-        setComparisonData(generateComparisonData())
       } catch (err: any) {
         console.error("Error fetching Twitter signals:", err)
-        setError(`Failed to load Twitter Signals: ${err.message}`)
+        setError(`Failed to load Twitter Signals: ${err.message || "Unknown error"}`)
       } finally {
         setLoading(false)
       }
@@ -102,54 +155,63 @@ export default function TwitterSignalsPage() {
   }, [])
 
   useEffect(() => {
-    // Apply filters and sorting
-    let result = [...data]
+    try {
+      // Apply filters and sorting safely
+      let result = [...data]
 
-    // Apply sentiment filter
-    if (sentimentFilter !== "all") {
-      result = result.filter((item) => item.sentiment?.toLowerCase() === sentimentFilter.toLowerCase())
-    }
-
-    // Apply search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      result = result.filter((item) => item.comp_symbol?.toLowerCase().includes(query))
-    }
-
-    // Apply sorting
-    result.sort((a, b) => {
-      if (sortBy === "date") {
-        return new Date(a.date) > new Date(b.date) ? 1 : -1
-      } else if (sortBy === "symbol") {
-        return a.comp_symbol.localeCompare(b.comp_symbol)
-      } else if (sortBy === "sentiment_score") {
-        return a.sentiment_score - b.sentiment_score
-      } else if (sortBy === "tweets") {
-        return a.analyzed_tweets - b.analyzed_tweets
+      // Apply sentiment filter
+      if (sentimentFilter !== "all") {
+        result = result.filter((item) => safeString(item.sentiment).toLowerCase() === sentimentFilter.toLowerCase())
       }
-      return 0
-    })
 
-    // Apply sort order
-    if (sortOrder === "desc") {
-      result.reverse()
+      // Apply search query
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        result = result.filter((item) => safeString(item.comp_symbol).toLowerCase().includes(query))
+      }
+
+      // Apply sorting
+      result.sort((a, b) => {
+        try {
+          if (sortBy === "date") {
+            const dateA = new Date(a.date)
+            const dateB = new Date(b.date)
+            return dateA.getTime() - dateB.getTime()
+          } else if (sortBy === "symbol") {
+            return safeString(a.comp_symbol).localeCompare(safeString(b.comp_symbol))
+          } else if (sortBy === "sentiment_score") {
+            return safeNumber(a.sentiment_score) - safeNumber(b.sentiment_score)
+          } else if (sortBy === "tweets") {
+            return safeNumber(a.analyzed_tweets) - safeNumber(b.analyzed_tweets)
+          }
+          return 0
+        } catch (sortError) {
+          console.error("Sorting error:", sortError)
+          return 0
+        }
+      })
+
+      // Apply sort order
+      if (sortOrder === "desc") {
+        result.reverse()
+      }
+
+      setFilteredData(result)
+    } catch (filterError) {
+      console.error("Filtering error:", filterError)
+      setFilteredData([])
     }
-
-    setFilteredData(result)
   }, [data, searchQuery, sentimentFilter, sortBy, sortOrder])
 
-  // Helper function to generate comparison data
-  const generateComparisonData = () => {
-    // Mock data comparing different signal sources
-    return [
-      { symbol: "AAPL", googleTrends: 0.5, twitter: 0.7, news: 0.6 },
-      { symbol: "MSFT", googleTrends: 0.6, twitter: 0.7, news: 0.5 },
-      { symbol: "AMZN", googleTrends: 0.4, twitter: 0.3, news: 0.2 },
-      { symbol: "GOOGL", googleTrends: 0.6, twitter: 0.8, news: 0.7 },
-      { symbol: "META", googleTrends: -0.3, twitter: -0.2, news: -0.1 },
-      { symbol: "TSLA", googleTrends: 0.3, twitter: 0.4, news: 0.5 },
-    ]
-  }
+  // Generate comparison data safely
+  const comparisonData = [
+    { symbol: "AAPL", googleTrends: 0.5, twitter: 0.7, news: 0.6 },
+    { symbol: "MSFT", googleTrends: 0.6, twitter: 0.7, news: 0.5 },
+    { symbol: "AMZN", googleTrends: 0.4, twitter: 0.3, news: 0.2 },
+    { symbol: "GOOGL", googleTrends: 0.6, twitter: 0.8, news: 0.7 },
+    { symbol: "META", googleTrends: -0.3, twitter: -0.2, news: -0.1 },
+    { symbol: "TSLA", googleTrends: 0.3, twitter: 0.4, news: 0.5 },
+  ]
 
   return (
     <div className="min-h-screen bg-background">
@@ -245,36 +307,44 @@ export default function TwitterSignalsPage() {
                 <span className="text-muted-foreground">Loading sentiment data...</span>
               </div>
             ) : error ? (
-              <div className="flex justify-center items-center h-64">
-                <p className="text-red-500">{error}</p>
+              <div className="flex flex-col justify-center items-center h-64 space-y-4">
+                <p className="text-red-500 text-center">{error}</p>
+                <Button onClick={() => window.location.reload()} variant="outline">
+                  Retry
+                </Button>
               </div>
             ) : filteredData.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="px-6 py-4 font-medium">Date</th>
-                      <th className="px-6 py-4 font-medium">Symbol</th>
-                      <th className="px-6 py-4 font-medium text-right">Analyzed Tweets</th>
-                      <th className="px-6 py-4 font-medium text-right">Sentiment Score</th>
-                      <th className="px-6 py-4 text-center font-medium">Sentiment</th>
-                      <th className="px-6 py-4 font-medium text-right">Entry Price</th>
+                      <th className="px-6 py-4 font-medium text-muted-foreground">Date</th>
+                      <th className="px-6 py-4 font-medium text-muted-foreground">Symbol</th>
+                      <th className="px-6 py-4 font-medium text-right text-muted-foreground">Analyzed Tweets</th>
+                      <th className="px-6 py-4 font-medium text-right text-muted-foreground">Sentiment Score</th>
+                      <th className="px-6 py-4 text-center font-medium text-muted-foreground">Sentiment</th>
+                      <th className="px-6 py-4 font-medium text-right text-muted-foreground">Entry Price</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredData.map((signal, i) => (
-                      <tr key={i} className="border-b border-border hover:bg-muted/50 transition-colors">
-                        <td className="px-6 py-4">{signal.date}</td>
-                        <td className="px-6 py-4 font-medium">{signal.comp_symbol}</td>
-                        <td className="px-6 py-4 text-right">{signal.analyzed_tweets}</td>
-                        <td className="px-6 py-4 text-right">{signal.sentiment_score?.toFixed(2)}</td>
+                      <tr
+                        key={`${signal.comp_symbol}-${signal.date}-${i}`}
+                        className="border-b border-border hover:bg-muted/50 transition-colors"
+                      >
+                        <td className="px-6 py-4 text-foreground">{signal.date}</td>
+                        <td className="px-6 py-4 font-medium text-foreground">{signal.comp_symbol}</td>
+                        <td className="px-6 py-4 text-right text-foreground">{signal.analyzed_tweets}</td>
+                        <td className="px-6 py-4 text-right text-foreground">
+                          {safeNumber(signal.sentiment_score).toFixed(2)}
+                        </td>
                         <td className="px-6 py-4 text-center">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium inline-block
                               ${
-                                signal.sentiment?.toLowerCase() === "positive"
+                                safeString(signal.sentiment).toLowerCase() === "positive"
                                   ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-800"
-                                  : signal.sentiment?.toLowerCase() === "negative"
+                                  : safeString(signal.sentiment).toLowerCase() === "negative"
                                     ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-800"
                                     : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
                               }`}
@@ -282,7 +352,9 @@ export default function TwitterSignalsPage() {
                             {signal.sentiment}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-right">${signal.entry_price?.toFixed(2)}</td>
+                        <td className="px-6 py-4 text-right text-foreground">
+                          ${safeNumber(signal.entry_price).toFixed(2)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -309,17 +381,17 @@ export default function TwitterSignalsPage() {
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={comparisonData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey="symbol" stroke="var(--muted-foreground)" />
-                  <YAxis stroke="var(--muted-foreground)" domain={[-1, 1]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="symbol" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" domain={[-1, 1]} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "var(--background)",
-                      borderColor: "var(--border)",
+                      backgroundColor: "hsl(var(--background))",
+                      borderColor: "hsl(var(--border))",
                       borderRadius: "0.375rem",
-                      color: "var(--foreground)",
+                      color: "hsl(var(--foreground))",
                     }}
-                    formatter={(value) => [value.toFixed(2), "Sentiment Score"]}
+                    formatter={(value: any) => [Number(value).toFixed(2), "Sentiment Score"]}
                   />
                   <Legend />
                   <Bar dataKey="googleTrends" name="Google Trends" fill="#10b981" />
