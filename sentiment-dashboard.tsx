@@ -27,7 +27,6 @@ import { useAuth } from "@/context/auth-context"
 import { saveBasket, getMostRecentBasket, type StockBasket, type BasketStock } from "@/lib/basket-service"
 import { useToast } from "@/hooks/use-toast"
 import { Slider } from "@/components/ui/slider"
-import { ThemeToggle } from "@/components/theme-toggle"
 
 const SentimentDashboard = () => {
   // Auth context
@@ -655,7 +654,6 @@ const SentimentDashboard = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                <ThemeToggle />
                 <Badge className={`${overallSentiment.color} px-3 py-1.5 text-white`}>{overallSentiment.text}</Badge>
                 <Tabs defaultValue={timePeriod} onValueChange={setTimePeriod} className="w-[200px]">
                   <TabsList className="grid grid-cols-3">
