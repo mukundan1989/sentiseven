@@ -29,10 +29,10 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <div className="min-h-screen bg-background text-foreground">
-              <nav className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <nav className="border-b border-gray-200 bg-white">
                 <div className="max-w-[1200px] mx-auto px-6 py-4">
                   <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-6 overflow-x-auto">
+                    <div className="flex items-center space-x-4 overflow-x-auto">
                       {/* SENTIBOARD Logo */}
                       <div className="border-2 border-black px-3 py-1 bg-white">
                         <span className="text-black font-bold italic transform -skew-x-12 inline-block text-lg">
@@ -50,7 +50,7 @@ export default function RootLayout({
                           Signals
                           <ChevronDown className="ml-1 h-4 w-4" />
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="bg-background border-border">
+                        <DropdownMenuContent className="bg-white border-gray-200">
                           <DropdownMenuItem asChild>
                             <Link
                               href="/google-trend-signals"
