@@ -300,3 +300,37 @@ export async function deleteBasket(basketId: string): Promise<{ error: Error | n
     return { error: error as Error }
   }
 }
+
+// Unlock a basket
+export async function unlockBasket(basketId: string): Promise<{ error: Error | null }> {
+  try {
+    // Get the current user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { error: new Error("User not authenticated") }
+    }
+
+    // Update the basket to unlock it
+    const { error: basketError } = await supabase
+      .from("stock_baskets")
+      .update({
+        is_locked: false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", basketId)
+      .eq("user_id", user.id)
+
+    if (basketError) {
+      console.error("Error unlocking basket:", basketError)
+      return { error: basketError }
+    }
+
+    return { error: null }
+  } catch (error) {
+    console.error("Error unlocking basket:", error)
+    return { error: error as Error }
+  }
+}
