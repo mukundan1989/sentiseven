@@ -29,7 +29,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <div className="min-h-screen bg-background text-foreground">
-              <nav className="border-b border-gray-200 bg-white">
+              <nav className="border-b border-border bg-white dark:bg-card">
                 <div className="max-w-[1200px] mx-auto px-6 py-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-4 overflow-x-auto">
@@ -50,7 +50,7 @@ export default function RootLayout({
                           Signals
                           <ChevronDown className="ml-1 h-4 w-4" />
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="bg-white border-gray-200">
+                        <DropdownMenuContent className="bg-background border-border">
                           <DropdownMenuItem asChild>
                             <Link
                               href="/google-trend-signals"
