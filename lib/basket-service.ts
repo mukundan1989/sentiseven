@@ -18,6 +18,93 @@ export type BasketStock = {
   is_locked: boolean
 }
 
+// Get all baskets for the current user
+export async function getAllUserBaskets(): Promise<{
+  baskets: StockBasket[] | null
+  error: Error | null
+}> {
+  try {
+    // Get the current user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { baskets: null, error: new Error("User not authenticated") }
+    }
+
+    // Get all baskets for this user
+    const { data: baskets, error: basketError } = await supabase
+      .from("stock_baskets")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false })
+
+    if (basketError) {
+      console.error("Error fetching baskets:", basketError)
+      return { baskets: null, error: basketError }
+    }
+
+    return { baskets: baskets || [], error: null }
+  } catch (error) {
+    console.error("Error getting user baskets:", error)
+    return { baskets: null, error: error as Error }
+  }
+}
+
+// Get a specific basket with its stocks
+export async function getBasketById(basketId: string): Promise<{
+  basket: StockBasket | null
+  stocks: BasketStock[] | null
+  error: Error | null
+}> {
+  try {
+    // Get the current user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { basket: null, stocks: null, error: new Error("User not authenticated") }
+    }
+
+    // Get the specific basket
+    const { data: baskets, error: basketError } = await supabase
+      .from("stock_baskets")
+      .select("*")
+      .eq("id", basketId)
+      .eq("user_id", user.id)
+      .limit(1)
+
+    if (basketError) {
+      console.error("Error fetching basket:", basketError)
+      return { basket: null, stocks: null, error: basketError }
+    }
+
+    if (!baskets || baskets.length === 0) {
+      return { basket: null, stocks: null, error: new Error("Basket not found") }
+    }
+
+    const basket = baskets[0]
+
+    // Get the stocks for this basket
+    const { data: stocks, error: stocksError } = await supabase
+      .from("basket_stocks")
+      .select("*")
+      .eq("basket_id", basket.id)
+
+    if (stocksError) {
+      console.error("Error fetching stocks:", stocksError)
+      return { basket, stocks: null, error: stocksError }
+    }
+
+    return { basket, stocks, error: null }
+  } catch (error) {
+    console.error("Error getting basket by ID:", error)
+    return { basket: null, stocks: null, error: error as Error }
+  }
+}
+
 // Get the most recent basket for the current user
 export async function getMostRecentBasket(): Promise<{
   basket: StockBasket | null
@@ -39,7 +126,7 @@ export async function getMostRecentBasket(): Promise<{
       .from("stock_baskets")
       .select("*")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
+      .order("updated_at", { ascending: false })
       .limit(1)
 
     if (basketError) {
@@ -75,6 +162,7 @@ export async function getMostRecentBasket(): Promise<{
 export async function saveBasket(
   basketData: StockBasket,
   stocks: BasketStock[],
+  forceNew = false,
 ): Promise<{ error: Error | null; basketId: string | null }> {
   try {
     // Get the current user
@@ -88,8 +176,8 @@ export async function saveBasket(
 
     let basketId = basketData.id
 
-    // If no basket ID, create a new basket
-    if (!basketId) {
+    // If forceNew is true or no basket ID, create a new basket
+    if (forceNew || !basketId) {
       basketId = uuidv4()
 
       // Insert the basket
@@ -171,5 +259,44 @@ export async function saveBasket(
   } catch (error) {
     console.error("Error saving basket:", error)
     return { error: error as Error, basketId: null }
+  }
+}
+
+// Delete a basket
+export async function deleteBasket(basketId: string): Promise<{ error: Error | null }> {
+  try {
+    // Get the current user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { error: new Error("User not authenticated") }
+    }
+
+    // Delete stocks first
+    const { error: stocksError } = await supabase.from("basket_stocks").delete().eq("basket_id", basketId)
+
+    if (stocksError) {
+      console.error("Error deleting basket stocks:", stocksError)
+      return { error: stocksError }
+    }
+
+    // Delete the basket
+    const { error: basketError } = await supabase
+      .from("stock_baskets")
+      .delete()
+      .eq("id", basketId)
+      .eq("user_id", user.id)
+
+    if (basketError) {
+      console.error("Error deleting basket:", basketError)
+      return { error: basketError }
+    }
+
+    return { error: null }
+  } catch (error) {
+    console.error("Error deleting basket:", error)
+    return { error: error as Error }
   }
 }
