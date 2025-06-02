@@ -37,12 +37,15 @@ export default function RootLayout({
           <AuthProvider>
             <div className="min-h-screen bg-background text-foreground">
               <nav className="border-b border-border bg-white dark:bg-card">
-                <div className="max-w-[1200px] mx-auto py-4">
+                <div className="max-w-7xl mx-auto px-6 py-4">
                   <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-4 overflow-x-auto">
-                      {/* SENTIBOARD Logo */}
+                    <div className="flex items-center">
+                      {/* SENTIBOARD Logo - stays on left */}
                       <span className="font-neuropol text-foreground text-lg">SENTIBOARD</span>
+                    </div>
 
+                    <div className="flex items-center space-x-4">
+                      {/* Navigation menu items moved here */}
                       <Link href="/" className="text-foreground hover:text-primary transition-colors whitespace-nowrap">
                         Home
                       </Link>
@@ -87,8 +90,7 @@ export default function RootLayout({
                       >
                         Performance
                       </Link>
-                    </div>
-                    <div className="flex items-center space-x-4">
+
                       <ThemeToggle />
                       <UserNav />
                     </div>
