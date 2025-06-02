@@ -33,6 +33,7 @@ import {
   getAllUserBaskets,
   getBasketById,
   deleteBasket,
+  unlockBasket,
   type StockBasket,
   type BasketStock,
 } from "@/lib/basket-service"
@@ -492,6 +493,80 @@ const SentimentDashboard = () => {
     }
   }
 
+  // Unlock basket
+  const handleUnlockBasket = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to unlock a basket.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!basketId) {
+      toast({
+        title: "No Basket Selected",
+        description: "Please select a basket to unlock.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!basketLocked) {
+      toast({
+        title: "Basket Already Unlocked",
+        description: "This basket is already in editable mode.",
+        variant: "default",
+      })
+      return
+    }
+
+    // Confirm unlocking
+    if (
+      !confirm(
+        `Are you sure you want to unlock the basket "${basketName}"? This will stop performance tracking and allow editing.`,
+      )
+    ) {
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const { error } = await unlockBasket(basketId)
+
+      if (error) {
+        console.error("Error unlocking basket:", error)
+        toast({
+          title: "Error",
+          description: "Failed to unlock the basket. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      toast({
+        title: "Success",
+        description: `Basket "${basketName}" has been unlocked and is now editable.`,
+      })
+
+      // Update state
+      setBasketLocked(false)
+
+      // Reload baskets list
+      await loadUserBaskets()
+    } catch (error) {
+      console.error("Error in handleUnlockBasket:", error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   // Handle basket selection change
   const handleBasketChange = (basketId: string) => {
     if (basketId && basketId !== selectedBasketId) {
@@ -620,6 +695,7 @@ const SentimentDashboard = () => {
       otherSources.forEach((key) => {
         const proportion = weights[key] / currentOtherSum
         newWeights[key] = remainingWeight * proportion
+        newWeights[key] = isNaN(newWeights[key]) ? 0 : newWeights[key]
       })
     }
 
@@ -1159,15 +1235,15 @@ const SentimentDashboard = () => {
                             Add to New Basket
                           </Button>
 
-                          {basketId && !basketLocked && (
+                          {basketId && (
                             <Button
-                              variant="secondary"
-                              onClick={() => saveCurrentBasket(true)}
+                              variant={basketLocked ? "outline" : "secondary"}
+                              onClick={() => (basketLocked ? handleUnlockBasket() : saveCurrentBasket(true))}
                               disabled={isLoading}
                               className="gap-1"
                             >
-                              <Lock className="h-4 w-4" />
-                              Lock & Track
+                              {basketLocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                              {basketLocked ? "Unlock" : "Lock"}
                             </Button>
                           )}
                         </div>
