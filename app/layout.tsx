@@ -10,8 +10,15 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Toaster } from "@/components/ui/toaster"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ChevronDown } from "lucide-react"
+import localFont from "next/font/local"
 
 const inter = Inter({ subsets: ["latin"] })
+
+// Load Neuropol font locally
+const neuropol = localFont({
+  src: "../public/fonts/neuropol.otf",
+  variable: "--font-neuropol",
+})
 
 export const metadata: Metadata = {
   title: "Sentiment Dashboard",
@@ -25,20 +32,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.className} ${neuropol.variable}`}>
         <ThemeProvider>
           <AuthProvider>
             <div className="min-h-screen bg-background text-foreground">
               <nav className="border-b border-border bg-white dark:bg-card">
-                <div className="max-w-[1200px] mx-auto px-6 py-4">
+                <div className="max-w-[1200px] mx-auto py-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-4 overflow-x-auto">
                       {/* SENTIBOARD Logo */}
-                      <div className="border-2 border-black px-3 py-1 bg-white">
-                        <span className="text-black font-bold italic transform -skew-x-12 inline-block text-lg">
-                          SENTIBOARD
-                        </span>
-                      </div>
+                      <span className="font-neuropol text-foreground text-lg">SENTIBOARD</span>
 
                       <Link href="/" className="text-foreground hover:text-primary transition-colors whitespace-nowrap">
                         Home
