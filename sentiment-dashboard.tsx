@@ -325,10 +325,10 @@ const SentimentDashboard = () => {
             trackingSection.scrollIntoView({ behavior: "smooth" })
           }
         }, 100)
-      }
 
-      // Reload baskets list
-      await loadUserBaskets()
+        // Only reload baskets list when locking (status change)
+        await loadUserBaskets()
+      }
     } catch (error) {
       console.error("Error in saveCurrentBasket:", error)
       toast({
@@ -519,15 +519,6 @@ const SentimentDashboard = () => {
         description: "This basket is already in editable mode.",
         variant: "default",
       })
-      return
-    }
-
-    // Confirm unlocking
-    if (
-      !confirm(
-        `Are you sure you want to unlock the basket "${basketName}"? This will stop performance tracking and allow editing.`,
-      )
-    ) {
       return
     }
 
