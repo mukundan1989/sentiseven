@@ -18,13 +18,24 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  Plus,
+  Trash2,
 } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { StockSelector } from "./components/stock-selector"
 import { StockDetailView } from "./components/stock-detail-view"
 import { CorrelationChart } from "./components/correlation-chart"
 import StockAllocation from "./components/stock-allocation"
 import { useAuth } from "@/context/auth-context"
-import { saveBasket, getMostRecentBasket, type StockBasket, type BasketStock } from "@/lib/basket-service"
+import {
+  saveBasket,
+  getMostRecentBasket,
+  getAllUserBaskets,
+  getBasketById,
+  deleteBasket,
+  type StockBasket,
+  type BasketStock,
+} from "@/lib/basket-service"
 import { useToast } from "@/hooks/use-toast"
 import { Slider } from "@/components/ui/slider"
 
@@ -57,20 +68,19 @@ const SentimentDashboard = () => {
     { id: 5, symbol: "META", name: "Meta Platforms Inc.", sector: "Technology", allocation: 20, locked: true },
   ])
 
-  // State for basket name
+  // State for basket management
   const [basketName, setBasketName] = useState("Tech Leaders")
-
-  // State to track if basket is locked in
+  const [basketId, setBasketId] = useState<string | null>(null)
   const [basketLocked, setBasketLocked] = useState(false)
-
-  // State to track creation and update dates
   const [basketDates, setBasketDates] = useState({
     created: null,
     updated: null,
   })
 
-  // State for basket ID (for database operations)
-  const [basketId, setBasketId] = useState<string | null>(null)
+  // State for basket management
+  const [allBaskets, setAllBaskets] = useState<StockBasket[]>([])
+  const [selectedBasketId, setSelectedBasketId] = useState<string | null>(null)
+  const [isLoadingBaskets, setIsLoadingBaskets] = useState(false)
 
   // State for loading
   const [isLoading, setIsLoading] = useState(false)
@@ -133,12 +143,93 @@ const SentimentDashboard = () => {
     tracking: false,
   })
 
-  // Load the user's most recent basket when the component mounts
+  // Load user's baskets and most recent basket when component mounts
   useEffect(() => {
     if (user) {
+      loadUserBaskets()
       loadMostRecentBasket()
     }
   }, [user])
+
+  // Load all user baskets
+  const loadUserBaskets = async () => {
+    setIsLoadingBaskets(true)
+    try {
+      const { baskets, error } = await getAllUserBaskets()
+
+      if (error) {
+        console.error("Error loading baskets:", error)
+        return
+      }
+
+      if (baskets) {
+        setAllBaskets(baskets)
+      }
+    } catch (error) {
+      console.error("Error in loadUserBaskets:", error)
+    } finally {
+      setIsLoadingBaskets(false)
+    }
+  }
+
+  // Load a specific basket
+  const loadBasket = async (basketId: string) => {
+    setIsLoading(true)
+    try {
+      const { basket, stocks: basketStocks, error } = await getBasketById(basketId)
+
+      if (error) {
+        console.error("Error loading basket:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load the selected basket. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (basket) {
+        // Update the state with the loaded basket
+        setBasketId(basket.id)
+        setSelectedBasketId(basket.id)
+        setBasketName(basket.name)
+        setBasketLocked(basket.is_locked)
+        setWeights(basket.source_weights)
+
+        // Convert dates
+        if (basket.created_at) {
+          setBasketDates({
+            created: new Date(basket.created_at),
+            updated: basket.updated_at ? new Date(basket.updated_at) : null,
+          })
+        }
+
+        // Convert stocks format
+        if (basketStocks && basketStocks.length > 0) {
+          const formattedStocks = basketStocks.map((stock) => ({
+            id: stock.id,
+            symbol: stock.symbol,
+            name: stock.name,
+            sector: stock.sector,
+            allocation: stock.allocation,
+            locked: stock.is_locked,
+          }))
+          setStocks(formattedStocks)
+        } else {
+          setStocks([])
+        }
+
+        toast({
+          title: "Basket Loaded",
+          description: `Successfully loaded "${basket.name}" basket.`,
+        })
+      }
+    } catch (error) {
+      console.error("Error in loadBasket:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Load the most recent basket
   const loadMostRecentBasket = async () => {
@@ -159,6 +250,7 @@ const SentimentDashboard = () => {
       if (basket) {
         // Update the state with the loaded basket
         setBasketId(basket.id)
+        setSelectedBasketId(basket.id)
         setBasketName(basket.name)
         setBasketLocked(basket.is_locked)
         setWeights(basket.source_weights)
@@ -192,7 +284,7 @@ const SentimentDashboard = () => {
   }
 
   // Save the current basket to the database
-  const saveCurrentBasket = async (isLocked = false) => {
+  const saveCurrentBasket = async (isLocked = false, forceNew = false) => {
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -202,19 +294,20 @@ const SentimentDashboard = () => {
       return
     }
 
+    if (!basketName.trim()) {
+      toast({
+        title: "Basket Name Required",
+        description: "Please enter a name for your basket.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsLoading(true)
     try {
-      console.log("Saving basket with ID:", basketId)
-      console.log("Basket data:", {
-        name: basketName,
-        weights: weights,
-        is_locked: isLocked,
-      })
-      console.log("Stocks data:", stocks)
-
       // Format the basket data
       const basketData: StockBasket = {
-        id: basketId,
+        id: forceNew ? undefined : basketId,
         name: basketName,
         source_weights: weights,
         is_locked: isLocked,
@@ -230,7 +323,7 @@ const SentimentDashboard = () => {
       }))
 
       // Save the basket
-      const { error, basketId: newBasketId } = await saveBasket(basketData, stocksData)
+      const { error, basketId: newBasketId } = await saveBasket(basketData, stocksData, forceNew)
 
       if (error) {
         console.error("Error saving basket:", error)
@@ -245,11 +338,12 @@ const SentimentDashboard = () => {
       // Update the basket ID
       if (newBasketId) {
         setBasketId(newBasketId)
+        setSelectedBasketId(newBasketId)
       }
 
       toast({
         title: "Success",
-        description: "Your basket has been saved.",
+        description: forceNew ? "New basket created successfully." : "Your basket has been saved.",
       })
 
       // If locking the basket, update the state
@@ -261,6 +355,9 @@ const SentimentDashboard = () => {
           updated: now,
         })
       }
+
+      // Reload baskets list
+      await loadUserBaskets()
     } catch (error) {
       console.error("Error in saveCurrentBasket:", error)
       toast({
@@ -268,6 +365,66 @@ const SentimentDashboard = () => {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Handle basket selection change
+  const handleBasketChange = (basketId: string) => {
+    if (basketId === "new") {
+      // Create new basket
+      setBasketId(null)
+      setSelectedBasketId(null)
+      setBasketName("")
+      setBasketLocked(false)
+      setStocks([])
+      setWeights({
+        twitter: 0.4,
+        googleTrends: 0.3,
+        news: 0.3,
+      })
+      setBasketDates({
+        created: null,
+        updated: null,
+      })
+    } else {
+      loadBasket(basketId)
+    }
+  }
+
+  // Handle basket deletion
+  const handleDeleteBasket = async (basketIdToDelete: string) => {
+    if (!basketIdToDelete) return
+
+    setIsLoading(true)
+    try {
+      const { error } = await deleteBasket(basketIdToDelete)
+
+      if (error) {
+        console.error("Error deleting basket:", error)
+        toast({
+          title: "Error",
+          description: "Failed to delete the basket. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      toast({
+        title: "Success",
+        description: "Basket deleted successfully.",
+      })
+
+      // If we deleted the current basket, reset to new basket
+      if (basketIdToDelete === basketId) {
+        handleBasketChange("new")
+      }
+
+      // Reload baskets list
+      await loadUserBaskets()
+    } catch (error) {
+      console.error("Error in handleDeleteBasket:", error)
     } finally {
       setIsLoading(false)
     }
@@ -289,7 +446,9 @@ const SentimentDashboard = () => {
       // Remove duplicates by id before setting
       const uniqueStocks = newStocks.filter((stock, index, self) => index === self.findIndex((s) => s.id === stock.id))
       setStocks(uniqueStocks)
-      saveCurrentBasket(basketLocked)
+      if (basketId) {
+        saveCurrentBasket(basketLocked)
+      }
       return
     }
 
@@ -322,7 +481,9 @@ const SentimentDashboard = () => {
     )
 
     setStocks(uniqueFinalStocks)
-    saveCurrentBasket(basketLocked)
+    if (basketId) {
+      saveCurrentBasket(basketLocked)
+    }
   }
 
   // Generate weighted composite sentiment
@@ -638,7 +799,9 @@ const SentimentDashboard = () => {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-card p-6 rounded-lg shadow-xl flex items-center gap-3">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="text-card-foreground">Saving your basket...</span>
+              <span className="text-card-foreground">
+                {isLoadingBaskets ? "Loading baskets..." : "Saving your basket..."}
+              </span>
             </div>
           </div>
         )}
@@ -899,41 +1062,131 @@ const SentimentDashboard = () => {
                     <CorrelationChart stocks={stocks} weights={weights} />
                   </div>
 
-                  {/* Lock in Basket Section */}
-                  <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-8">
-                    <div className="w-full md:w-64">
-                      <label htmlFor="basket-name" className="text-sm font-medium text-muted-foreground mb-2 block">
-                        Basket Name
-                      </label>
-                      <Input
-                        id="basket-name"
-                        value={basketName}
-                        onChange={(e) => setBasketName(e.target.value)}
-                        className="bg-background border-border"
-                        placeholder="Enter basket name"
-                      />
-                    </div>
-                    <div className="flex gap-2 w-full md:w-auto">
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        className="px-8 py-6 text-lg w-full md:w-auto mt-4 md:mt-6"
-                        onClick={() => saveCurrentBasket(false)}
-                        disabled={!basketName.trim() || isLoading}
-                      >
-                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                        Save Changes
-                      </Button>
-                      <Button
-                        size="lg"
-                        className="bg-primary hover:bg-primary/90 px-8 py-6 text-lg w-full md:w-auto mt-4 md:mt-6"
-                        onClick={handleLockBasket}
-                        disabled={!basketName.trim() || isLoading}
-                      >
-                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                        Lock in Basket
-                      </Button>
-                    </div>
+                  {/* Enhanced Basket Management Section */}
+                  <div className="mt-8">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <BarChart3 className="h-5 w-5 text-primary" />
+                          Basket Management
+                        </CardTitle>
+                        <CardDescription>
+                          Manage your stock baskets - create new ones or select from existing baskets
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Basket Selection */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                              Select Basket
+                            </label>
+                            <Select value={selectedBasketId || "new"} onValueChange={handleBasketChange}>
+                              <SelectTrigger className="bg-background border-border">
+                                <SelectValue placeholder="Select a basket" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="new">
+                                  <div className="flex items-center gap-2">
+                                    <Plus className="h-4 w-4" />
+                                    Create New Basket
+                                  </div>
+                                </SelectItem>
+                                {allBaskets.map((basket) => (
+                                  <SelectItem key={basket.id} value={basket.id}>
+                                    <div className="flex items-center justify-between w-full">
+                                      <span>{basket.name}</span>
+                                      {basket.is_locked && <Lock className="h-3 w-3 text-amber-500 ml-2" />}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div>
+                            <label className="text-sm font-medium text-muted-foreground mb-2 block">Basket Name</label>
+                            <Input
+                              value={basketName}
+                              onChange={(e) => setBasketName(e.target.value)}
+                              className="bg-background border-border"
+                              placeholder="Enter basket name"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Basket Actions */}
+                        <div className="flex flex-wrap gap-2 pt-4 border-t">
+                          <Button
+                            variant="outline"
+                            onClick={() => saveCurrentBasket(false, false)}
+                            disabled={!basketName.trim() || isLoading || !basketId}
+                            className="gap-1"
+                          >
+                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            Update Current
+                          </Button>
+
+                          <Button
+                            variant="outline"
+                            onClick={() => saveCurrentBasket(false, true)}
+                            disabled={!basketName.trim() || isLoading}
+                            className="gap-1"
+                          >
+                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            <Plus className="h-4 w-4" />
+                            Save as New
+                          </Button>
+
+                          <Button
+                            onClick={() => saveCurrentBasket(true, false)}
+                            disabled={!basketName.trim() || isLoading || basketLocked}
+                            className="gap-1"
+                          >
+                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            <Lock className="h-4 w-4" />
+                            Lock Basket
+                          </Button>
+
+                          {basketId && !basketLocked && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteBasket(basketId)}
+                              disabled={isLoading}
+                              className="gap-1"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* Basket Info */}
+                        {basketId && (
+                          <div className="pt-4 border-t">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Stocks:</span>
+                                <span className="font-medium ml-1">{stocks.length}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Locked:</span>
+                                <span className="font-medium ml-1">{stocks.filter((s) => s.locked).length}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Created:</span>
+                                <span className="font-medium ml-1">{formatDate(basketDates.created)}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Updated:</span>
+                                <span className="font-medium ml-1">{formatDate(basketDates.updated)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
                 </>
               )}
