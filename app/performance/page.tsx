@@ -327,7 +327,7 @@ export default function PerformancePage() {
                       </th>
                       <th
                         colSpan={3}
-                        className="px-4 py-3 bg-primary/10 text-primary-foreground border-b text-center font-medium"
+                        className="px-4 py-3 bg-primary/10 text-foreground border-b text-center font-medium"
                       >
                         Locked
                       </th>
@@ -343,13 +343,9 @@ export default function PerformancePage() {
                         Symbol
                       </th>
                       <th className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium">Name</th>
-                      <th className="px-4 py-3 bg-primary/10 text-primary-foreground border-b text-left font-medium">
-                        Date
-                      </th>
-                      <th className="px-4 py-3 bg-primary/10 text-primary-foreground border-b text-left font-medium">
-                        Price
-                      </th>
-                      <th className="px-4 py-3 bg-primary/10 text-primary-foreground border-b text-left font-medium">
+                      <th className="px-4 py-3 bg-primary/10 text-foreground border-b text-left font-medium">Date</th>
+                      <th className="px-4 py-3 bg-primary/10 text-foreground border-b text-left font-medium">Price</th>
+                      <th className="px-4 py-3 bg-primary/10 text-foreground border-b text-left font-medium">
                         Sentiment
                       </th>
                       <th className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium">Price</th>
@@ -369,18 +365,18 @@ export default function PerformancePage() {
                         <td className="px-4 py-4 text-foreground bg-primary/5">{stock.lockDate}</td>
                         <td className="px-4 py-4 text-foreground bg-primary/5">${stock.lockPrice.toFixed(2)}</td>
                         <td className="px-4 py-4 bg-primary/5">
-                          <Badge
-                            variant={
-                              stock.lockSentiment.toLowerCase() === "positive"
-                                ? "default"
-                                : stock.lockSentiment.toLowerCase() === "negative"
-                                  ? "destructive"
-                                  : "secondary"
-                            }
-                            className="text-xs"
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium inline-block
+                              ${
+                                stock.lockSentiment.toLowerCase() === "positive"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-800"
+                                  : stock.lockSentiment.toLowerCase() === "negative"
+                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-800"
+                                    : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                              }`}
                           >
                             {stock.lockSentiment}
-                          </Badge>
+                          </span>
                         </td>
                         <td className="px-4 py-4 font-medium text-foreground">${stock.currentPrice.toFixed(2)}</td>
                         <td
@@ -397,18 +393,18 @@ export default function PerformancePage() {
                           )}
                         </td>
                         <td className="px-4 py-4">
-                          <Badge
-                            variant={
-                              stock.currentSentiment.toLowerCase() === "positive"
-                                ? "default"
-                                : stock.currentSentiment.toLowerCase() === "negative"
-                                  ? "destructive"
-                                  : "secondary"
-                            }
-                            className="text-xs"
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium inline-block
+                              ${
+                                stock.currentSentiment.toLowerCase() === "positive"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-800"
+                                  : stock.currentSentiment.toLowerCase() === "negative"
+                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-800"
+                                    : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                              }`}
                           >
                             {stock.currentSentiment}
-                          </Badge>
+                          </span>
                         </td>
                       </tr>
                     ))}
