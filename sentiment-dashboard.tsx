@@ -5,7 +5,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowUp, ArrowDown, Activity, BarChart3, Edit2, Lock, Unlock, RotateCw, ChevronDown, ChevronUp, Loader2, Plus } from 'lucide-react'
+import {
+  ArrowUp,
+  ArrowDown,
+  Activity,
+  BarChart3,
+  Edit2,
+  Lock,
+  Unlock,
+  RotateCw,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Plus,
+} from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { StockSelector } from "./components/stock-selector"
 import { StockDetailView } from "./components/stock-detail-view"
@@ -80,13 +93,6 @@ const SentimentDashboard = () => {
     "1m": generateSentimentData(30),
   }
 
-  // Sample correlation data
-  const correlationData = {
-    twitter: 0.68,
-    googleTrends: 0.42,
-    news: 0.53,
-  }
-
   // State for stock selector dialog
   const [isStockSelectorOpen, setIsStockSelectorOpen] = useState(false)
 
@@ -95,34 +101,6 @@ const SentimentDashboard = () => {
 
   // State for allocation editor
   const [isAllocationEditorOpen, setIsAllocationEditorOpen] = useState(false)
-
-  // State for premium features card index
-  const [premiumFeatureIndex, setPremiumFeatureIndex] = useState(0)
-
-  // State for premium features
-  const premiumFeatures = [
-    {
-      title: "User Benchmarking",
-      description: "Compare your sentiment-based returns against other users",
-      value: "+3.2%",
-      comparison: "outperforming 78% of users",
-      icon: <BarChart3 className="h-5 w-5" />,
-    },
-    {
-      title: "Sentiment-Price Correlation",
-      description: "Detailed analysis of sentiment impact on price movements",
-      value: "0.72",
-      comparison: "Strong positive correlation",
-      icon: <Activity className="h-5 w-5" />,
-    },
-    {
-      title: "Predictive Signals",
-      description: "Early indicators of sentiment shifts before price movement",
-      value: "4",
-      comparison: "active signals available",
-      icon: <ArrowUp className="h-5 w-5" />,
-    },
-  ]
 
   // State for section collapse
   const [sectionsCollapsed, setSectionsCollapsed] = useState({
@@ -450,7 +428,6 @@ const SentimentDashboard = () => {
     })
   }
 
-  // Update the handleSaveStocks function to ensure new stocks start with 0% allocation
   // Function to handle saving stocks from the stock selector
   const handleSaveStocks = (newStocks) => {
     // If these are stocks from the StockAllocation component, just update them directly
@@ -594,6 +571,7 @@ const SentimentDashboard = () => {
       ...stock,
       price: 100, // Default price if not found
       change: 0, // Default change if not found
+      performance: 0,
     }
 
     setSelectedStock(stockWithPrice)
@@ -769,9 +747,7 @@ const SentimentDashboard = () => {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-card p-6 rounded-lg shadow-xl flex items-center gap-3">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="text-card-foreground">
-                {isLoadingBaskets ? "Loading baskets..." : "Processing..."}
-              </span>
+              <span className="text-card-foreground">{isLoadingBaskets ? "Loading baskets..." : "Processing..."}</span>
             </div>
           </div>
         )}
@@ -853,11 +829,7 @@ const SentimentDashboard = () => {
                             Save Changes
                           </Button>
 
-                          <Button
-                            onClick={() => setIsAddBasketModalOpen(true)}
-                            disabled={isLoading}
-                            className="gap-1"
-                          >
+                          <Button onClick={() => setIsAddBasketModalOpen(true)} disabled={isLoading} className="gap-1">
                             <Plus className="h-4 w-4" />
                             Add to New Basket
                           </Button>
@@ -1021,11 +993,7 @@ const SentimentDashboard = () => {
                           Reset
                         </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => setIsAllocationEditorOpen(true)}
-                        disabled={basketLocked}
-                      >
+                      <Button size="sm" onClick={() => setIsAllocationEditorOpen(true)} disabled={basketLocked}>
                         Adjust Allocations
                       </Button>
                     </CardFooter>
@@ -1331,4 +1299,50 @@ function generateSentimentData(days) {
   let googleBaseline = Math.random() * 0.4 - 0.2 // -0.2 to 0.2
   let newsBaseline = Math.random() * 0.6 - 0.3 // -0.3 to 0.3
 
-  for (let i = days - 1; i >= 0; i--
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date(now)
+    date.setDate(date.getDate() - i)
+
+    // Create some variability in the sentiment
+    const twitterVariation = Math.random() * 0.4 - 0.2 // -0.2 to 0.2
+    const googleVariation = Math.random() * 0.3 - 0.15 // -0.15 to 0.15
+    const newsVariation = Math.random() * 0.5 - 0.25 // -0.25 to 0.25
+
+    // Create some correlation between the sentiments
+    const commonFactor = Math.random() * 0.3 - 0.15 // -0.15 to 0.15
+
+    // Calculate sentiments with bounds checking
+    const twitterSentiment = clamp(twitterBaseline + twitterVariation + commonFactor, -1, 1)
+    const googleTrendsSentiment = clamp(googleBaseline + googleVariation + commonFactor, -1, 1)
+    const newsSentiment = clamp(newsBaseline + newsVariation + commonFactor, -1, 1)
+
+    // Format date as MM/DD
+    const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`
+
+    data.push({
+      date: formattedDate,
+      twitterSentiment,
+      googleTrendsSentiment,
+      newsSentiment,
+    })
+
+    // Adjust baselines slightly for trend
+    twitterBaseline += Math.random() * 0.1 - 0.05
+    googleBaseline += Math.random() * 0.08 - 0.04
+    newsBaseline += Math.random() * 0.12 - 0.06
+
+    // Keep baselines in reasonable range
+    twitterBaseline = clamp(twitterBaseline, -0.7, 0.7)
+    googleBaseline = clamp(googleBaseline, -0.7, 0.7)
+    newsBaseline = clamp(newsBaseline, -0.7, 0.7)
+  }
+
+  return data
+}
+
+// Helper function to clamp a value between min and max
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max)
+}
+
+export default SentimentDashboard
