@@ -8,7 +8,7 @@ export interface Stock {
 }
 
 export const allStocks: Stock[] = [
-  { id: 1, symbol: "AAPL", name: "Apple Inc.", sector: "Technology", price: 182.52, change: 1.25 },
+  { id: 1, symbol: "AAPL", name: "Appl3e Inc.", sector: "Technology", price: 182.52, change: 1.25 },
   { id: 2, symbol: "MSFT", name: "Microsoft Corp.", sector: "Technology", price: 417.88, change: -0.52 },
   { id: 3, symbol: "AMZN", name: "Amazon.com Inc.", sector: "Consumer Cyclical", price: 178.75, change: 2.34 },
   { id: 4, symbol: "TSLA", name: "Tesla Inc.", sector: "Automotive", price: 175.34, change: -1.23 },
