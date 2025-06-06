@@ -62,6 +62,7 @@ export default function PerformancePage() {
   const [selectedBasketId, setSelectedBasketId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<"all" | string>("all") // "all" or basket ID
   const [basketStocks, setBasketStocks] = useState<string[]>([])
+  let currentSentiment: string
 
   // Format date to YYYY-MM-DD
   const formatDate = (dateString: string) => {
@@ -190,8 +191,13 @@ export default function PerformancePage() {
         const twitterStocks = new Set(twitterData.map((item: StockSignal) => item.comp_symbol))
         const newsStocks = new Set(newsData.map((item: StockSignal) => item.comp_symbol))
 
-        // Find stocks that appear in all three sources (intersection)
-        let commonStocks = [...googleStocks].filter((symbol) => twitterStocks.has(symbol) && newsStocks.has(symbol))
+        // Find stocks that appear in at least 2 out of 3 sources
+        const allStocks = new Set([...googleStocks, ...twitterStocks, ...newsStocks])
+        let commonStocks = [...allStocks].filter((symbol) => {
+          const count =
+            (googleStocks.has(symbol) ? 1 : 0) + (twitterStocks.has(symbol) ? 1 : 0) + (newsStocks.has(symbol) ? 1 : 0)
+          return count >= 2
+        })
 
         let basketLockDate: string | null = null
         let selectedBasket: StockBasket | null = null
@@ -220,9 +226,9 @@ export default function PerformancePage() {
           setLoading(false)
           if (viewMode !== "all") {
             const selectedBasketName = userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"
-            setError(`No stocks found for basket "${selectedBasketName}" with signals in all three models`)
+            setError(`No stocks found for basket "${selectedBasketName}" with signals in at least 2 out of 3 models`)
           } else {
-            setError("No stocks found with signals in all three models")
+            setError("No stocks found with signals in at least 2 out of 3 models")
           }
           return
         }
@@ -241,7 +247,14 @@ export default function PerformancePage() {
             const twitterSignal = twitterMap.get(symbol)
             const newsSignal = newsMap.get(symbol)
 
-            if (!googleSignal || !twitterSignal || !newsSignal) continue
+            // We need at least 2 signals, so check which ones we have
+            const availableSignals = [
+              googleSignal ? { signal: googleSignal, source: "google" } : null,
+              twitterSignal ? { signal: twitterSignal, source: "twitter" } : null,
+              newsSignal ? { signal: newsSignal, source: "news" } : null,
+            ].filter(Boolean)
+
+            if (availableSignals.length < 2) continue
 
             // Determine the lock date and price based on view mode
             let lockDate: string
@@ -260,35 +273,29 @@ export default function PerformancePage() {
                 continue // Skip this stock if we can't get historical price
               }
 
-              // For basket view, use the most recent signal sentiment
-              const dates = [new Date(googleSignal.date), new Date(twitterSignal.date), new Date(newsSignal.date)]
+              // Find the most recent signal date among available sources
+              const dates = availableSignals.map((item) => new Date(item.signal.date))
               const mostRecentDate = new Date(Math.max(...dates.map((d) => d.getTime())))
 
-              if (mostRecentDate.getTime() === dates[0].getTime()) {
-                lockSentiment = googleSignal.sentiment
-              } else if (mostRecentDate.getTime() === dates[1].getTime()) {
-                lockSentiment = twitterSignal.sentiment
-              } else {
-                lockSentiment = newsSignal.sentiment
-              }
+              // Find which signal corresponds to the most recent date
+              const mostRecentSignal = availableSignals.find(
+                (item) => new Date(item.signal.date).getTime() === mostRecentDate.getTime(),
+              )?.signal
+
+              lockSentiment = mostRecentSignal.sentiment
             } else {
-              // Use signal date and price (for "All Stocks" view)
-              const dates = [new Date(googleSignal.date), new Date(twitterSignal.date), new Date(newsSignal.date)]
+              // Find the most recent signal date among available sources
+              const dates = availableSignals.map((item) => new Date(item.signal.date))
               const mostRecentDate = new Date(Math.max(...dates.map((d) => d.getTime())))
+
+              // Find which signal corresponds to the most recent date
+              const mostRecentSignal = availableSignals.find(
+                (item) => new Date(item.signal.date).getTime() === mostRecentDate.getTime(),
+              )?.signal
               lockDate = formatDate(mostRecentDate.toISOString())
 
-              // Determine which signal to use based on the most recent date
-              let lockSignal: StockSignal
-              if (mostRecentDate.getTime() === dates[0].getTime()) {
-                lockSignal = googleSignal
-              } else if (mostRecentDate.getTime() === dates[1].getTime()) {
-                lockSignal = twitterSignal
-              } else {
-                lockSignal = newsSignal
-              }
-
-              lockPrice = Number.parseFloat(lockSignal.entry_price.toString())
-              lockSentiment = lockSignal.sentiment
+              lockPrice = Number.parseFloat(mostRecentSignal.entry_price.toString())
+              lockSentiment = mostRecentSignal.sentiment
             }
 
             // Get current price using Yahoo Finance
@@ -309,17 +316,15 @@ export default function PerformancePage() {
             const change = currentPrice - lockPrice
             const changePercent = (change / lockPrice) * 100
 
-            // For current sentiment, use the most recent signal sentiment
-            const dates = [new Date(googleSignal.date), new Date(twitterSignal.date), new Date(newsSignal.date)]
+            // Find the most recent signal date among available sources
+            const dates = availableSignals.map((item) => new Date(item.signal.date))
             const mostRecentDate = new Date(Math.max(...dates.map((d) => d.getTime())))
-            let currentSentiment: string
-            if (mostRecentDate.getTime() === dates[0].getTime()) {
-              currentSentiment = googleSignal.sentiment
-            } else if (mostRecentDate.getTime() === dates[1].getTime()) {
-              currentSentiment = twitterSignal.sentiment
-            } else {
-              currentSentiment = newsSignal.sentiment
-            }
+
+            // Find which signal corresponds to the most recent date
+            const mostRecentSignal = availableSignals.find(
+              (item) => new Date(item.signal.date).getTime() === mostRecentDate.getTime(),
+            )?.signal
+            currentSentiment = mostRecentSignal.sentiment
 
             processedData.push({
               symbol,
@@ -361,7 +366,7 @@ export default function PerformancePage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Performance Summary</h1>
           <p className="text-muted-foreground mt-2">
-            Performance data for stocks with signals in all three models (Google Trends, Twitter, News)
+            Performance data for stocks with signals in at least 2 out of 3 models (Google Trends, Twitter, News)
           </p>
         </div>
 
@@ -373,7 +378,7 @@ export default function PerformancePage() {
                 <CardTitle className="text-xl">Stocks Performance Table</CardTitle>
                 <CardDescription>
                   {viewMode === "all"
-                    ? "Performance data for stocks with signals in all three models"
+                    ? "Performance data for stocks with signals in at least 2 out of 3 models"
                     : "Performance data from basket lock date to current date"}
                 </CardDescription>
               </div>
@@ -445,8 +450,8 @@ export default function PerformancePage() {
             ) : performanceData.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 {viewMode !== "all"
-                  ? `No stocks found for basket "${userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"}" with signals in all three models (Google Trends, Twitter, News)`
-                  : "No stocks found with signals in all three models (Google Trends, Twitter, News)"}
+                  ? `No stocks found for basket "${userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"}" with signals in at least 2 out of 3 models (Google Trends, Twitter, News)`
+                  : "No stocks found with signals in at least 2 out of 3 models (Google Trends, Twitter, News)"}
               </div>
             ) : (
               <div className="overflow-x-auto">
