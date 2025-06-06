@@ -292,6 +292,7 @@ const SentimentDashboard = () => {
         name: basketName,
         source_weights: weights,
         is_locked: isLocked,
+        locked_at: basketDates.locked?.toISOString(), // Preserve the existing locked date
       }
 
       // Format the stocks data
