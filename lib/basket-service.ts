@@ -1,6 +1,5 @@
 import { supabase } from "@/lib/supabase"
 import { v4 as uuidv4 } from "uuid"
-import { getMultipleStockPrices } from "./price-utils"
 
 export type StockBasket = {
   id?: string
@@ -9,8 +8,6 @@ export type StockBasket = {
   is_locked: boolean
   created_at?: string
   updated_at?: string
-  locked_at?: string
-  lock_prices?: { [key: string]: number }
 }
 
 export type BasketStock = {
@@ -178,7 +175,6 @@ export async function saveBasket(
     }
 
     let basketId = basketData.id
-    const now = new Date().toISOString()
 
     // If forceNew is true or no basket ID, create a new basket
     if (forceNew || !basketId) {
@@ -189,12 +185,10 @@ export async function saveBasket(
         id: basketId,
         user_id: user.id,
         name: basketData.name,
-        created_at: now,
-        updated_at: now,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
         source_weights: basketData.source_weights,
         is_locked: basketData.is_locked,
-        locked_at: basketData.is_locked ? now : null,
-        lock_prices: basketData.lock_prices || null,
       })
 
       if (basketError) {
@@ -209,22 +203,14 @@ export async function saveBasket(
         is_locked: basketData.is_locked,
       })
 
-      const updateData: any = {
-        name: basketData.name,
-        updated_at: now,
-        source_weights: basketData.source_weights,
-        is_locked: basketData.is_locked,
-      }
-
-      // If locking the basket, set locked_at and lock_prices
-      if (basketData.is_locked) {
-        updateData.locked_at = now
-        updateData.lock_prices = basketData.lock_prices
-      }
-
       const { error: basketError } = await supabase
         .from("stock_baskets")
-        .update(updateData)
+        .update({
+          name: basketData.name,
+          updated_at: new Date().toISOString(),
+          source_weights: basketData.source_weights,
+          is_locked: basketData.is_locked,
+        })
         .eq("id", basketId)
         .eq("user_id", user.id)
 
@@ -276,100 +262,6 @@ export async function saveBasket(
   }
 }
 
-// Lock basket with current stock prices
-export async function lockBasketWithPrices(
-  basketId: string,
-  userId: string,
-): Promise<{
-  success: boolean
-  error?: string
-}> {
-  try {
-    // First, get the basket to verify ownership and get stocks
-    const { data: basket, error: basketError } = await supabase
-      .from("stock_baskets")
-      .select("*")
-      .eq("id", basketId)
-      .eq("user_id", userId)
-      .single()
-
-    if (basketError || !basket) {
-      console.error("Error fetching basket:", basketError)
-      return { success: false, error: "Basket not found or access denied" }
-    }
-
-    // Get the stocks in this basket
-    const { data: stocks, error: stocksError } = await supabase
-      .from("basket_stocks")
-      .select("symbol")
-      .eq("basket_id", basketId)
-
-    if (stocksError || !stocks) {
-      console.error("Error fetching basket stocks:", stocksError)
-      return { success: false, error: "Failed to fetch basket stocks" }
-    }
-
-    const stockSymbols = stocks.map((stock) => stock.symbol)
-
-    // Fetch current prices for all stocks in the basket
-    console.log("Fetching current prices for stocks:", stockSymbols)
-    const lockPrices = await getMultipleStockPrices(stockSymbols)
-    console.log("Lock prices:", lockPrices)
-
-    // Update the basket with lock status and prices
-    const { error: updateError } = await supabase
-      .from("stock_baskets")
-      .update({
-        is_locked: true,
-        locked_at: new Date().toISOString(),
-        lock_prices: lockPrices,
-      })
-      .eq("id", basketId)
-      .eq("user_id", userId)
-
-    if (updateError) {
-      console.error("Error locking basket:", updateError)
-      return { success: false, error: "Failed to lock basket" }
-    }
-
-    return { success: true }
-  } catch (error) {
-    console.error("Error in lockBasketWithPrices:", error)
-    return { success: false, error: "An unexpected error occurred" }
-  }
-}
-
-// Unlock a basket
-export async function unlockBasket(
-  basketId: string,
-  userId: string,
-): Promise<{
-  success: boolean
-  error?: string
-}> {
-  try {
-    const { error } = await supabase
-      .from("stock_baskets")
-      .update({
-        is_locked: false,
-        locked_at: null,
-        // We keep the lock_prices for historical reference
-      })
-      .eq("id", basketId)
-      .eq("user_id", userId)
-
-    if (error) {
-      console.error("Error unlocking basket:", error)
-      return { success: false, error: "Failed to unlock basket" }
-    }
-
-    return { success: true }
-  } catch (error) {
-    console.error("Error in unlockBasket:", error)
-    return { success: false, error: "An unexpected error occurred" }
-  }
-}
-
 // Delete a basket
 export async function deleteBasket(basketId: string): Promise<{ error: Error | null }> {
   try {
@@ -405,6 +297,40 @@ export async function deleteBasket(basketId: string): Promise<{ error: Error | n
     return { error: null }
   } catch (error) {
     console.error("Error deleting basket:", error)
+    return { error: error as Error }
+  }
+}
+
+// Unlock a basket
+export async function unlockBasket(basketId: string): Promise<{ error: Error | null }> {
+  try {
+    // Get the current user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { error: new Error("User not authenticated") }
+    }
+
+    // Update the basket to unlock it
+    const { error: basketError } = await supabase
+      .from("stock_baskets")
+      .update({
+        is_locked: false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", basketId)
+      .eq("user_id", user.id)
+
+    if (basketError) {
+      console.error("Error unlocking basket:", basketError)
+      return { error: basketError }
+    }
+
+    return { error: null }
+  } catch (error) {
+    console.error("Error unlocking basket:", error)
     return { error: error as Error }
   }
 }
