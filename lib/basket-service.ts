@@ -190,7 +190,7 @@ export async function saveBasket(
         updated_at: new Date().toISOString(),
         source_weights: basketData.source_weights,
         is_locked: basketData.is_locked,
-        locked_at: basketData.is_locked ? new Date().toISOString() : null, // Set locked_at if basket is locked
+        locked_at: basketData.is_locked ? basketData.locked_at || new Date().toISOString() : null,
       })
 
       if (basketError) {
@@ -222,15 +222,23 @@ export async function saveBasket(
       // If we're locking the basket (wasn't locked before but is now), set locked_at
       const isNewlyLocked = !currentBasket.is_locked && basketData.is_locked
 
+      const updateData = {
+        name: basketData.name,
+        updated_at: now,
+        source_weights: basketData.source_weights,
+        is_locked: basketData.is_locked,
+      }
+
+      // Only update locked_at if newly locked and no custom locked_at is provided
+      if (isNewlyLocked && !basketData.locked_at) {
+        updateData.locked_at = now
+      } else if (basketData.locked_at) {
+        updateData.locked_at = basketData.locked_at
+      }
+
       const { error: basketError } = await supabase
         .from("stock_baskets")
-        .update({
-          name: basketData.name,
-          updated_at: now,
-          source_weights: basketData.source_weights,
-          is_locked: basketData.is_locked,
-          locked_at: isNewlyLocked ? now : currentBasket.locked_at, // Only update locked_at if newly locked
-        })
+        .update(updateData)
         .eq("id", basketId)
         .eq("user_id", user.id)
 
