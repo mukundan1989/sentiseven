@@ -96,6 +96,36 @@ export default function PerformancePage() {
     }
   }
 
+  // Fetch historical stock price for a specific date
+  const getHistoricalPrice = async (symbol: string, date: string): Promise<number> => {
+    try {
+      // Convert date to Unix timestamp
+      const targetDate = new Date(date)
+      const period1 = Math.floor(targetDate.getTime() / 1000) - 86400 // Start 1 day before
+      const period2 = Math.floor(targetDate.getTime() / 1000) + 86400 // End 1 day after
+
+      const response = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${period1}&period2=${period2}&interval=1d`,
+      )
+      const data = await response.json()
+
+      if (data.chart?.result?.[0]?.indicators?.quote?.[0]?.close) {
+        const closes = data.chart.result[0].indicators.quote[0].close
+        // Get the last available close price (should be closest to our target date)
+        const validCloses = closes.filter((price: number) => price !== null && price !== undefined)
+        if (validCloses.length > 0) {
+          return validCloses[validCloses.length - 1]
+        }
+      }
+
+      throw new Error(`No historical price data found for ${symbol} on ${date}`)
+    } catch (error) {
+      console.error(`Error fetching historical price for ${symbol} on ${date}:`, error)
+      // Return 0 to indicate failure - we'll handle this in the calling function
+      return 0
+    }
+  }
+
   // Fetch current stock price using Yahoo Finance API
   const getCurrentPrice = async (symbol: string): Promise<number> => {
     try {
@@ -163,12 +193,17 @@ export default function PerformancePage() {
         // Find stocks that appear in all three sources (intersection)
         let commonStocks = [...googleStocks].filter((symbol) => twitterStocks.has(symbol) && newsStocks.has(symbol))
 
+        let basketLockDate: string | null = null
+        let selectedBasket: StockBasket | null = null
+
         // Filter by selected basket if a specific basket is selected
         if (viewMode !== "all" && viewMode) {
           // Load stocks for the selected basket
           try {
             const { basket, stocks, error } = await getBasketById(viewMode)
-            if (!error && stocks) {
+            if (!error && stocks && basket) {
+              selectedBasket = basket
+              basketLockDate = basket.locked_at || null
               const basketSymbols = stocks.map((stock) => stock.symbol)
               commonStocks = commonStocks.filter((symbol) => basketSymbols.includes(symbol))
             } else {
@@ -184,10 +219,8 @@ export default function PerformancePage() {
           setPerformanceData([])
           setLoading(false)
           if (viewMode !== "all") {
-            const selectedBasket = userBaskets.find((b) => b.id === viewMode)
-            setError(
-              `No stocks found for basket "${selectedBasket?.name || "Unknown"}" with signals in all three models`,
-            )
+            const selectedBasketName = userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"
+            setError(`No stocks found for basket "${selectedBasketName}" with signals in all three models`)
           } else {
             setError("No stocks found with signals in all three models")
           }
@@ -210,23 +243,51 @@ export default function PerformancePage() {
 
             if (!googleSignal || !twitterSignal || !newsSignal) continue
 
-            // Find the most recent signal date among the three sources
-            const dates = [new Date(googleSignal.date), new Date(twitterSignal.date), new Date(newsSignal.date)]
-            const mostRecentDate = new Date(Math.max(...dates.map((d) => d.getTime())))
-            const formattedDate = formatDate(mostRecentDate.toISOString())
+            // Determine the lock date and price
+            let lockDate: string
+            let lockPrice: number
 
-            // Determine which signal to use based on the most recent date
-            let lockSignal: StockSignal
-            if (mostRecentDate.getTime() === dates[0].getTime()) {
-              lockSignal = googleSignal
-            } else if (mostRecentDate.getTime() === dates[1].getTime()) {
-              lockSignal = twitterSignal
+            if (basketLockDate && selectedBasket) {
+              // Use basket lock date and fetch historical price for that date
+              lockDate = formatDate(basketLockDate)
+              lockPrice = await getHistoricalPrice(symbol, lockDate)
+
+              // If historical price fetch failed, fall back to signal price
+              if (lockPrice === 0) {
+                console.warn(`Failed to fetch historical price for ${symbol} on ${lockDate}, using signal price`)
+                // Find the most recent signal date among the three sources
+                const dates = [new Date(googleSignal.date), new Date(twitterSignal.date), new Date(newsSignal.date)]
+                const mostRecentDate = new Date(Math.max(...dates.map((d) => d.getTime())))
+                lockDate = formatDate(mostRecentDate.toISOString())
+
+                // Determine which signal to use based on the most recent date
+                let lockSignal: StockSignal
+                if (mostRecentDate.getTime() === dates[0].getTime()) {
+                  lockSignal = googleSignal
+                } else if (mostRecentDate.getTime() === dates[1].getTime()) {
+                  lockSignal = twitterSignal
+                } else {
+                  lockSignal = newsSignal
+                }
+                lockPrice = Number.parseFloat(lockSignal.entry_price.toString())
+              }
             } else {
-              lockSignal = newsSignal
-            }
+              // Use signal date and price (for "All Stocks" view)
+              const dates = [new Date(googleSignal.date), new Date(twitterSignal.date), new Date(newsSignal.date)]
+              const mostRecentDate = new Date(Math.max(...dates.map((d) => d.getTime())))
+              lockDate = formatDate(mostRecentDate.toISOString())
 
-            // Get the locked price from the signal
-            const lockPrice = Number.parseFloat(lockSignal.entry_price.toString())
+              // Determine which signal to use based on the most recent date
+              let lockSignal: StockSignal
+              if (mostRecentDate.getTime() === dates[0].getTime()) {
+                lockSignal = googleSignal
+              } else if (mostRecentDate.getTime() === dates[1].getTime()) {
+                lockSignal = twitterSignal
+              } else {
+                lockSignal = newsSignal
+              }
+              lockPrice = Number.parseFloat(lockSignal.entry_price.toString())
+            }
 
             // Get current price using Yahoo Finance
             let currentPrice = await getCurrentPrice(symbol)
@@ -246,16 +307,24 @@ export default function PerformancePage() {
             const change = currentPrice - lockPrice
             const changePercent = (change / lockPrice) * 100
 
-            // Determine current sentiment (for demo, we'll use the most recent sentiment)
-            // In production, you might want to calculate this differently
-            const currentSentiment = lockSignal.sentiment
+            // For sentiment, use the most recent signal sentiment
+            const dates = [new Date(googleSignal.date), new Date(twitterSignal.date), new Date(newsSignal.date)]
+            const mostRecentDate = new Date(Math.max(...dates.map((d) => d.getTime())))
+            let currentSentiment: string
+            if (mostRecentDate.getTime() === dates[0].getTime()) {
+              currentSentiment = googleSignal.sentiment
+            } else if (mostRecentDate.getTime() === dates[1].getTime()) {
+              currentSentiment = twitterSignal.sentiment
+            } else {
+              currentSentiment = newsSignal.sentiment
+            }
 
             processedData.push({
               symbol,
               name: getCompanyName(symbol),
-              lockDate: formattedDate,
+              lockDate,
               lockPrice,
-              lockSentiment: lockSignal.sentiment,
+              lockSentiment: currentSentiment, // Use the sentiment from the most recent signal
               currentPrice,
               change,
               changePercent,
@@ -300,7 +369,11 @@ export default function PerformancePage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <CardTitle className="text-xl">Stocks Performance Table</CardTitle>
-                <CardDescription>Performance data for stocks with signals in all three models</CardDescription>
+                <CardDescription>
+                  {viewMode === "all"
+                    ? "Performance data for stocks with signals in all three models"
+                    : "Performance data from basket lock date to current date"}
+                </CardDescription>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -388,7 +461,7 @@ export default function PerformancePage() {
                         colSpan={3}
                         className="px-4 py-3 bg-primary/10 text-foreground border-b text-center font-medium"
                       >
-                        Locked
+                        {viewMode === "all" ? "Signal Date" : "Basket Lock Date"}
                       </th>
                       <th
                         colSpan={3}
