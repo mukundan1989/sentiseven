@@ -40,6 +40,12 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { Slider } from "@/components/ui/slider"
 
+// Add this import at the top with the other imports
+import { Edit } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { supabase } from "@/lib/supabase-client"
+
 const SentimentDashboard = () => {
   // Auth context
   const { user } = useAuth()
@@ -59,6 +65,9 @@ const SentimentDashboard = () => {
     googleTrends: false,
     news: false,
   })
+
+  // Add this state for date editing near the other state declarations
+  const [isEditingLockDate, setIsEditingLockDate] = useState(false)
 
   // Sample basket of stocks with allocation percentages
   const [stocks, setStocks] = useState([
@@ -489,6 +498,50 @@ const SentimentDashboard = () => {
       await loadUserBaskets()
     } catch (error) {
       console.error("Error in handleDeleteBasket:", error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Add this function to handle updating the lock date
+  const handleUpdateLockDate = async (newDate: Date) => {
+    if (!basketId) return
+
+    setIsLoading(true)
+    try {
+      // Format the date for Supabase
+      const formattedDate = newDate.toISOString()
+
+      // Update the locked_at field in the database
+      const { error } = await supabase.from("stock_baskets").update({ locked_at: formattedDate }).eq("id", basketId)
+
+      if (error) {
+        console.error("Error updating lock date:", error)
+        toast({
+          title: "Error",
+          description: "Failed to update the lock date. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Update local state
+      setBasketDates({
+        ...basketDates,
+        locked: newDate,
+      })
+
+      toast({
+        title: "Success",
+        description: "Lock date updated successfully.",
+      })
+    } catch (error) {
+      console.error("Error in handleUpdateLockDate:", error)
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -1334,7 +1387,29 @@ const SentimentDashboard = () => {
                           </div>
                           <div className="flex justify-between items-center py-1">
                             <span className="text-muted-foreground">Locked On</span>
-                            <span className="font-medium text-foreground">{formatDate(basketDates.locked)}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-foreground">{formatDate(basketDates.locked)}</span>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                                    <Edit className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <span className="sr-only">Edit lock date</span>
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
+                                  <Calendar
+                                    mode="single"
+                                    selected={basketDates.locked || undefined}
+                                    onSelect={(date) => {
+                                      if (date) {
+                                        handleUpdateLockDate(date)
+                                      }
+                                    }}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
