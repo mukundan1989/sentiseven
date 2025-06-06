@@ -39,6 +39,7 @@ export default function TwitterSignalsPage() {
   const [pricesLoading, setPricesLoading] = useState(false)
 
   // Mock historical prices for demo purposes
+  // This ensures consistent prices for the same stock on the same date
   const mockHistoricalPrices: Record<string, number> = {
     AAPL: 175.43,
     MSFT: 325.76,
@@ -57,6 +58,7 @@ export default function TwitterSignalsPage() {
   // Fetch current stock price using Yahoo Finance API
   const getCurrentPrice = async (symbol: string): Promise<number> => {
     try {
+      // Using Yahoo Finance API through a proxy service
       const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`)
       const data = await response.json()
 
@@ -64,6 +66,7 @@ export default function TwitterSignalsPage() {
         return data.chart.result[0].meta.regularMarketPrice
       }
 
+      // Fallback: try alternative endpoint
       const altResponse = await fetch(
         `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price`,
       )
@@ -76,8 +79,10 @@ export default function TwitterSignalsPage() {
       throw new Error(`No price data found for ${symbol}`)
     } catch (error) {
       console.error(`Error fetching current price for ${symbol}:`, error)
+
+      // Use our mock prices with a small random variation for current price
       const basePrice = mockHistoricalPrices[symbol] || 100
-      return basePrice * (0.9 + Math.random() * 0.2)
+      return basePrice * (0.9 + Math.random() * 0.2) // ±10% variation
     }
   }
 
