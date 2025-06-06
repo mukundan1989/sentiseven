@@ -243,33 +243,33 @@ export default function PerformancePage() {
 
             if (!googleSignal || !twitterSignal || !newsSignal) continue
 
-            // Determine the lock date and price
+            // Determine the lock date and price based on view mode
             let lockDate: string
             let lockPrice: number
+            let lockSentiment: string
 
-            if (basketLockDate && selectedBasket) {
+            if (viewMode !== "all" && selectedBasket && basketLockDate) {
               // Use basket lock date and fetch historical price for that date
               lockDate = formatDate(basketLockDate)
+              console.log(`Fetching historical price for ${symbol} on basket lock date: ${lockDate}`)
+
               lockPrice = await getHistoricalPrice(symbol, lockDate)
 
-              // If historical price fetch failed, fall back to signal price
               if (lockPrice === 0) {
-                console.warn(`Failed to fetch historical price for ${symbol} on ${lockDate}, using signal price`)
-                // Find the most recent signal date among the three sources
-                const dates = [new Date(googleSignal.date), new Date(twitterSignal.date), new Date(newsSignal.date)]
-                const mostRecentDate = new Date(Math.max(...dates.map((d) => d.getTime())))
-                lockDate = formatDate(mostRecentDate.toISOString())
+                console.warn(`Failed to fetch historical price for ${symbol} on ${lockDate}, skipping this stock`)
+                continue // Skip this stock if we can't get historical price
+              }
 
-                // Determine which signal to use based on the most recent date
-                let lockSignal: StockSignal
-                if (mostRecentDate.getTime() === dates[0].getTime()) {
-                  lockSignal = googleSignal
-                } else if (mostRecentDate.getTime() === dates[1].getTime()) {
-                  lockSignal = twitterSignal
-                } else {
-                  lockSignal = newsSignal
-                }
-                lockPrice = Number.parseFloat(lockSignal.entry_price.toString())
+              // For basket view, use the most recent signal sentiment
+              const dates = [new Date(googleSignal.date), new Date(twitterSignal.date), new Date(newsSignal.date)]
+              const mostRecentDate = new Date(Math.max(...dates.map((d) => d.getTime())))
+
+              if (mostRecentDate.getTime() === dates[0].getTime()) {
+                lockSentiment = googleSignal.sentiment
+              } else if (mostRecentDate.getTime() === dates[1].getTime()) {
+                lockSentiment = twitterSignal.sentiment
+              } else {
+                lockSentiment = newsSignal.sentiment
               }
             } else {
               // Use signal date and price (for "All Stocks" view)
@@ -286,7 +286,9 @@ export default function PerformancePage() {
               } else {
                 lockSignal = newsSignal
               }
+
               lockPrice = Number.parseFloat(lockSignal.entry_price.toString())
+              lockSentiment = lockSignal.sentiment
             }
 
             // Get current price using Yahoo Finance
@@ -307,7 +309,7 @@ export default function PerformancePage() {
             const change = currentPrice - lockPrice
             const changePercent = (change / lockPrice) * 100
 
-            // For sentiment, use the most recent signal sentiment
+            // For current sentiment, use the most recent signal sentiment
             const dates = [new Date(googleSignal.date), new Date(twitterSignal.date), new Date(newsSignal.date)]
             const mostRecentDate = new Date(Math.max(...dates.map((d) => d.getTime())))
             let currentSentiment: string
@@ -324,7 +326,7 @@ export default function PerformancePage() {
               name: getCompanyName(symbol),
               lockDate,
               lockPrice,
-              lockSentiment: currentSentiment, // Use the sentiment from the most recent signal
+              lockSentiment,
               currentPrice,
               change,
               changePercent,
