@@ -8,6 +8,7 @@ export type StockBasket = {
   is_locked: boolean
   created_at?: string
   updated_at?: string
+  locked_at?: string // New field to track when basket was locked
 }
 
 export type BasketStock = {
@@ -189,6 +190,7 @@ export async function saveBasket(
         updated_at: new Date().toISOString(),
         source_weights: basketData.source_weights,
         is_locked: basketData.is_locked,
+        locked_at: basketData.is_locked ? new Date().toISOString() : null, // Set locked_at if basket is locked
       })
 
       if (basketError) {
@@ -203,13 +205,31 @@ export async function saveBasket(
         is_locked: basketData.is_locked,
       })
 
+      const now = new Date().toISOString()
+
+      // Determine if we're locking the basket
+      const { data: currentBasket, error: fetchError } = await supabase
+        .from("stock_baskets")
+        .select("is_locked")
+        .eq("id", basketId)
+        .single()
+
+      if (fetchError) {
+        console.error("Error fetching current basket state:", fetchError)
+        return { error: fetchError, basketId: null }
+      }
+
+      // If we're locking the basket (wasn't locked before but is now), set locked_at
+      const isNewlyLocked = !currentBasket.is_locked && basketData.is_locked
+
       const { error: basketError } = await supabase
         .from("stock_baskets")
         .update({
           name: basketData.name,
-          updated_at: new Date().toISOString(),
+          updated_at: now,
           source_weights: basketData.source_weights,
           is_locked: basketData.is_locked,
+          locked_at: isNewlyLocked ? now : currentBasket.locked_at, // Only update locked_at if newly locked
         })
         .eq("id", basketId)
         .eq("user_id", user.id)
@@ -319,6 +339,7 @@ export async function unlockBasket(basketId: string): Promise<{ error: Error | n
       .update({
         is_locked: false,
         updated_at: new Date().toISOString(),
+        // We don't clear locked_at because we want to preserve when it was last locked
       })
       .eq("id", basketId)
       .eq("user_id", user.id)
