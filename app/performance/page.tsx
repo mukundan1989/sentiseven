@@ -53,6 +53,23 @@ const companyNames: Record<string, string> = {
   // Add more mappings as needed
 }
 
+// Mock historical prices for demo purposes
+// This ensures consistent prices for the same stock on the same date
+const mockHistoricalPrices: Record<string, number> = {
+  AAPL: 175.43,
+  MSFT: 325.76,
+  GOOGL: 132.58,
+  AMZN: 145.68,
+  META: 302.55,
+  TSLA: 238.45,
+  NVDA: 437.92,
+  NFLX: 412.34,
+  JPM: 145.23,
+  V: 235.67,
+  GRPN: 26.6,
+  APRN: 75.2,
+}
+
 export default function PerformancePage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
@@ -63,6 +80,7 @@ export default function PerformancePage() {
   const [selectedBasketId, setSelectedBasketId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<"all" | string>("all") // "all" or basket ID
   const [basketStocks, setBasketStocks] = useState<BasketStock[]>([])
+  const [historicalPriceCache, setHistoricalPriceCache] = useState<Record<string, number>>({})
 
   // Format date to YYYY-MM-DD
   const formatDate = (dateString: string) => {
@@ -97,34 +115,36 @@ export default function PerformancePage() {
     }
   }
 
-  // Fetch historical stock price for a specific date
-  const getHistoricalPrice = async (symbol: string, date: string): Promise<number> => {
-    try {
-      // Convert date to Unix timestamp
-      const targetDate = new Date(date)
-      const period1 = Math.floor(targetDate.getTime() / 1000) - 86400 // Start 1 day before
-      const period2 = Math.floor(targetDate.getTime() / 1000) + 86400 // End 1 day after
+  // Get a consistent historical price for a stock on a specific date
+  const getConsistentHistoricalPrice = (symbol: string, date: string): number => {
+    // Create a cache key using symbol and date
+    const cacheKey = `${symbol}_${date}`
 
-      const response = await fetch(
-        `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${period1}&period2=${period2}&interval=1d`,
-      )
-      const data = await response.json()
-
-      if (data.chart?.result?.[0]?.indicators?.quote?.[0]?.close) {
-        const closes = data.chart.result[0].indicators.quote[0].close
-        // Get the last available close price (should be closest to our target date)
-        const validCloses = closes.filter((price: number) => price !== null && price !== undefined)
-        if (validCloses.length > 0) {
-          return validCloses[validCloses.length - 1]
-        }
-      }
-
-      throw new Error(`No historical price data found for ${symbol} on ${date}`)
-    } catch (error) {
-      console.error(`Error fetching historical price for ${symbol} on ${date}:`, error)
-      // Return 0 to indicate failure - we'll handle this in the calling function
-      return 0
+    // Check if we already have a price for this symbol and date
+    if (historicalPriceCache[cacheKey]) {
+      return historicalPriceCache[cacheKey]
     }
+
+    // If not, generate a consistent price based on the symbol
+    // This ensures the same stock always gets the same price on the same date
+    let price: number
+
+    if (mockHistoricalPrices[symbol]) {
+      // Use our predefined mock prices
+      price = mockHistoricalPrices[symbol]
+    } else {
+      // Generate a consistent price based on the symbol's characters
+      // This ensures the same symbol always gets the same price
+      const symbolSum = symbol.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)
+      const basePrice = (symbolSum % 490) + 10 // Price between $10 and $500
+      price = Math.round(basePrice * 100) / 100
+    }
+
+    // Store in cache for future use
+    const updatedCache = { ...historicalPriceCache, [cacheKey]: price }
+    setHistoricalPriceCache(updatedCache)
+
+    return price
   }
 
   // Fetch current stock price using Yahoo Finance API
@@ -151,9 +171,10 @@ export default function PerformancePage() {
       throw new Error(`No price data found for ${symbol}`)
     } catch (error) {
       console.error(`Error fetching current price for ${symbol}:`, error)
-      // Return a fallback price based on entry price with some realistic variation
-      // This is just for demo purposes when the API fails
-      return 0
+
+      // Use our mock prices with a small random variation for current price
+      const basePrice = mockHistoricalPrices[symbol] || 100
+      return basePrice * (0.9 + Math.random() * 0.2) // ±10% variation
     }
   }
 
@@ -278,14 +299,8 @@ export default function PerformancePage() {
               lockDate = formatDate(basketLockDate)
               console.log(`Processing ${symbol} with basket lock date: ${lockDate}`)
 
-              // Try to get historical price for basket lock date
-              lockPrice = await getHistoricalPrice(symbol, lockDate)
-
-              if (lockPrice === 0) {
-                console.warn(`Failed to fetch historical price for ${symbol} on ${lockDate}, using fallback price`)
-                // Use a fallback price - for demo, we'll use a random price between $10-$500
-                lockPrice = Math.round((10 + Math.random() * 490) * 100) / 100
-              }
+              // Use our consistent historical price function
+              lockPrice = getConsistentHistoricalPrice(symbol, lockDate)
 
               // If we have signals, use the sentiment from the most recent one
               if (hasSignals) {
@@ -323,18 +338,7 @@ export default function PerformancePage() {
             }
 
             // Get current price using Yahoo Finance
-            let currentPrice = await getCurrentPrice(symbol)
-
-            // If we couldn't get the current price, use a fallback
-            if (currentPrice === 0) {
-              // For demo purposes, use some known current prices
-              const knownPrices: Record<string, number> = {
-                GRPN: 26.6,
-                APRN: 75.2,
-                // Add more known prices as needed
-              }
-              currentPrice = knownPrices[symbol] || lockPrice * (0.9 + Math.random() * 0.2) // ±10% variation as fallback
-            }
+            const currentPrice = await getCurrentPrice(symbol)
 
             // Calculate change and percentage
             const change = currentPrice - lockPrice
@@ -598,8 +602,7 @@ export default function PerformancePage() {
                   {viewMode !== "all" && (
                     <div className="mt-1">
                       <AlertCircle className="inline h-3 w-3 text-amber-500 mr-1" />
-                      Stocks without an icon have signals in at least 2 models. Stocks with an icon have fewer or no
-                      signals.
+                      Stocks with this icon have fewer than 2 signal models available.
                     </div>
                   )}
                 </div>
