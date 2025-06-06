@@ -76,6 +76,7 @@ const SentimentDashboard = () => {
   const [basketDates, setBasketDates] = useState({
     created: null,
     updated: null,
+    locked: null,
   })
 
   // State for basket management
@@ -170,6 +171,7 @@ const SentimentDashboard = () => {
           setBasketDates({
             created: new Date(basket.created_at),
             updated: basket.updated_at ? new Date(basket.updated_at) : null,
+            locked: basket.locked_at ? new Date(basket.locked_at) : null, // Add locked date
           })
         }
 
@@ -229,6 +231,7 @@ const SentimentDashboard = () => {
           setBasketDates({
             created: new Date(basket.created_at),
             updated: basket.updated_at ? new Date(basket.updated_at) : null,
+            locked: basket.locked_at ? new Date(basket.locked_at) : null, // Add locked date
           })
         }
 
@@ -316,6 +319,7 @@ const SentimentDashboard = () => {
         setBasketDates({
           created: basketDates.created || now,
           updated: now,
+          locked: now, // Set the locked date
         })
 
         // Scroll to the basket tracking section
@@ -393,6 +397,7 @@ const SentimentDashboard = () => {
         setBasketDates({
           created: now,
           updated: now,
+          locked: null, // New baskets aren't locked
         })
       }
 
@@ -477,6 +482,7 @@ const SentimentDashboard = () => {
       setBasketDates({
         created: null,
         updated: null,
+        locked: null, // Reset locked date
       })
 
       // Reload baskets list
@@ -883,7 +889,7 @@ const SentimentDashboard = () => {
   // Format date for display
   const formatDate = (date) => {
     if (!date) return "N/A"
-    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+    return date instanceof Date ? `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}` : "N/A"
   }
 
   return (
@@ -1328,7 +1334,7 @@ const SentimentDashboard = () => {
                           </div>
                           <div className="flex justify-between items-center py-1">
                             <span className="text-muted-foreground">Locked On</span>
-                            <span className="font-medium text-foreground">{formatDate(basketDates.updated)}</span>
+                            <span className="font-medium text-foreground">{formatDate(basketDates.locked)}</span>
                           </div>
                         </div>
                       </CardContent>
