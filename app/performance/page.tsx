@@ -5,8 +5,14 @@ import { ChevronDown, Loader2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { getMostRecentBasket } from "@/lib/basket-service"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import { getAllUserBaskets, getBasketById, type StockBasket } from "@/lib/basket-service"
 import { useAuth } from "@/context/auth-context"
 
 interface StockSignal {
@@ -52,7 +58,9 @@ export default function PerformancePage() {
   const [error, setError] = useState<string | null>(null)
   const [performanceData, setPerformanceData] = useState<PerformanceData[]>([])
   const [lastUpdated, setLastUpdated] = useState<string>("")
-  const [viewMode, setViewMode] = useState<"all" | "basket">("all")
+  const [userBaskets, setUserBaskets] = useState<StockBasket[]>([])
+  const [selectedBasketId, setSelectedBasketId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<"all" | string>("all") // "all" or basket ID
   const [basketStocks, setBasketStocks] = useState<string[]>([])
 
   // Format date to YYYY-MM-DD
@@ -66,18 +74,25 @@ export default function PerformancePage() {
     return companyNames[symbol] || `${symbol} Inc.`
   }
 
-  // Load user's basket stocks
-  const loadBasketStocks = async () => {
+  // Load user's baskets
+  const loadUserBaskets = async () => {
     if (!user) return
 
     try {
-      const { basket, stocks, error } = await getMostRecentBasket()
-      if (!error && stocks) {
-        const symbols = stocks.map((stock) => stock.symbol)
-        setBasketStocks(symbols)
+      const { baskets, error } = await getAllUserBaskets()
+      if (!error && baskets) {
+        // Only show locked baskets
+        const lockedBaskets = baskets.filter((basket) => basket.is_locked)
+        setUserBaskets(lockedBaskets)
+
+        // If current selection is not valid anymore, reset to "all"
+        if (selectedBasketId && !lockedBaskets.find((b) => b.id === selectedBasketId)) {
+          setViewMode("all")
+          setSelectedBasketId(null)
+        }
       }
     } catch (error) {
-      console.error("Error loading basket stocks:", error)
+      console.error("Error loading user baskets:", error)
     }
   }
 
@@ -113,7 +128,7 @@ export default function PerformancePage() {
 
   useEffect(() => {
     if (user) {
-      loadBasketStocks()
+      loadUserBaskets()
     }
   }, [user])
 
@@ -148,16 +163,31 @@ export default function PerformancePage() {
         // Find stocks that appear in all three sources (intersection)
         let commonStocks = [...googleStocks].filter((symbol) => twitterStocks.has(symbol) && newsStocks.has(symbol))
 
-        // Filter by basket stocks if basket mode is selected
-        if (viewMode === "basket" && basketStocks.length > 0) {
-          commonStocks = commonStocks.filter((symbol) => basketStocks.includes(symbol))
+        // Filter by selected basket if a specific basket is selected
+        if (viewMode !== "all" && viewMode) {
+          // Load stocks for the selected basket
+          try {
+            const { basket, stocks, error } = await getBasketById(viewMode)
+            if (!error && stocks) {
+              const basketSymbols = stocks.map((stock) => stock.symbol)
+              commonStocks = commonStocks.filter((symbol) => basketSymbols.includes(symbol))
+            } else {
+              commonStocks = [] // No stocks if basket not found
+            }
+          } catch (error) {
+            console.error("Error loading basket stocks:", error)
+            commonStocks = []
+          }
         }
 
         if (commonStocks.length === 0) {
           setPerformanceData([])
           setLoading(false)
-          if (viewMode === "basket") {
-            setError("No basket stocks found with signals in all three models")
+          if (viewMode !== "all") {
+            const selectedBasket = userBaskets.find((b) => b.id === viewMode)
+            setError(
+              `No stocks found for basket "${selectedBasket?.name || "Unknown"}" with signals in all three models`,
+            )
           } else {
             setError("No stocks found with signals in all three models")
           }
@@ -251,7 +281,7 @@ export default function PerformancePage() {
     }
 
     fetchData()
-  }, [viewMode, basketStocks])
+  }, [viewMode, userBaskets])
 
   return (
     <div className="min-h-screen bg-background">
@@ -275,7 +305,11 @@ export default function PerformancePage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="flex items-center gap-2">
-                    <span>{viewMode === "all" ? "All Stocks" : "Basket Stocks"}</span>
+                    <span>
+                      {viewMode === "all"
+                        ? "All Stocks"
+                        : userBaskets.find((b) => b.id === viewMode)?.name || "Unknown Basket"}
+                    </span>
                     <Badge variant="secondary" className="ml-2">
                       {performanceData.length} stocks
                     </Badge>
@@ -283,15 +317,40 @@ export default function PerformancePage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setViewMode("all")}>All Stocks</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setViewMode("basket")} disabled={!user || basketStocks.length === 0}>
-                    Basket Stocks
-                    {(!user || basketStocks.length === 0) && (
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        {!user ? "(Login required)" : "(No basket)"}
-                      </span>
-                    )}
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setViewMode("all")
+                      setSelectedBasketId(null)
+                    }}
+                  >
+                    All Stocks
                   </DropdownMenuItem>
+                  {userBaskets.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      {userBaskets.map((basket) => (
+                        <DropdownMenuItem
+                          key={basket.id}
+                          onClick={() => {
+                            setViewMode(basket.id!)
+                            setSelectedBasketId(basket.id!)
+                          }}
+                        >
+                          {basket.name}
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            (Locked {basket.locked_at ? new Date(basket.locked_at).toLocaleDateString() : ""})
+                          </span>
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                  {userBaskets.length === 0 && user && (
+                    <DropdownMenuItem disabled>
+                      No locked baskets
+                      <span className="ml-2 text-xs text-muted-foreground">(Create and lock a basket first)</span>
+                    </DropdownMenuItem>
+                  )}
+                  {!user && <DropdownMenuItem disabled>Login required</DropdownMenuItem>}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -310,8 +369,8 @@ export default function PerformancePage() {
               </div>
             ) : performanceData.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
-                {viewMode === "basket"
-                  ? "No basket stocks found with signals in all three models (Google Trends, Twitter, News)"
+                {viewMode !== "all"
+                  ? `No stocks found for basket "${userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"}" with signals in all three models (Google Trends, Twitter, News)`
                   : "No stocks found with signals in all three models (Google Trends, Twitter, News)"}
               </div>
             ) : (
