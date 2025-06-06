@@ -44,7 +44,7 @@ import { Slider } from "@/components/ui/slider"
 import { Edit } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { supabase } from "@/lib/supabase-client"
+import { supabase } from "@/lib/supabase"
 
 const SentimentDashboard = () => {
   // Auth context
