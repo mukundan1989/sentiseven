@@ -34,6 +34,7 @@ import {
   getBasketById,
   deleteBasket,
   unlockBasket,
+  lockBasketWithPrices,
   type StockBasket,
   type BasketStock,
 } from "@/lib/basket-service"
@@ -291,8 +292,10 @@ const SentimentDashboard = () => {
         is_locked: stock.locked,
       }))
 
-      // Save the basket
-      const { error } = await saveBasket(basketData, stocksData, false)
+      // Use different function based on whether we're locking
+      const { error } = isLocked
+        ? await lockBasketWithPrices(basketData, stocksData)
+        : await saveBasket(basketData, stocksData, false)
 
       if (error) {
         console.error("Error saving basket:", error)
@@ -306,7 +309,7 @@ const SentimentDashboard = () => {
 
       toast({
         title: "Success",
-        description: "Your changes have been saved.",
+        description: isLocked ? "Basket locked with current prices!" : "Your changes have been saved.",
       })
 
       // If locking the basket, update the state
@@ -495,7 +498,7 @@ const SentimentDashboard = () => {
 
   // Unlock basket
   const handleUnlockBasket = async () => {
-    if (!user) {
+    if (!user || !basketId) {
       toast({
         title: "Authentication Required",
         description: "Please log in to unlock a basket.",
@@ -504,33 +507,14 @@ const SentimentDashboard = () => {
       return
     }
 
-    if (!basketId) {
-      toast({
-        title: "No Basket Selected",
-        description: "Please select a basket to unlock.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!basketLocked) {
-      toast({
-        title: "Basket Already Unlocked",
-        description: "This basket is already in editable mode.",
-        variant: "default",
-      })
-      return
-    }
-
     setIsLoading(true)
     try {
-      const { error } = await unlockBasket(basketId)
+      const { success, error } = await unlockBasket(basketId, user.id)
 
-      if (error) {
-        console.error("Error unlocking basket:", error)
+      if (!success) {
         toast({
           title: "Error",
-          description: "Failed to unlock the basket. Please try again.",
+          description: error || "Failed to unlock the basket. Please try again.",
           variant: "destructive",
         })
         return
@@ -551,6 +535,52 @@ const SentimentDashboard = () => {
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Update the handleLockBasket function
+  const handleLockBasket = async () => {
+    if (!basketId || !user) {
+      toast({
+        title: "No basket selected",
+        description: "Please select or create a basket first",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const { success, error } = await lockBasketWithPrices(basketId, user.id)
+
+      if (!success) {
+        toast({
+          title: "Error locking basket",
+          description: error || "An unexpected error occurred",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Basket locked",
+          description: "Your basket has been locked and will now be tracked for performance",
+        })
+
+        // Update local state
+        setBasketLocked(true)
+
+        // Refresh baskets to update UI
+        await loadUserBaskets()
+      }
+    } catch (error) {
+      console.error("Error locking basket:", error)
+      toast({
+        title: "Error locking basket",
+        description: "An unexpected error occurred",
         variant: "destructive",
       })
     } finally {
@@ -1229,7 +1259,7 @@ const SentimentDashboard = () => {
                           {basketId && (
                             <Button
                               variant={basketLocked ? "outline" : "secondary"}
-                              onClick={() => (basketLocked ? handleUnlockBasket() : saveCurrentBasket(true))}
+                              onClick={() => (basketLocked ? handleUnlockBasket() : handleLockBasket())}
                               disabled={isLoading}
                               className="gap-1"
                             >
