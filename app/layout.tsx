@@ -44,7 +44,7 @@ export default function RootLayout({
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
                         {/* Hamburger icon for mobile */}
-                        <div className="md:hidden mr-4">
+                        <div className="lg:hidden mr-4">
                           <SidebarTrigger className="h-7 w-7">
                             <PanelLeft className="h-5 w-5" />
                             <span className="sr-only">Toggle Sidebar</span>
@@ -54,7 +54,7 @@ export default function RootLayout({
                         <span className="font-neuropol text-foreground text-lg">SENTIBOARD</span>
                       </div>
 
-                      <div className="hidden md:flex items-center space-x-4">
+                      <div className="hidden lg:flex items-center space-x-4">
                         {/* Navigation menu items */}
                         <Link
                           href="/"
