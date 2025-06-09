@@ -352,7 +352,9 @@ export default function PerformancePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        {" "}
+        {/* Updated classes */}
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Performance Summary</h1>
@@ -362,7 +364,6 @@ export default function PerformancePage() {
               : "Performance data for stocks in your selected basket"}
           </p>
         </div>
-
         {/* Main Content Card */}
         <Card className="mb-8">
           <CardHeader className="pb-4">
