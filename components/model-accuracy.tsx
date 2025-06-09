@@ -143,15 +143,12 @@ export function ModelAccuracy() {
       // Group by symbol and get the latest signal for each
       const latestSignals = new Map<string, SignalData>()
 
-      // Defensive check for data
-      if (data) {
-        data.forEach((signal) => {
-          const existingSignal = latestSignals.get(signal.comp_symbol)
-          if (!existingSignal || new Date(signal.date) > new Date(existingSignal.date)) {
-            latestSignals.set(signal.comp_symbol, signal)
-          }
-        })
-      }
+      data.forEach((signal) => {
+        const existingSignal = latestSignals.get(signal.comp_symbol)
+        if (!existingSignal || new Date(signal.date) > new Date(existingSignal.date)) {
+          latestSignals.set(signal.comp_symbol, signal)
+        }
+      })
 
       // Calculate accuracy for each signal
       let correctCount = 0
@@ -209,47 +206,39 @@ export function ModelAccuracy() {
           <div className="p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-md">{error}</div>
         ) : (
           <div className="space-y-6">
-            {modelAccuracies &&
-              modelAccuracies.map(
-                (
-                  model, // Defensive check
-                ) => (
-                  <div key={model.modelName} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <div className={`p-1.5 rounded-full ${model.color}`}>{model.icon}</div>
-                        <span className="font-medium">{model.modelName}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          {model.correctSignals} of {model.totalSignals} correct
-                        </span>
-                        <Badge variant={model.accuracy >= 60 ? "default" : "outline"}>
-                          {model.accuracy.toFixed(1)}% accurate
-                        </Badge>
-                      </div>
-                    </div>
-                    <Progress value={model.accuracy} className="h-2" />
+            {modelAccuracies.map((model) => (
+              <div key={model.modelName} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-1.5 rounded-full ${model.color}`}>{model.icon}</div>
+                    <span className="font-medium">{model.modelName}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {model.correctSignals} of {model.totalSignals} correct
+                    </span>
+                    <Badge variant={model.accuracy >= 60 ? "default" : "outline"}>
+                      {model.accuracy.toFixed(1)}% accurate
+                    </Badge>
+                  </div>
+                </div>
+                <Progress value={model.accuracy} className="h-2" />
 
-                    <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {model.details &&
-                        model.details.slice(0, 6).map(
-                          (
-                            detail, // Defensive check
-                          ) => (
-                            <div
-                              key={detail.symbol}
-                              className={`text-xs p-2 rounded-md border flex justify-between items-center
+                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {model.details.slice(0, 6).map((detail) => (
+                    <div
+                      key={detail.symbol}
+                      className={`text-xs p-2 rounded-md border flex justify-between items-center
                         ${
                           detail.isCorrect
                             ? "border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-900"
                             : "border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900"
                         }`}
-                            >
-                              <div>
-                                <span className="font-medium">{detail.symbol}</span>
-                                <span
-                                  className={`ml-2 px-1.5 py-0.5 rounded text-xs
+                    >
+                      <div>
+                        <span className="font-medium">{detail.symbol}</span>
+                        <span
+                          className={`ml-2 px-1.5 py-0.5 rounded text-xs
                           ${
                             detail.sentiment.toLowerCase() === "positive"
                               ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
@@ -257,34 +246,31 @@ export function ModelAccuracy() {
                                 ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
                                 : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
                           }`}
-                                >
-                                  {detail.sentiment}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <span className={detail.percentChange >= 0 ? "text-green-600" : "text-red-600"}>
-                                  {detail.percentChange >= 0 ? "+" : ""}
-                                  {detail.percentChange.toFixed(1)}%
-                                </span>
-                                {detail.isCorrect ? (
-                                  <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                                ) : (
-                                  <XCircle className="h-3.5 w-3.5 text-red-500" />
-                                )}
-                              </div>
-                            </div>
-                          ),
+                        >
+                          {detail.sentiment}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className={detail.percentChange >= 0 ? "text-green-600" : "text-red-600"}>
+                          {detail.percentChange >= 0 ? "+" : ""}
+                          {detail.percentChange.toFixed(1)}%
+                        </span>
+                        {detail.isCorrect ? (
+                          <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-3.5 w-3.5 text-red-500" />
                         )}
-                      {model.details &&
-                        model.details.length > 6 && ( // Defensive check
-                          <div className="text-xs p-2 rounded-md border border-dashed border-muted-foreground/30 flex justify-center items-center">
-                            +{model.details.length - 6} more stocks
-                          </div>
-                        )}
+                      </div>
                     </div>
-                  </div>
-                ),
-              )}
+                  ))}
+                  {model.details.length > 6 && (
+                    <div className="text-xs p-2 rounded-md border border-dashed border-muted-foreground/30 flex justify-center items-center">
+                      +{model.details.length - 6} more stocks
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>
