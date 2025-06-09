@@ -949,6 +949,7 @@ const SentimentDashboard = () => {
 
   return (
     <div className="bg-background min-h-screen">
+      <div className="text-center text-sm text-muted-foreground py-2">Sentiment Dashboard Home</div>
       <div className="max-w-7xl mx-auto p-6">
         {isLoading && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
