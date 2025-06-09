@@ -26,7 +26,6 @@ import { StockDetailView } from "./components/stock-detail-view"
 import { CorrelationChart } from "./components/correlation-chart"
 import StockAllocation from "./components/stock-allocation"
 import { AddBasketModal } from "./components/add-basket-modal"
-import { ModelAccuracy } from "./components/model-accuracy"
 import { useAuth } from "@/context/auth-context"
 import {
   saveBasket,
@@ -1023,12 +1022,12 @@ const SentimentDashboard = () => {
                           const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
                           return (
                             <div key={stock.id} className="space-y-3">
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                              <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <div className="w-16 font-medium text-foreground">{stock.symbol}</div>
                                   <div className="text-sm text-muted-foreground truncate">{stock.name}</div>
                                 </div>
-                                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                                <div className="flex items-center gap-3">
                                   <div className="text-sm font-medium text-foreground min-w-[3rem] text-right">
                                     {stock.allocation}%
                                   </div>
@@ -1084,7 +1083,7 @@ const SentimentDashboard = () => {
                       </div>
                     </CardContent>
 
-                    <CardFooter className="flex flex-wrap justify-between border-t pt-4 gap-2">
+                    <CardFooter className="flex justify-between border-t pt-4">
                       <div className="flex items-center gap-4">
                         <div className="text-sm text-muted-foreground">
                           <span className="font-medium text-foreground">{stocks.filter((s) => s.locked).length}</span>{" "}
@@ -1228,11 +1227,6 @@ const SentimentDashboard = () => {
                     <CorrelationChart stocks={stocks} weights={weights} />
                   </div>
 
-                  {/* Model Accuracy Section */}
-                  <div className="mb-6">
-                    <ModelAccuracy />
-                  </div>
-
                   {/* Simplified Basket Management */}
                   <Card className="mb-6">
                     <CardHeader>
@@ -1245,7 +1239,7 @@ const SentimentDashboard = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex flex-col sm:flex-row gap-3 w-full">
+                      <div className="flex flex-col sm:flex-row gap-3">
                         {/* Basket Dropdown */}
                         <div className="flex-1">
                           <Select value={selectedBasketId || ""} onValueChange={handleBasketChange}>
@@ -1266,7 +1260,7 @@ const SentimentDashboard = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
+                        <div className="flex gap-2">
                           <Button
                             variant="outline"
                             onClick={() => saveCurrentBasket(false)}
@@ -1309,7 +1303,7 @@ const SentimentDashboard = () => {
                       {/* Current Basket Info */}
                       {basketId && (
                         <div className="mt-4 pt-4 border-t">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
                               <span className="text-muted-foreground">Current:</span>
                               <span className="font-medium ml-1">{basketName}</span>
@@ -1326,15 +1320,15 @@ const SentimentDashboard = () => {
                                     Locked
                                   </Badge>
                                 ) : (
-                                  <Badge variant="outline" className="border-green-500 text-green-600 text-xs">
+                                  <Badge variant="outline" className="text-xs">
                                     Editable
                                   </Badge>
                                 )}
                               </span>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Created:</span>
-                              <span className="font-medium ml-1">{formatDate(basketDates.created)}</span>
+                              <span className="text-muted-foreground">Updated:</span>
+                              <span className="font-medium ml-1">{formatDate(basketDates.updated)}</span>
                             </div>
                           </div>
                         </div>
@@ -1345,66 +1339,11 @@ const SentimentDashboard = () => {
               )}
             </div>
 
-            {/* Insights Section */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-foreground">Insights</h2>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleSection("insights")}>
-                  {sectionsCollapsed.insights ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
-                </Button>
-              </div>
-
-              {!sectionsCollapsed.insights && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {stockPerformanceData.map((stock) => (
-                    <Card
-                      key={stock.id}
-                      className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                      onClick={() => handleStockClick(stock)}
-                    >
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <CardTitle className="text-lg">{stock.symbol}</CardTitle>
-                            <CardDescription className="text-sm">{stock.name}</CardDescription>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-lg font-bold">${stock.price}</div>
-                            <div className={`text-sm ${getPerformanceColor(stock.change)}`}>
-                              {stock.change > 0 ? "+" : ""}
-                              {stock.change.toFixed(2)}%
-                            </div>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Allocation</span>
-                            <span className="font-medium">{stock.allocation}%</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Sentiment</span>
-                            <div className="flex items-center gap-1">
-                              {getSentimentIcon(stock.compositeSentiment)}
-                              <span className={`text-sm font-medium ${getSentimentColor(stock.compositeSentiment)}`}>
-                                {stock.compositeSentiment.toFixed(2)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Performance Tracking Section */}
+            {/* Basket Tracking Section - Only shown after basket is locked */}
             {basketLocked && (
-              <div id="tracking-section" className="mb-8">
+              <div className="mb-8" id="tracking-section">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold text-foreground">Performance Tracking</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Basket Tracking</h2>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleSection("tracking")}>
                     {sectionsCollapsed.tracking ? (
                       <ChevronDown className="h-5 w-5" />
@@ -1415,113 +1354,173 @@ const SentimentDashboard = () => {
                 </div>
 
                 {!sectionsCollapsed.tracking && (
-                  <Card>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Basket Details */}
+                    <Card>
+                      <CardHeader>
+                        <div className="flex justify-between items-center">
                           <CardTitle className="flex items-center gap-2">
-                            <Lock className="h-5 w-5 text-amber-500" />
-                            Locked Basket: {basketName}
+                            <BarChart3 className="h-5 w-5 text-primary" />
+                            Basket Details
                           </CardTitle>
-                          <CardDescription>
-                            This basket is locked for performance tracking. Unlock to make changes.
-                          </CardDescription>
                         </div>
-                        <Button variant="outline" onClick={handleUnlockBasket} disabled={isLoading} className="gap-1">
-                          <Unlock className="h-4 w-4" />
-                          Unlock Basket
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-foreground">
-                            {stocks.reduce((sum, stock) => sum + stock.allocation, 0)}%
+                        <CardDescription>Information about the locked stock basket</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center py-1 border-b">
+                            <span className="text-muted-foreground">Name</span>
+                            <span className="font-medium text-foreground">{basketName}</span>
                           </div>
-                          <div className="text-sm text-muted-foreground">Total Allocation</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-emerald-500">+2.4%</div>
-                          <div className="text-sm text-muted-foreground">Performance Since Lock</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-foreground">{stocks.length}</div>
-                          <div className="text-sm text-muted-foreground">Stocks in Basket</div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Created:</span>
-                          <span className="font-medium">{formatDate(basketDates.created)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Last Updated:</span>
-                          <span className="font-medium">{formatDate(basketDates.updated)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Locked Date:</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{formatDate(basketDates.locked)}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() => setIsEditingLockDate(true)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
+                          <div className="flex justify-between items-center py-1 border-b">
+                            <span className="text-muted-foreground">Stocks</span>
+                            <span className="font-medium text-foreground">{stocks.length}</span>
+                          </div>
+                          <div className="flex justify-between items-center py-1 border-b">
+                            <span className="text-muted-foreground">Locked Positions</span>
+                            <span className="font-medium text-foreground">
+                              {stocks.filter((s) => s.locked).length} of {stocks.length}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center py-1 border-b">
+                            <span className="text-muted-foreground">Created</span>
+                            <span className="font-medium text-foreground">{formatDate(basketDates.created)}</span>
+                          </div>
+                          <div className="flex justify-between items-center py-1">
+                            <span className="text-muted-foreground">Locked On</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-foreground">{formatDate(basketDates.locked)}</span>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                                    <Edit className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <span className="sr-only">Edit lock date</span>
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
+                                  <Calendar
+                                    mode="single"
+                                    selected={basketDates.locked || undefined}
+                                    onSelect={(date) => {
+                                      if (date) {
+                                        handleUpdateLockDate(date)
+                                      }
+                                    }}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      </CardContent>
+                    </Card>
 
-                      {/* Date Editor Popover */}
-                      <Popover open={isEditingLockDate} onOpenChange={setIsEditingLockDate}>
-                        <PopoverTrigger asChild>
-                          <div />
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="end">
-                          <Calendar
-                            mode="single"
-                            selected={basketDates.locked}
-                            onSelect={(date) => {
-                              if (date) {
-                                handleUpdateLockDate(date)
-                                setIsEditingLockDate(false)
-                              }
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </CardContent>
-                  </Card>
+                    {/* Stock Performance Table */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle className="flex items-center gap-2">
+                              <BarChart3 className="h-5 w-5 text-primary" />
+                              Performance Tracking
+                            </CardTitle>
+                            <CardDescription>Real-time performance vs. sentiment predictions</CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="text-left py-3 px-4 font-medium text-muted-foreground">Symbol</th>
+                                <th className="text-right py-3 px-4 font-medium text-muted-foreground">Sentiment</th>
+                                <th className="text-right py-3 px-4 font-medium text-muted-foreground">Performance</th>
+                                <th className="text-center py-3 px-4 font-medium text-muted-foreground">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {stockPerformanceData.map((stock) => (
+                                <tr
+                                  key={stock.id}
+                                  className="border-b hover:bg-accent transition-colors cursor-pointer"
+                                  onClick={() => handleStockClick(stock)}
+                                >
+                                  <td className="py-3 px-4 font-medium text-foreground">{stock.symbol}</td>
+                                  <td className="py-3 px-4 text-right font-medium">
+                                    <div className="flex items-center justify-end gap-1">
+                                      {getSentimentIcon(stock.compositeSentiment)}
+                                      <span className={getSentimentColor(stock.compositeSentiment)}>
+                                        {stock.compositeSentiment.toFixed(2)}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-right font-bold">
+                                    <div className="flex items-center justify-end gap-1">
+                                      {stock.performance > 0 ? (
+                                        <ArrowUp className="h-4 w-4 text-emerald-500" />
+                                      ) : (
+                                        <ArrowDown className="h-4 w-4 text-red-500" />
+                                      )}
+                                      <span className={getPerformanceColor(stock.performance)}>
+                                        {stock.performance > 0 ? "+" : ""}
+                                        {stock.performance}%
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">
+                                    {stock.locked ? (
+                                      <Badge variant="outline" className="border-amber-500 text-amber-600">
+                                        Locked
+                                      </Badge>
+                                    ) : (
+                                      <Badge
+                                        variant="outline"
+                                        className="border-muted-foreground text-muted-foreground"
+                                      >
+                                        Flexible
+                                      </Badge>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 )}
               </div>
             )}
 
-            {/* Stock Selector Dialog */}
-            <StockSelector
-              isOpen={isStockSelectorOpen}
-              onClose={() => setIsStockSelectorOpen(false)}
-              selectedStocks={stocks}
-              onSaveStocks={handleSaveStocks}
-            />
+            {/* Footer */}
+            <div className="mt-8 pt-6 border-t text-center text-muted-foreground text-sm">
+              <p>© 2025 Sentiment Analysis Dashboard. Data refreshes every 15 minutes.</p>
+            </div>
 
-            {/* Stock Allocation Dialog */}
-            <StockAllocation
-              isOpen={isAllocationEditorOpen}
-              onClose={() => setIsAllocationEditorOpen(false)}
-              stocks={stocks}
-              onSaveStocks={handleSaveStocks}
-            />
-
-            {/* Add Basket Modal */}
+            {/* Modals */}
             <AddBasketModal
-              isOpen={isAddBasketModalOpen}
-              onClose={() => setIsAddBasketModalOpen(false)}
-              onCreateBasket={createNewBasket}
+              open={isAddBasketModalOpen}
+              onOpenChange={setIsAddBasketModalOpen}
+              onSave={createNewBasket}
+              isLoading={isLoading}
+            />
+
+            <StockSelector
+              open={isStockSelectorOpen}
+              onOpenChange={setIsStockSelectorOpen}
+              initialStocks={stocks}
+              onSave={handleSaveStocks}
+            />
+            <StockAllocation
+              open={isAllocationEditorOpen}
+              onOpenChange={setIsAllocationEditorOpen}
+              stocks={stocks}
+              onSave={handleSaveStocks}
+              onAllocationChange={handleAllocationChange}
+              onToggleLock={handleToggleLock}
             />
           </>
         )}
@@ -1530,24 +1529,58 @@ const SentimentDashboard = () => {
   )
 }
 
-// Helper function to generate sentiment data
+// Helper function to generate sample sentiment data
 function generateSentimentData(days) {
   const data = []
-  const today = new Date()
+  const now = new Date()
+  let twitterBaseline = Math.random() * 0.4 + 0.1 // 0.1 to 0.5
+  let googleBaseline = Math.random() * 0.4 - 0.2 // -0.2 to 0.2
+  let newsBaseline = Math.random() * 0.6 - 0.3 // -0.3 to 0.3
 
   for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(today)
+    const date = new Date(now)
     date.setDate(date.getDate() - i)
 
+    // Create some variability in the sentiment
+    const twitterVariation = Math.random() * 0.4 - 0.2 // -0.2 to 0.2
+    const googleVariation = Math.random() * 0.3 - 0.15 // -0.15 to 0.15
+    const newsVariation = Math.random() * 0.5 - 0.25 // -0.25 to 0.25
+
+    // Create some correlation between the sentiments
+    const commonFactor = Math.random() * 0.3 - 0.15 // -0.15 to 0.15
+
+    // Calculate sentiments with bounds checking
+    const twitterSentiment = clamp(twitterBaseline + twitterVariation + commonFactor, -1, 1)
+    const googleTrendsSentiment = clamp(googleBaseline + googleVariation + commonFactor, -1, 1)
+    const newsSentiment = clamp(newsBaseline + newsVariation + commonFactor, -1, 1)
+
+    // Format date as MM/DD
+    const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`
+
     data.push({
-      date: date.toISOString().split("T")[0],
-      twitterSentiment: Number.parseFloat((Math.random() * 2 - 1).toFixed(2)),
-      googleTrendsSentiment: Number.parseFloat((Math.random() * 2 - 1).toFixed(2)),
-      newsSentiment: Number.parseFloat((Math.random() * 2 - 1).toFixed(2)),
+      date: formattedDate,
+      twitterSentiment,
+      googleTrendsSentiment,
+      newsSentiment,
     })
+
+    // Adjust baselines slightly for trend
+    twitterBaseline += Math.random() * 0.1 - 0.05
+    googleBaseline += Math.random() * 0.08 - 0.04
+    newsBaseline += Math.random() * 0.12 - 0.06
+
+    // Keep baselines in reasonable range
+    twitterBaseline = clamp(twitterBaseline, -0.7, 0.7)
+    googleBaseline = clamp(googleBaseline, -0.7, 0.7)
+    newsBaseline = clamp(newsBaseline, -0.7, 0.7)
   }
 
   return data
+}
+
+// Helper function to clamp a value between min and max
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max)
 }
 
 export default SentimentDashboard
