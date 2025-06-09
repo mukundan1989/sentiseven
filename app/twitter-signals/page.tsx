@@ -273,7 +273,7 @@ export default function TwitterSignalsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">X Signals</h1>
           <p className="text-muted-foreground mt-2">View the latest Twitter sentiment signals for each stock.</p>
@@ -309,7 +309,7 @@ export default function TwitterSignalsPage() {
         {/* Filters and Controls */}
         <Card className="mb-8">
           <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -321,7 +321,7 @@ export default function TwitterSignalsPage() {
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Select value={sentimentFilter} onValueChange={setSentimentFilter}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Filter by sentiment" />
