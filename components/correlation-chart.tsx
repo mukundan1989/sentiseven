@@ -101,43 +101,37 @@ export function CorrelationChart({ stocks, weights }) {
           <div className="h-px bg-slate-800"></div>
 
           {/* Source rows */}
-          {sourceCorrelationData &&
-            sourceCorrelationData.map(
-              (
-                source,
-                index, // Defensive check
-              ) => (
-                <div key={index} className="space-y-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-lg font-medium">{source.name}</div>
-                    <div className="flex items-center justify-end text-lg font-medium" style={{ color: source.color }}>
-                      {source.correlation.toFixed(2)} - {source.impact}
-                    </div>
-                  </div>
-
-                  {/* Progress bar background */}
-                  <div className="h-4 w-full rounded-full bg-slate-800/50">
-                    {/* Progress bar fill */}
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: getWidthPercentage(source.correlation),
-                        backgroundColor: source.color,
-                      }}
-                    ></div>
-                  </div>
-
-                  {/* Scale labels */}
-                  <div className="grid grid-cols-5 text-xs text-slate-400">
-                    <div>Poor (0.0)</div>
-                    <div className="text-center">Weak (0.3)</div>
-                    <div className="text-center">Moderate (0.5)</div>
-                    <div className="text-center">Strong (0.8)</div>
-                    <div className="text-right">Perfect (1.0)</div>
-                  </div>
+          {sourceCorrelationData.map((source, index) => (
+            <div key={index} className="space-y-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-lg font-medium">{source.name}</div>
+                <div className="flex items-center justify-end text-lg font-medium" style={{ color: source.color }}>
+                  {source.correlation.toFixed(2)} - {source.impact}
                 </div>
-              ),
-            )}
+              </div>
+
+              {/* Progress bar background */}
+              <div className="h-4 w-full rounded-full bg-slate-800/50">
+                {/* Progress bar fill */}
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: getWidthPercentage(source.correlation),
+                    backgroundColor: source.color,
+                  }}
+                ></div>
+              </div>
+
+              {/* Scale labels */}
+              <div className="grid grid-cols-5 text-xs text-slate-400">
+                <div>Poor (0.0)</div>
+                <div className="text-center">Weak (0.3)</div>
+                <div className="text-center">Moderate (0.5)</div>
+                <div className="text-center">Strong (0.8)</div>
+                <div className="text-right">Perfect (1.0)</div>
+              </div>
+            </div>
+          ))}
 
           {/* Divider */}
           <div className="h-px bg-slate-800"></div>
@@ -148,40 +142,28 @@ export function CorrelationChart({ stocks, weights }) {
 
             {/* Scale bar */}
             <div className="flex h-6 w-full rounded-full overflow-hidden">
-              {correlationScale &&
-                correlationScale.map(
-                  (
-                    segment,
-                    index, // Defensive check
-                  ) => (
-                    <div
-                      key={index}
-                      className="h-full"
-                      style={{
-                        backgroundColor: segment.color,
-                        width: "25%", // Equal width for each segment
-                      }}
-                    ></div>
-                  ),
-                )}
+              {correlationScale.map((segment, index) => (
+                <div
+                  key={index}
+                  className="h-full"
+                  style={{
+                    backgroundColor: segment.color,
+                    width: "25%", // Equal width for each segment
+                  }}
+                ></div>
+              ))}
             </div>
 
             {/* Scale labels */}
             <div className="grid grid-cols-4 text-sm">
-              {correlationScale &&
-                correlationScale.map(
-                  (
-                    segment,
-                    index, // Defensive check
-                  ) => (
-                    <div key={index} className={index === 0 ? "" : index === 3 ? "text-right" : "text-center"}>
-                      <div className="font-medium" style={{ color: segment.color }}>
-                        {segment.label}
-                      </div>
-                      <div className="text-xs text-slate-400">{segment.range}</div>
-                    </div>
-                  ),
-                )}
+              {correlationScale.map((segment, index) => (
+                <div key={index} className={index === 0 ? "" : index === 3 ? "text-right" : "text-center"}>
+                  <div className="font-medium" style={{ color: segment.color }}>
+                    {segment.label}
+                  </div>
+                  <div className="text-xs text-slate-400">{segment.range}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
