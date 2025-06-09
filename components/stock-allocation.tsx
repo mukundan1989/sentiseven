@@ -170,7 +170,7 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
+      <AlertDialogContent className="w-full max-w-md sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-card-foreground">Stock Allocation</AlertDialogTitle>
           <AlertDialogDescription className="text-muted-foreground">
@@ -178,7 +178,7 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
           <div className="flex items-center gap-2">
             <Badge
               className={
@@ -213,40 +213,45 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
 
         <div className="grid gap-4 py-4">
           {localStocks.map((stock) => (
-            <div key={stock.id} className="grid grid-cols-12 items-center gap-4">
-              <Label htmlFor={`stock-${stock.id}`} className="col-span-3 truncate text-foreground">
+            <div
+              key={stock.id}
+              className="flex flex-col sm:grid sm:grid-cols-12 items-start sm:items-center gap-2 sm:gap-4 p-2 border rounded-md"
+            >
+              <Label htmlFor={`stock-${stock.id}`} className="sm:col-span-3 truncate text-foreground w-full sm:w-auto">
                 {stock.symbol ? `${stock.symbol} - ${stock.name}` : stock.name}
               </Label>
-              <div className="col-span-2">
-                <Input
-                  type="number"
-                  id={`stock-${stock.id}`}
-                  value={stock.allocation}
-                  onChange={(e) => {
-                    const newAllocation = Number.parseFloat(e.target.value)
-                    if (!isNaN(newAllocation)) {
-                      handleAllocationChange(stock.id, newAllocation)
-                    }
-                  }}
-                  className="w-full bg-background border-border text-foreground"
-                  step="0.1"
-                  min="0"
-                  max="100"
-                />
-              </div>
-              <div className="col-span-5">
-                <Slider
-                  value={[stock.allocation]}
-                  max={100}
-                  step={0.1}
-                  onValueChange={(value) => {
-                    handleAllocationChange(stock.id, value[0])
-                  }}
-                />
-              </div>
-              <div className="col-span-2 flex items-center justify-end gap-2">
-                <span className="text-sm text-muted-foreground">{stock.locked ? "Locked" : "Unlocked"}</span>
-                <Switch checked={stock.locked} onCheckedChange={() => handleLockChange(stock.id)} />
+              <div className="flex items-center gap-2 w-full sm:col-span-9">
+                <div className="w-20 sm:w-auto">
+                  <Input
+                    type="number"
+                    id={`stock-${stock.id}`}
+                    value={stock.allocation}
+                    onChange={(e) => {
+                      const newAllocation = Number.parseFloat(e.target.value)
+                      if (!isNaN(newAllocation)) {
+                        handleAllocationChange(stock.id, newAllocation)
+                      }
+                    }}
+                    className="w-full bg-background border-border text-foreground"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Slider
+                    value={[stock.allocation]}
+                    max={100}
+                    step={0.1}
+                    onValueChange={(value) => {
+                      handleAllocationChange(stock.id, value[0])
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-end gap-2 min-w-[6rem]">
+                  <span className="text-sm text-muted-foreground">{stock.locked ? "Locked" : "Unlocked"}</span>
+                  <Switch checked={stock.locked} onCheckedChange={() => handleLockChange(stock.id)} />
+                </div>
               </div>
             </div>
           ))}
