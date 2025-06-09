@@ -1023,12 +1023,12 @@ const SentimentDashboard = () => {
                           const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
                           return (
                             <div key={stock.id} className="space-y-3">
-                              <div className="flex items-center justify-between">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                                 <div className="flex items-center gap-3">
                                   <div className="w-16 font-medium text-foreground">{stock.symbol}</div>
                                   <div className="text-sm text-muted-foreground truncate">{stock.name}</div>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
                                   <div className="text-sm font-medium text-foreground min-w-[3rem] text-right">
                                     {stock.allocation}%
                                   </div>
@@ -1084,7 +1084,7 @@ const SentimentDashboard = () => {
                       </div>
                     </CardContent>
 
-                    <CardFooter className="flex justify-between border-t pt-4">
+                    <CardFooter className="flex flex-wrap justify-between border-t pt-4 gap-2">
                       <div className="flex items-center gap-4">
                         <div className="text-sm text-muted-foreground">
                           <span className="font-medium text-foreground">{stocks.filter((s) => s.locked).length}</span>{" "}
@@ -1245,7 +1245,7 @@ const SentimentDashboard = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex flex-col sm:flex-row gap-3 w-full">
                         {/* Basket Dropdown */}
                         <div className="flex-1">
                           <Select value={selectedBasketId || ""} onValueChange={handleBasketChange}>
@@ -1266,7 +1266,7 @@ const SentimentDashboard = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                           <Button
                             variant="outline"
                             onClick={() => saveCurrentBasket(false)}
@@ -1309,7 +1309,7 @@ const SentimentDashboard = () => {
                       {/* Current Basket Info */}
                       {basketId && (
                         <div className="mt-4 pt-4 border-t">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
                               <span className="text-muted-foreground">Current:</span>
                               <span className="font-medium ml-1">{basketName}</span>
