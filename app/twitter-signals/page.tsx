@@ -17,6 +17,12 @@ interface TwitterSignal {
   entry_price: number
 }
 
+interface StockPrice {
+  symbol: string
+  price: number
+  source?: string
+}
+
 export default function TwitterSignalsPage() {
   const [data, setData] = useState<TwitterSignal[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,57 +44,31 @@ export default function TwitterSignalsPage() {
   const [currentPrices, setCurrentPrices] = useState<Record<string, number>>({})
   const [pricesLoading, setPricesLoading] = useState(false)
 
-  // Mock historical prices for demo purposes
-  // This ensures consistent prices for the same stock on the same date
-  const mockHistoricalPrices: Record<string, number> = {
-    AAPL: 175.43,
-    MSFT: 325.76,
-    GOOGL: 132.58,
-    AMZN: 145.68,
-    META: 302.55,
-    TSLA: 238.45,
-    NVDA: 437.92,
-    NFLX: 412.34,
-    JPM: 145.23,
-    V: 235.67,
-    GRPN: 26.6,
-    APRN: 75.2,
-  }
-
-  // Fetch current stock price using Yahoo Finance API
+  // Fetch current stock price using our API route
   const getCurrentPrice = async (symbol: string): Promise<number> => {
     try {
-      // Using Yahoo Finance API through a proxy service
-      const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`)
-      const data = await response.json()
+      console.log(`Fetching price for ${symbol} from API route`)
+      const response = await fetch(`/api/stock-price/current/${symbol}`)
 
-      if (data.chart?.result?.[0]?.meta?.regularMarketPrice) {
-        return data.chart.result[0].meta.regularMarketPrice
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`API returned ${response.status}: ${errorText}`)
       }
 
-      // Fallback: try alternative endpoint
-      const altResponse = await fetch(
-        `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price`,
-      )
-      const altData = await altResponse.json()
-
-      if (altData.quoteSummary?.result?.[0]?.price?.regularMarketPrice?.raw) {
-        return altData.quoteSummary.result[0].price.regularMarketPrice.raw
-      }
-
-      throw new Error(`No price data found for ${symbol}`)
+      const data: StockPrice = await response.json()
+      console.log(`Received price for ${symbol}: ${data.price} (source: ${data.source || "unknown"})`)
+      return data.price
     } catch (error) {
       console.error(`Error fetching current price for ${symbol}:`, error)
-
-      // Use our mock prices with a small random variation for current price
-      const basePrice = mockHistoricalPrices[symbol] || 100
-      return basePrice * (0.9 + Math.random() * 0.2) // ±10% variation
+      return 0
     }
   }
 
   // Fetch current prices for all symbols
   const fetchCurrentPrices = async (symbols: string[]) => {
     setPricesLoading(true)
+    console.log(`Fetching prices for ${symbols.length} symbols`)
+
     const prices: Record<string, number> = {}
 
     for (const symbol of symbols) {
@@ -100,6 +80,7 @@ export default function TwitterSignalsPage() {
       }
     }
 
+    console.log("All prices fetched:", prices)
     setCurrentPrices(prices)
     setPricesLoading(false)
   }
@@ -226,6 +207,7 @@ export default function TwitterSignalsPage() {
   useEffect(() => {
     if (data.length > 0) {
       const uniqueSymbols = [...new Set(data.map((item) => item.comp_symbol))]
+      console.log(`Found ${uniqueSymbols.length} unique symbols:`, uniqueSymbols)
       fetchCurrentPrices(uniqueSymbols)
     }
   }, [data])
