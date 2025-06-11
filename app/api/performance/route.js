@@ -1,4 +1,10 @@
-import mysql from "mysql2/promise"
+import { createClient } from "@supabase/supabase-js"
+
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export async function GET(req) {
   const url = new URL(req.url)
@@ -17,52 +23,41 @@ export async function GET(req) {
   }
 
   try {
-    const connection = await mysql.createConnection({
-      host: "13.233.224.119",
-      user: "stockstream_two",
-      password: "stockstream_two",
-      database: "stockstream_two",
-    })
-
     let result
 
     if (type === "metrics") {
       // Win percentage query
-      const [winPercentageRows] = await connection.execute(
-        `
-        SELECT (COUNT(CASE WHEN (\`30d_pl\` > 0 OR \`60d_pl\` > 0) AND sentiment != 'neutral' THEN 1 END) 
-        / COUNT(CASE WHEN sentiment != 'neutral' THEN 1 END)) * 100 AS win_percentage
-        FROM models_performance WHERE comp_symbol = ?;
-      `,
-        [symbol],
-      )
+      const { data: winPercentageData, error: winPercentageError } = await supabase
+        .from("models_performance")
+        .select("30d_pl, 60d_pl, sentiment")
+        .eq("comp_symbol", symbol)
+        .neq("sentiment", "neutral")
+
+      if (winPercentageError) throw winPercentageError
+
+      const totalSignals = winPercentageData.length
+      let winningSignals = 0
+      if (totalSignals > 0) {
+        winningSignals = winPercentageData.filter((row) => row["30d_pl"] > 0 || row["60d_pl"] > 0).length
+      }
+      const winPercentage = totalSignals > 0 ? Math.round((winningSignals / totalSignals) * 100) : "N/A"
 
       // Total trades query
-      const [totalTradesRows] = await connection.execute(
-        `
-        SELECT COUNT(*) AS total_trades FROM models_performance
-        WHERE comp_symbol = ? AND sentiment != 'neutral';
-      `,
-        [symbol],
-      )
+      const totalTrades = totalSignals !== null ? totalSignals : "N/A"
 
       // Profit factor query
-      const [profitFactorRows] = await connection.execute(
-        `
-        SELECT COALESCE(SUM(CASE WHEN \`30d_pl\` > 0 AND sentiment != 'neutral' THEN \`30d_pl\` ELSE 0 END), 0) / 
-        NULLIF(ABS(SUM(CASE WHEN \`30d_pl\` < 0 AND sentiment != 'neutral' THEN \`30d_pl\` ELSE 0 END)), 0) 
-        AS profit_factor FROM models_performance WHERE comp_symbol = ?;
-      `,
-        [symbol],
-      )
-
-      const winPercentage =
-        winPercentageRows[0].win_percentage !== null ? Math.round(winPercentageRows[0].win_percentage) : "N/A"
-
-      const totalTrades = totalTradesRows[0].total_trades !== null ? totalTradesRows[0].total_trades : "N/A"
-
-      const profitFactor =
-        profitFactorRows[0].profit_factor !== null ? Number(profitFactorRows[0].profit_factor).toFixed(2) : "N/A"
+      let totalProfit = 0
+      let totalLoss = 0
+      if (winPercentageData.length > 0) {
+        winPercentageData.forEach((row) => {
+          if (row["30d_pl"] > 0) {
+            totalProfit += row["30d_pl"]
+          } else if (row["30d_pl"] < 0) {
+            totalLoss += row["30d_pl"]
+          }
+        })
+      }
+      const profitFactor = totalLoss !== 0 ? (totalProfit / Math.abs(totalLoss)).toFixed(2) : "N/A"
 
       result = {
         win_percentage: winPercentage,
@@ -70,43 +65,39 @@ export async function GET(req) {
         profit_factor: profitFactor,
       }
     } else if (type === "data") {
-      const [rows] = await connection.execute(
-        `
-        SELECT date, sentiment, entry_price, \`30d_pl\`, \`60d_pl\`
-        FROM models_performance
-        WHERE comp_symbol = ? AND sentiment != 'neutral'
-      `,
-        [symbol],
-      )
+      const { data, error } = await supabase
+        .from("models_performance")
+        .select("date, sentiment, entry_price, 30d_pl, 60d_pl")
+        .eq("comp_symbol", symbol)
+        .neq("sentiment", "neutral")
 
-      result = rows
+      if (error) throw error
+      result = data
     } else if (type === "cumulative-pl") {
-      const [rows] = await connection.execute(
-        `
-        SELECT date, SUM(\`30d_pl\`) AS daily_pl
-        FROM models_performance
-        WHERE comp_symbol = ? AND sentiment != 'neutral'
-        GROUP BY date ORDER BY date;
-      `,
-        [symbol],
-      )
+      const { data, error } = await supabase
+        .from("models_performance")
+        .select("date, 30d_pl")
+        .eq("comp_symbol", symbol)
+        .neq("sentiment", "neutral")
+        .order("date", { ascending: true })
+
+      if (error) throw error
 
       // Calculate cumulative P/L
       let cumulativePL = 0
-      result = rows.map((row) => {
-        cumulativePL += Number(row.daily_pl)
+      result = data.map((row) => {
+        cumulativePL += Number(row["30d_pl"])
         return {
           date: row.date,
-          daily_pl: Number(row.daily_pl),
+          daily_pl: Number(row["30d_pl"]),
           cumulative_pl: cumulativePL,
         }
       })
     }
 
-    await connection.end()
     return Response.json(result)
   } catch (error) {
     console.error(`Error fetching ${type} data:`, error)
-    return Response.json({ error: `Failed to fetch ${type} data` }, { status: 500 })
+    return Response.json({ error: `Failed to fetch ${type} data: ${error.message}` }, { status: 500 })
   }
 }
