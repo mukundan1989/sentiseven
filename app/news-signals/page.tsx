@@ -41,23 +41,35 @@ export default function NewsSignalsPage() {
   const [currentPrices, setCurrentPrices] = useState<Record<string, number>>({})
   const [pricesLoading, setPricesLoading] = useState(false)
 
-  // Fetch current prices for all symbols
+  // Fetch current prices for all symbols using the new batch API
   const fetchCurrentPrices = async (symbols: string[]) => {
     setPricesLoading(true)
     const prices: Record<string, number> = {}
 
-    for (const symbol of symbols) {
-      try {
-        const res = await fetch(`/api/stock-price/current/${symbol}`)
-        if (!res.ok) {
-          throw new Error(`Failed to fetch current price for ${symbol}`)
-        }
-        const data = await res.json()
-        prices[symbol] = data.price
-      } catch (error) {
-        console.error(`Failed to get current price for ${symbol}:`, error)
-        prices[symbol] = 0 // Fallback to 0 or handle as needed
+    if (symbols.length === 0) {
+      setPricesLoading(false)
+      return
+    }
+
+    try {
+      const res = await fetch("/api/stock-price/current/batch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ symbols }),
+      })
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch current prices: ${res.statusText}`)
       }
+
+      const data = await res.json() // data will be an object like {AAPL: 175.43, MSFT: 325.76}
+      Object.assign(prices, data) // Merge fetched prices into the prices object
+    } catch (error) {
+      console.error("Failed to get current prices in batch:", error)
+      // Optionally, set all prices to 0 or a fallback if batch fails
+      symbols.forEach((symbol) => (prices[symbol] = 0))
     }
 
     setCurrentPrices(prices)
