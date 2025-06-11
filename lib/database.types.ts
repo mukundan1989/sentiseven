@@ -61,6 +61,146 @@ export interface Database {
           is_locked?: boolean
         }
       }
+      news_signals_full: {
+        Row: {
+          id: number
+          date: string
+          comp_symbol: string
+          analyzed_articles: number
+          sentiment_score: number
+          sentiment: string
+          entry_price: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          date: string
+          comp_symbol: string
+          analyzed_articles: number
+          sentiment_score: number
+          sentiment: string
+          entry_price: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          date?: string
+          comp_symbol?: string
+          analyzed_articles?: number
+          sentiment_score?: number
+          sentiment?: string
+          entry_price?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      twitter_signals_full: {
+        Row: {
+          id: number
+          date: string
+          comp_symbol: string
+          analyzed_tweets: number
+          sentiment_score: number
+          sentiment: string
+          entry_price: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          date: string
+          comp_symbol: string
+          analyzed_tweets: number
+          sentiment_score: number
+          sentiment: string
+          entry_price: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          date?: string
+          comp_symbol?: string
+          analyzed_tweets?: number
+          sentiment_score?: number
+          sentiment?: string
+          entry_price?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      gtrend_signals_full: {
+        Row: {
+          id: number
+          date: string
+          comp_symbol: string
+          analyzed_keywords: number
+          sentiment_score: number
+          sentiment: string
+          entry_price: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          date: string
+          comp_symbol: string
+          analyzed_keywords: number
+          sentiment_score: number
+          sentiment: string
+          entry_price: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          date?: string
+          comp_symbol?: string
+          analyzed_keywords?: number
+          sentiment_score?: number
+          sentiment?: string
+          entry_price?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      models_performance: {
+        Row: {
+          id: number
+          date: string
+          comp_symbol: string
+          sentiment: string
+          entry_price: number
+          "30d_pl": number
+          "60d_pl": number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          date: string
+          comp_symbol: string
+          sentiment: string
+          entry_price: number
+          "30d_pl": number
+          "60d_pl": number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          date?: string
+          comp_symbol?: string
+          sentiment?: string
+          entry_price?: number
+          "30d_pl"?: number
+          "60d_pl"?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
