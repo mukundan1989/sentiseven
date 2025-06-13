@@ -1024,14 +1024,22 @@ const SentimentDashboard = () => {
                           const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
                           return (
                             <div key={stock.id} className="space-y-3">
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-16 text-sm sm:text-base font-medium text-foreground">
+                              <div className="flex items-center justify-between gap-2">
+                                {" "}
+                                {/* Changed from flex-col sm:flex-row */}
+                                <div className="flex items-center gap-3 flex-shrink-0">
+                                  {" "}
+                                  {/* Added flex-shrink-0 */}
+                                  <div className="min-w-[3rem] sm:w-16 font-medium text-foreground">
+                                    {" "}
+                                    {/* Adjusted width for responsiveness */}
                                     {stock.symbol}
                                   </div>
                                   <div className="text-xs sm:text-sm text-muted-foreground truncate">{stock.name}</div>
                                 </div>
-                                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                                <div className="flex items-center gap-3 flex-shrink-0">
+                                  {" "}
+                                  {/* Added flex-shrink-0, removed w-full sm:w-auto justify-between sm:justify-end */}
                                   <div className="text-xs sm:text-sm font-medium text-foreground min-w-[3rem] text-right">
                                     {stock.allocation}%
                                   </div>
