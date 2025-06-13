@@ -998,7 +998,7 @@ const SentimentDashboard = () => {
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <div>
-                          <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                          <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl mb-1">
                             <BarChart3 className="h-5 w-5 text-primary" />
                             Stock Allocation
                           </CardTitle>
@@ -1115,7 +1115,7 @@ const SentimentDashboard = () => {
                     {/* Source Weighting Controls */}
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl mb-1">
                           <Activity className="h-5 w-5 text-primary" />
                           Source Weighting
                         </CardTitle>
@@ -1241,7 +1241,7 @@ const SentimentDashboard = () => {
                   {/* Simplified Basket Management */}
                   <Card className="mb-6">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl mb-1">
                         <BarChart3 className="h-5 w-5 text-primary" />
                         Basket Management
                       </CardTitle>
@@ -1436,7 +1436,7 @@ const SentimentDashboard = () => {
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                          <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl mb-1">
                             <Lock className="h-5 w-5 text-amber-500" />
                             Locked Basket: {basketName}
                           </CardTitle>
