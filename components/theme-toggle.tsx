@@ -16,13 +16,11 @@ export function ThemeToggle() {
     >
       {theme === "light" ? (
         <>
-          <Moon className="h-4 w-4 mr-2" />
-          Dark
+          <Moon className="h-4 w-4" />
         </>
       ) : (
         <>
-          <Sun className="h-4 w-4 mr-2" />
-          Light
+          <Sun className="h-4 w-4" />
         </>
       )}
       <span className="sr-only">Toggle theme</span>
