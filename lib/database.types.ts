@@ -3,204 +3,103 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export interface Database {
   public: {
     Tables: {
-      stock_baskets: {
+      signal_summaries: {
         Row: {
           id: string
-          user_id: string
-          name: string
-          created_at: string
-          updated_at: string
-          source_weights: Json
-          is_locked: boolean
+          signal_type: string
+          total_signals: number
+          positive_ratio: number
+          win_rate_percent: number
+          positive_signals: number
+          negative_signals: number
+          last_updated_at: string
         }
         Insert: {
           id?: string
-          user_id: string
-          name: string
-          created_at?: string
-          updated_at?: string
-          source_weights?: Json
-          is_locked?: boolean
+          signal_type: string
+          total_signals: number
+          positive_ratio: number
+          win_rate_percent: number
+          positive_signals: number
+          negative_signals: number
+          last_updated_at?: string
         }
         Update: {
           id?: string
-          user_id?: string
-          name?: string
-          created_at?: string
-          updated_at?: string
-          source_weights?: Json
-          is_locked?: boolean
+          signal_type?: string
+          total_signals?: number
+          positive_ratio?: number
+          win_rate_percent?: number
+          positive_signals?: number
+          negative_signals?: number
+          last_updated_at?: string
         }
+        Relationships: []
       }
-      basket_stocks: {
-        Row: {
-          id: string
-          basket_id: string
-          symbol: string
-          name: string
-          sector: string
-          allocation: number
-          is_locked: boolean
-        }
-        Insert: {
-          id?: string
-          basket_id: string
-          symbol: string
-          name: string
-          sector: string
-          allocation: number
-          is_locked?: boolean
-        }
-        Update: {
-          id?: string
-          basket_id?: string
-          symbol?: string
-          name?: string
-          sector?: string
-          allocation?: number
-          is_locked?: boolean
-        }
-      }
-      news_signals_full: {
-        Row: {
-          id: number
-          date: string
-          comp_symbol: string
-          analyzed_articles: number
-          sentiment_score: number
-          sentiment: string
-          entry_price: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: number
-          date: string
-          comp_symbol: string
-          analyzed_articles: number
-          sentiment_score: number
-          sentiment: string
-          entry_price: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: number
-          date?: string
-          comp_symbol?: string
-          analyzed_articles?: number
-          sentiment_score?: number
-          sentiment?: string
-          entry_price?: number
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      twitter_signals_full: {
-        Row: {
-          id: number
-          date: string
-          comp_symbol: string
-          analyzed_tweets: number
-          sentiment_score: number
-          sentiment: string
-          entry_price: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: number
-          date: string
-          comp_symbol: string
-          analyzed_tweets: number
-          sentiment_score: number
-          sentiment: string
-          entry_price: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: number
-          date?: string
-          comp_symbol?: string
-          analyzed_tweets?: number
-          sentiment_score?: number
-          sentiment?: string
-          entry_price?: number
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      gtrend_signals_full: {
-        Row: {
-          id: number
-          date: string
-          comp_symbol: string
-          analyzed_keywords: number
-          sentiment_score: number
-          sentiment: string
-          entry_price: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: number
-          date: string
-          comp_symbol: string
-          analyzed_keywords: number
-          sentiment_score: number
-          sentiment: string
-          entry_price: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: number
-          date?: string
-          comp_symbol?: string
-          analyzed_keywords?: number
-          sentiment_score?: number
-          sentiment?: string
-          entry_price?: number
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      models_performance: {
-        Row: {
-          id: number
-          date: string
-          comp_symbol: string
-          sentiment: string
-          entry_price: number
-          "30d_pl": number
-          "60d_pl": number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: number
-          date: string
-          comp_symbol: string
-          sentiment: string
-          entry_price: number
-          "30d_pl": number
-          "60d_pl": number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: number
-          date?: string
-          comp_symbol?: string
-          sentiment?: string
-          entry_price?: number
-          "30d_pl"?: number
-          "60d_pl"?: number
-          created_at?: string
-          updated_at?: string
-        }
-      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }
+
+export type Tables<
+  PublicTableNameOrOptions extends
+    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+        Database[PublicTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: any
+    }
+    ? Database[PublicTableNameOrOptions["schema"]]["Tables"] & Database[PublicTableNameOrOptions["schema"]]["Views"]
+    : never
+  : never
+
+export type TablesInsert<
+  PublicTableNameOrOptions extends keyof Database["public"]["Tables"] | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: any
+    }
+    ? Omit<Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName]["Insert"], "id">
+    : never
+  : never
+
+export type TablesUpdate<
+  PublicTableNameOrOptions extends keyof Database["public"]["Tables"] | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: any
+    }
+    ? Omit<Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName]["Update"], "id">
+    : never
+  : never
+
+export type Enums<
+  PublicEnumNameOrOptions extends keyof Database["public"]["Enums"] | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : never
