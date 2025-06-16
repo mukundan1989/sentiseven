@@ -1,43 +1,105 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { InfoIcon as InfoCircle } from "lucide-react"
+import { InfoIcon as InfoCircle, Loader2 } from "lucide-react" // Added Loader2 for loading state
 
-export function CorrelationChart({ stocks, weights }) {
-  // State for the selected basket
-  const [selectedBasket, setSelectedBasket] = useState("all")
+export function CorrelationChart() {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [dynamicSourceCorrelationData, setDynamicSourceCorrelationData] = useState([])
 
-  // Generate correlation data for sources
-  const sourceCorrelationData = [
-    {
-      name: "Google Trends",
-      correlation: 0.92,
-      impact: "Strong Positive",
-      color: "#10b981", // emerald-500
-    },
-    {
-      name: "Twitter",
-      correlation: 0.65,
-      impact: "Moderate Positive",
-      color: "#f59e0b", // amber-500
-    },
-    {
-      name: "Composite",
-      correlation: 0.58,
-      impact: "Moderate Positive",
-      color: "#3b82f6", // blue-500
-    },
-    {
-      name: "News",
-      correlation: 0.15,
-      impact: "Poor Correlation",
-      color: "#ef4444", // red-500
-    },
-  ]
+  useEffect(() => {
+    const fetchSignalSummaries = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const response = await fetch("/api/signal-summaries")
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const summaries = await response.json()
 
-  // Define the correlation scale
+        // Map fetched summaries to the correlation chart data structure
+        const updatedData = [
+          {
+            name: "Google Trends",
+            correlation: 0.92, // Keeping hardcoded as per previous state, only winRate is dynamic
+            impact: "Strong Positive",
+            color: "#10b981", // emerald-500
+            winRate: 0, // Placeholder, will be updated
+          },
+          {
+            name: "Twitter",
+            correlation: 0.65, // Keeping hardcoded
+            impact: "Moderate Positive",
+            color: "#f59e0b", // amber-500
+            winRate: 0, // Placeholder
+          },
+          {
+            name: "Composite",
+            correlation: 0.58, // Keeping hardcoded
+            impact: "Moderate Positive",
+            color: "#3b82f6", // blue-500
+            winRate: 0, // Placeholder, will be calculated
+          },
+          {
+            name: "News",
+            correlation: 0.15, // Keeping hardcoded
+            impact: "Poor Correlation",
+            color: "#ef4444", // red-500
+            winRate: 0, // Placeholder
+          },
+        ]
+
+        let totalWinRate = 0
+        let countForComposite = 0
+
+        summaries.forEach((summary) => {
+          const winRate = summary.win_rate_percent || 0 // Default to 0 if null/undefined
+          if (summary.signal_type === "google_trends") {
+            const index = updatedData.findIndex((d) => d.name === "Google Trends")
+            if (index !== -1) {
+              updatedData[index].winRate = winRate
+              totalWinRate += winRate
+              countForComposite++
+            }
+          } else if (summary.signal_type === "twitter") {
+            const index = updatedData.findIndex((d) => d.name === "Twitter")
+            if (index !== -1) {
+              updatedData[index].winRate = winRate
+              totalWinRate += winRate
+              countForComposite++
+            }
+          } else if (summary.signal_type === "news") {
+            const index = updatedData.findIndex((d) => d.name === "News")
+            if (index !== -1) {
+              updatedData[index].winRate = winRate
+              totalWinRate += winRate
+              countForComposite++
+            }
+          }
+        })
+
+        // Calculate composite win rate
+        const compositeIndex = updatedData.findIndex((d) => d.name === "Composite")
+        if (compositeIndex !== -1 && countForComposite > 0) {
+          updatedData[compositeIndex].winRate = totalWinRate / countForComposite
+        }
+
+        setDynamicSourceCorrelationData(updatedData)
+      } catch (err: any) {
+        console.error("Error fetching signal summaries for correlation chart:", err)
+        setError(err.message || "Failed to load correlation data.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSignalSummaries()
+  }, []) // Empty dependency array to run once on mount
+
+  // Define the correlation scale (remains static)
   const correlationScale = [
     { label: "Poor", range: "0.0-0.29", color: "#ef4444" },
     { label: "Weak", range: "0.3-0.49", color: "#f59e0b" },
@@ -46,20 +108,20 @@ export function CorrelationChart({ stocks, weights }) {
   ]
 
   // Helper function to get the width percentage based on correlation value
-  const getWidthPercentage = (value) => {
+  const getWidthPercentage = (value: number) => {
     return `${Math.min(value * 100, 100)}%`
   }
 
-  // Helper function to get the color based on correlation value
-  const getCorrelationColor = (value) => {
+  // Helper function to get the color based on correlation value (remains static)
+  const getCorrelationColor = (value: number) => {
     if (value >= 0.8) return "#10b981" // Strong - emerald
     if (value >= 0.5) return "#f59e0b" // Moderate - amber
     if (value >= 0.3) return "#eab308" // Weak - yellow
     return "#ef4444" // Poor - red
   }
 
-  // Helper function to get the text description based on correlation value
-  const getCorrelationText = (value) => {
+  // Helper function to get the text description based on correlation value (remains static)
+  const getCorrelationText = (value: number) => {
     if (value >= 0.8) return "Strong Positive"
     if (value >= 0.5) return "Moderate Positive"
     if (value >= 0.3) return "Weak Positive"
@@ -69,104 +131,106 @@ export function CorrelationChart({ stocks, weights }) {
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 space-y-2 sm:space-y-0">
-        <div className="max-w-[70%] sm:max-w-[60%]">
+        <div className="max-w-[70%] sm:max-w-[100%]">
+          {" "}
+          {/* Adjusted max-width as basket is removed */}
           <CardTitle className="text-2xl font-bold">Sentiment-Price Correlation</CardTitle>
           <CardDescription className="mt-1 text-slate-400">
             This table shows the relationship between the source of information and historical price
           </CardDescription>
         </div>
-        <Select value={selectedBasket} onValueChange={setSelectedBasket}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select Basket" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Basket (All Stocks)</SelectItem>
-            <SelectItem value="tech">Tech Stocks</SelectItem>
-            <SelectItem value="finance">Finance Stocks</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Removed the Select Basket dropdown */}
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          {/* Header row */}
-          <div className="grid grid-cols-2 gap-4 py-2 text-sm font-medium text-slate-400">
-            <div>Source</div>
-            <div className="flex items-center justify-end">
-              Correlation Impact
-              <InfoCircle className="ml-1 h-4 w-4" />
-            </div>
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Loading correlation data...</span>
           </div>
+        ) : error ? (
+          <div className="p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-md">{error}</div>
+        ) : (
+          <div className="space-y-6">
+            {/* Header row */}
+            <div className="grid grid-cols-2 gap-4 py-2 text-sm font-medium text-slate-400">
+              <div>Source</div>
+              <div className="flex items-center justify-end">
+                Correlation Impact / Win Rate %
+                <InfoCircle className="ml-1 h-4 w-4" />
+              </div>
+            </div>
 
-          {/* Divider */}
-          <div className="h-px bg-slate-800"></div>
+            {/* Divider */}
+            <div className="h-px bg-slate-800"></div>
 
-          {/* Source rows */}
-          {sourceCorrelationData.map((source, index) => (
-            <div key={index} className="space-y-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-lg font-medium">{source.name}</div>
-                <div className="flex items-center justify-end text-lg font-medium" style={{ color: source.color }}>
-                  {source.correlation.toFixed(2)} - {source.impact}
+            {/* Source rows */}
+            {dynamicSourceCorrelationData.map((source, index) => (
+              <div key={index} className="space-y-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-lg font-medium">{source.name}</div>
+                  <div className="flex items-center justify-end text-lg font-medium" style={{ color: source.color }}>
+                    {source.correlation.toFixed(2)} - {source.impact} ({source.winRate.toFixed(1)}%)
+                  </div>
+                </div>
+
+                {/* Progress bar background */}
+                <div className="h-4 w-full rounded-full bg-slate-800/50">
+                  {/* Progress bar fill */}
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: getWidthPercentage(source.correlation),
+                      backgroundColor: source.color,
+                    }}
+                  ></div>
+                </div>
+
+                {/* Scale labels */}
+                <div className="grid grid-cols-5 text-xs text-slate-400">
+                  <div>Poor (0.0)</div>
+                  <div className="text-center">Weak (0.3)</div>
+                  <div className="text-center">Moderate (0.5)</div>
+                  <div className="text-center">Strong (0.8)</div>
+                  <div className="text-right">Perfect (1.0)</div>
                 </div>
               </div>
+            ))}
 
-              {/* Progress bar background */}
-              <div className="h-4 w-full rounded-full bg-slate-800/50">
-                {/* Progress bar fill */}
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: getWidthPercentage(source.correlation),
-                    backgroundColor: source.color,
-                  }}
-                ></div>
+            {/* Divider */}
+            <div className="h-px bg-slate-800"></div>
+
+            {/* Correlation Impact Scale */}
+            <div className="space-y-2">
+              <div className="text-lg font-medium">Correlation Impact Scale</div>
+
+              {/* Scale bar */}
+              <div className="flex h-6 w-full rounded-full overflow-hidden">
+                {correlationScale.map((segment, index) => (
+                  <div
+                    key={index}
+                    className="h-full"
+                    style={{
+                      backgroundColor: segment.color,
+                      width: "25%", // Equal width for each segment
+                    }}
+                  ></div>
+                ))}
               </div>
 
               {/* Scale labels */}
-              <div className="grid grid-cols-5 text-xs text-slate-400">
-                <div>Poor (0.0)</div>
-                <div className="text-center">Weak (0.3)</div>
-                <div className="text-center">Moderate (0.5)</div>
-                <div className="text-center">Strong (0.8)</div>
-                <div className="text-right">Perfect (1.0)</div>
+              <div className="grid grid-cols-4 text-sm">
+                {correlationScale.map((segment, index) => (
+                  <div key={index} className={index === 0 ? "" : index === 3 ? "text-right" : "text-center"}>
+                    <div className="font-medium" style={{ color: segment.color }}>
+                      {segment.label}
+                    </div>
+                    <div className="text-xs text-slate-400">{segment.range}</div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-
-          {/* Divider */}
-          <div className="h-px bg-slate-800"></div>
-
-          {/* Correlation Impact Scale */}
-          <div className="space-y-2">
-            <div className="text-lg font-medium">Correlation Impact Scale</div>
-
-            {/* Scale bar */}
-            <div className="flex h-6 w-full rounded-full overflow-hidden">
-              {correlationScale.map((segment, index) => (
-                <div
-                  key={index}
-                  className="h-full"
-                  style={{
-                    backgroundColor: segment.color,
-                    width: "25%", // Equal width for each segment
-                  }}
-                ></div>
-              ))}
-            </div>
-
-            {/* Scale labels */}
-            <div className="grid grid-cols-4 text-sm">
-              {correlationScale.map((segment, index) => (
-                <div key={index} className={index === 0 ? "" : index === 3 ? "text-right" : "text-center"}>
-                  <div className="font-medium" style={{ color: segment.color }}>
-                    {segment.label}
-                  </div>
-                  <div className="text-xs text-slate-400">{segment.range}</div>
-                </div>
-              ))}
-            </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   )
