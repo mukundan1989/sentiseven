@@ -164,74 +164,44 @@ export function CorrelationChart() {
             {/* Divider */}
             <div className="h-px bg-slate-800"></div>
 
-            {/* Source rows */}
-            {dynamicSourceCorrelationData.map((source, index) => (
-              <div key={index} className="space-y-2">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-lg font-medium">{source.name}</div>
-                  <div className="flex items-center justify-end text-lg font-medium" style={{ color: source.color }}>
-                    {source.correlation.toFixed(2)} - {source.impact} ({source.winRate.toFixed(1)}%)
-                  </div>
-                </div>
-
-                {/* Progress bar background */}
-                <div className="h-3 w-full rounded-full bg-slate-800/50">
-                  {" "}
-                  {/* Changed h-4 to h-3 */}
-                  {/* Progress bar fill */}
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: getWinRateWidthPercentage(source.winRate), // Changed to use winRate
-                      backgroundColor: source.color,
-                    }}
-                  ></div>
-                </div>
-
-                {/* Scale labels */}
-                <div className="grid grid-cols-5 text-xs text-slate-400">
-                  <div>0%</div> {/* Changed from Poor (0.0) */}
-                  <div className="text-center">25%</div>
-                  <div className="text-center">50%</div>
-                  <div className="text-center">75%</div>
-                  <div className="text-right">100%</div> {/* Changed from Perfect (1.0) */}
-                </div>
-              </div>
-            ))}
-
-            {/* Divider */}
-            <div className="h-px bg-slate-800"></div>
-
-            {/* Correlation Impact Scale */}
-            <div className="space-y-2">
-              <div className="text-lg font-medium">Correlation Impact Scale</div>
-
-              {/* Scale bar */}
-              <div className="flex h-6 w-full rounded-full overflow-hidden">
-                {correlationScale.map((segment, index) => (
-                  <div
-                    key={index}
-                    className="h-full"
-                    style={{
-                      backgroundColor: segment.color,
-                      width: "25%", // Equal width for each segment
-                    }}
-                  ></div>
-                ))}
-              </div>
-
-              {/* Scale labels */}
-              <div className="grid grid-cols-4 text-sm">
-                {correlationScale.map((segment, index) => (
-                  <div key={index} className={index === 0 ? "" : index === 3 ? "text-right" : "text-center"}>
-                    <div className="font-medium" style={{ color: segment.color }}>
-                      {segment.label}
+            {/* Source rows in a 2x2 grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {dynamicSourceCorrelationData.map((source, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-lg font-medium">{source.name}</div>
+                    <div className="flex items-center justify-end text-lg font-medium" style={{ color: source.color }}>
+                      {source.correlation.toFixed(2)} - {source.impact} ({source.winRate.toFixed(1)}%)
                     </div>
-                    <div className="text-xs text-slate-400">{segment.range}</div>
                   </div>
-                ))}
-              </div>
+
+                  {/* Progress bar background */}
+                  <div className="h-3 w-full rounded-full bg-slate-800/50">
+                    {" "}
+                    {/* Changed h-4 to h-3 */}
+                    {/* Progress bar fill */}
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: getWinRateWidthPercentage(source.winRate), // Changed to use winRate
+                        backgroundColor: source.color,
+                      }}
+                    ></div>
+                  </div>
+
+                  {/* Scale labels */}
+                  <div className="grid grid-cols-5 text-xs text-slate-400">
+                    <div>0%</div> {/* Changed from Poor (0.0) */}
+                    <div className="text-center">25%</div>
+                    <div className="text-center">50%</div>
+                    <div className="text-center">75%</div>
+                    <div className="text-right">100%</div> {/* Changed from Perfect (1.0) */}
+                  </div>
+                </div>
+              ))}
             </div>
+
+            {/* Removed the Correlation Impact Scale section */}
           </div>
         )}
       </CardContent>
