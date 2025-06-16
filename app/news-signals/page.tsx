@@ -177,20 +177,31 @@ export default function NewsSignalsPage() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
+    console.log("NewsSignalsPage: useEffect for sending summary stats triggered.")
+    console.log(
+      "NewsSignalsPage: Conditions - filteredData.length:",
+      filteredData.length,
+      "pricesLoading:",
+      pricesLoading,
+      "summaryStats.total:",
+      summaryStats.total,
+    )
     if (filteredData.length > 0 && !pricesLoading && summaryStats.total > 0) {
+      console.log("NewsSignalsPage: Conditions met. Setting timeout for summary upload.")
       // Clear any existing timeout to avoid sending stale data
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
       }
 
       timeoutRef.current = setTimeout(async () => {
+        console.log("NewsSignalsPage: 60-second timeout elapsed. Sending summary data...")
         try {
           const positiveRatio =
             summaryStats.negative > 0
               ? summaryStats.positive / summaryStats.negative
               : summaryStats.positive > 0
-                ? Number.POSITIVE_INFINITY
-                : 0
+                ? null // Send null if negative is 0 and positive is > 0 (representing Infinity)
+                : 0 // Send 0 if both are 0
 
           const response = await fetch("/api/signal-summaries", {
             method: "POST",
@@ -209,9 +220,9 @@ export default function NewsSignalsPage() {
 
           if (!response.ok) {
             const errorData = await response.json()
-            console.error("Failed to save News signal summary:", errorData.error)
+            console.error("NewsSignalsPage: Failed to save News signal summary:", errorData.error, response.status)
           } else {
-            console.log("News signal summary saved successfully!")
+            console.log("NewsSignalsPage: News signal summary saved successfully!")
           }
         } catch (error) {
           console.error("Error sending News signal summary:", error)
