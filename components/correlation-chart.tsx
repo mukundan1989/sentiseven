@@ -23,7 +23,7 @@ export function CorrelationChart() {
         // Map fetched summaries to the correlation chart data structure
         const updatedData = [
           {
-            name: "Google Trends",
+            name: "GTrends", // Changed from "Google Trends"
             correlation: 0.92, // Keeping hardcoded as per previous state, only winRate is dynamic
             impact: "Strong Positive",
             color: "#10b981", // emerald-500
@@ -58,7 +58,7 @@ export function CorrelationChart() {
         summaries.forEach((summary) => {
           const winRate = summary.win_rate_percent || 0 // Default to 0 if null/undefined
           if (summary.signal_type === "google_trends") {
-            const index = updatedData.findIndex((d) => d.name === "Google Trends")
+            const index = updatedData.findIndex((d) => d.name === "GTrends") // Updated name here too
             if (index !== -1) {
               updatedData[index].winRate = winRate
               totalWinRate += winRate
@@ -188,17 +188,17 @@ export function CorrelationChart() {
 
                     {/* Vertical marker */}
                     <div
-                      className="absolute top-0 h-full w-px bg-white z-10"
+                      className="absolute top-0 h-full w-px bg-black z-10" // Changed bg-white to bg-black
                       style={{ left: getWinRateWidthPercentage(source.winRate) }}
                     ></div>
 
                     {/* Percentage text below marker */}
                     <div
-                      className="absolute top-4 text-xs text-white z-10"
+                      className="absolute top-4 text-xs text-black z-10" // Changed text-white to text-black
                       style={{
                         left: getWinRateWidthPercentage(source.winRate),
                         transform: "translateX(-50%)", // Center text on the marker
-                        textShadow: "0 0 2px rgba(0,0,0,0.5)", // Add a subtle shadow for readability
+                        textShadow: "0 0 3px rgba(255,255,255,0.8)", // Stronger white shadow for readability
                       }}
                     >
                       {source.winRate.toFixed(1)}%
