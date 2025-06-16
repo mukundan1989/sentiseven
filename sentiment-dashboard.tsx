@@ -964,9 +964,7 @@ const SentimentDashboard = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-                  Sentiment Analysis Dashboard
-                </h1>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">Sentiment Analysis Dashboard</h1>
                 <p className="text-muted-foreground mt-1">Track market sentiment across multiple data sources</p>
               </div>
 
@@ -998,11 +996,11 @@ const SentimentDashboard = () => {
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <div>
-                          <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl mb-1">
+                          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                             <BarChart3 className="h-5 w-5 text-primary" />
                             Stock Allocation
                           </CardTitle>
-                          <CardDescription className="text-xs sm:text-sm">
+                          <CardDescription>
                             Adjust your portfolio allocation and lock in positions based on sentiment
                           </CardDescription>
                         </div>
@@ -1024,23 +1022,13 @@ const SentimentDashboard = () => {
                           const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
                           return (
                             <div key={stock.id} className="space-y-3">
-                              <div className="flex items-center justify-between gap-2">
-                                {" "}
-                                {/* Changed from flex-col sm:flex-row */}
-                                <div className="flex items-center gap-3 flex-shrink-0">
-                                  {" "}
-                                  {/* Added flex-shrink-0 */}
-                                  <div className="min-w-[3rem] sm:w-16 font-medium text-foreground">
-                                    {" "}
-                                    {/* Adjusted width for responsiveness */}
-                                    {stock.symbol}
-                                  </div>
-                                  <div className="text-xs sm:text-sm text-muted-foreground truncate">{stock.name}</div>
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-16 font-medium text-foreground">{stock.symbol}</div>
+                                  <div className="text-sm text-muted-foreground truncate">{stock.name}</div>
                                 </div>
-                                <div className="flex items-center gap-3 flex-shrink-0">
-                                  {" "}
-                                  {/* Added flex-shrink-0, removed w-full sm:w-auto justify-between sm:justify-end */}
-                                  <div className="text-xs sm:text-sm font-medium text-foreground min-w-[3rem] text-right">
+                                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                                  <div className="text-sm font-medium text-foreground min-w-[3rem] text-right">
                                     {stock.allocation}%
                                   </div>
                                   <Button
@@ -1083,7 +1071,7 @@ const SentimentDashboard = () => {
                                   />
                                 </div>
                                 {stock.locked && (
-                                  <div className="text-xs sm:text-sm text-amber-600 flex items-center gap-1">
+                                  <div className="text-xs text-amber-600 flex items-center gap-1">
                                     <Lock className="h-3 w-3" />
                                     Position locked at {stock.allocation}%
                                   </div>
@@ -1123,11 +1111,11 @@ const SentimentDashboard = () => {
                     {/* Source Weighting Controls */}
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl mb-1">
+                        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                           <Activity className="h-5 w-5 text-primary" />
                           Source Weighting
                         </CardTitle>
-                        <CardDescription className="text-xs sm:text-sm">
+                        <CardDescription>
                           Adjust the influence of each data source on the composite sentiment
                         </CardDescription>
                       </CardHeader>
@@ -1249,11 +1237,11 @@ const SentimentDashboard = () => {
                   {/* Simplified Basket Management */}
                   <Card className="mb-6">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl mb-1">
+                      <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                         <BarChart3 className="h-5 w-5 text-primary" />
                         Basket Management
                       </CardTitle>
-                      <CardDescription className="text-xs sm:text-sm">
+                      <CardDescription>
                         Select an existing basket or create a new one to track your portfolio
                       </CardDescription>
                     </CardHeader>
@@ -1444,11 +1432,11 @@ const SentimentDashboard = () => {
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl mb-1">
+                          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                             <Lock className="h-5 w-5 text-amber-500" />
                             Locked Basket: {basketName}
                           </CardTitle>
-                          <CardDescription className="text-xs sm:text-sm">
+                          <CardDescription>
                             This basket is locked for performance tracking. Unlock to make changes.
                           </CardDescription>
                         </div>
@@ -1461,17 +1449,17 @@ const SentimentDashboard = () => {
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                         <div className="text-center">
-                          <div className="text-xl sm:text-2xl font-bold text-foreground">
+                          <div className="text-2xl font-bold text-foreground">
                             {stocks.reduce((sum, stock) => sum + stock.allocation, 0)}%
                           </div>
                           <div className="text-sm text-muted-foreground">Total Allocation</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-xl sm:text-2xl font-bold text-emerald-500">+2.4%</div>
+                          <div className="text-2xl font-bold text-emerald-500">+2.4%</div>
                           <div className="text-sm text-muted-foreground">Performance Since Lock</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-xl sm:text-2xl font-bold text-foreground">{stocks.length}</div>
+                          <div className="text-2xl font-bold text-foreground">{stocks.length}</div>
                           <div className="text-sm text-muted-foreground">Stocks in Basket</div>
                         </div>
                       </div>
