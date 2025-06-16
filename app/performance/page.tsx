@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { getAllUserBaskets, getBasketById, type StockBasket, type BasketStock } from "@/lib/basket-service"
 import { useAuth } from "@/context/auth-context"
+import { Switch } from "@/components/ui/switch" // Add this line
 
 interface StockSignal {
   date: string
@@ -63,6 +64,7 @@ export default function PerformancePage() {
   const [selectedBasketId, setSelectedBasketId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<"all" | string>("all") // "all" or basket ID
   const [basketStocks, setBasketStocks] = useState<BasketStock[]>([])
+  const [selectedModels, setSelectedModels] = useState<string[]>(["google", "twitter", "news"]) // Add this line
 
   // Format date to YYYY-MM-DD
   const formatDate = (dateString: string) => {
@@ -179,9 +181,13 @@ export default function PerformancePage() {
         // Find stocks that appear in at least 2 out of 3 sources
         const allStocks = new Set([...googleStocks, ...twitterStocks, ...newsStocks])
         const stocksWithSignals = [...allStocks].filter((symbol) => {
-          const count =
-            (googleStocks.has(symbol) ? 1 : 0) + (twitterStocks.has(symbol) ? 1 : 0) + (newsStocks.has(symbol) ? 1 : 0)
-          return count >= 2
+          // A stock must have a signal in ALL currently selected models
+          return selectedModels.every((model) => {
+            if (model === "google") return googleStocks.has(symbol)
+            if (model === "twitter") return twitterStocks.has(symbol)
+            if (model === "news") return newsStocks.has(symbol)
+            return false
+          })
         })
 
         let basketLockDate: string | null = null
@@ -222,9 +228,9 @@ export default function PerformancePage() {
           setLoading(false)
           if (viewMode !== "all") {
             const selectedBasketName = userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"
-            setError(`No stocks found in basket "${selectedBasketName}"`)
+            setError(`No stocks found in basket "${selectedBasketName}" that match selected models.`)
           } else {
-            setError("No stocks found with signals in at least 2 out of 3 models")
+            setError("No stocks found matching the selected signal models.")
           }
           return
         }
@@ -245,7 +251,12 @@ export default function PerformancePage() {
               newsSignal ? { signal: newsSignal, source: "news" } : null,
             ].filter(Boolean)
 
-            const hasSignals = availableSignals.length >= 2
+            const hasSignals = selectedModels.every((model) => {
+              if (model === "google") return googleSignal !== undefined
+              if (model === "twitter") return twitterSignal !== undefined
+              if (model === "news") return newsSignal !== undefined
+              return false
+            })
 
             // Determine the lock date and price based on view mode
             let lockDate: string
@@ -348,7 +359,7 @@ export default function PerformancePage() {
     }
 
     fetchData()
-  }, [viewMode, userBaskets, getCurrentPrice, getHistoricalPrice]) // Added dependencies
+  }, [viewMode, userBaskets, getCurrentPrice, getHistoricalPrice, selectedModels]) // Added dependencies
 
   return (
     <div className="min-h-screen bg-background">
@@ -360,8 +371,8 @@ export default function PerformancePage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Performance Summary</h1>
           <p className="text-muted-foreground mt-2">
             {viewMode === "all"
-              ? "Performance data for stocks with signals in at least 2 out of 3 models (Google Trends, Twitter, News)"
-              : "Performance data for stocks in your selected basket"}
+              ? "Performance data for stocks matching selected signal models"
+              : "Performance data for stocks in your selected basket matching selected signal models"}
           </p>
         </div>
         {/* Main Content Card */}
@@ -372,9 +383,58 @@ export default function PerformancePage() {
                 <CardTitle className="text-xl">Stocks Performance Table</CardTitle>
                 <CardDescription>
                   {viewMode === "all"
-                    ? "Performance data for stocks with signals in at least 2 out of 3 models"
-                    : "Performance data from basket lock date to current date"}
+                    ? "Performance data for stocks matching selected signal models"
+                    : "Performance data from basket lock date to current date, matching selected signal models"}
                 </CardDescription>
+              </div>
+              <div className="flex items-center space-x-4 mt-4 sm:mt-0">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="google-switch"
+                    checked={selectedModels.includes("google")}
+                    onCheckedChange={(checked) => {
+                      setSelectedModels((prev) => (checked ? [...prev, "google"] : prev.filter((m) => m !== "google")))
+                    }}
+                  />
+                  <label
+                    htmlFor="google-switch"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    GTrends
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="twitter-switch"
+                    checked={selectedModels.includes("twitter")}
+                    onCheckedChange={(checked) => {
+                      setSelectedModels((prev) =>
+                        checked ? [...prev, "twitter"] : prev.filter((m) => m !== "twitter"),
+                      )
+                    }}
+                  />
+                  <label
+                    htmlFor="twitter-switch"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Twitter
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="news-switch"
+                    checked={selectedModels.includes("news")}
+                    onCheckedChange={(checked) => {
+                      setSelectedModels((prev) => (checked ? [...prev, "news"] : prev.filter((m) => m !== "news")))
+                    }}
+                  />
+                  <label
+                    htmlFor="news-switch"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    News
+                  </label>
+                </div>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -444,8 +504,8 @@ export default function PerformancePage() {
             ) : performanceData.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 {viewMode !== "all"
-                  ? `No stocks found for basket "${userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"}"`
-                  : "No stocks found with signals in at least 2 out of 3 models (Google Trends, Twitter, News)"}
+                  ? `No stocks found for basket "${userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"}" matching selected signal models.`
+                  : "No stocks found matching the selected signal models."}
               </div>
             ) : (
               <div className="overflow-x-auto">
