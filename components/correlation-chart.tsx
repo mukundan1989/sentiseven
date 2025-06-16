@@ -107,9 +107,10 @@ export function CorrelationChart() {
     { label: "Strong", range: "0.8-1.0", color: "#10b981" },
   ]
 
-  // Helper function to get the width percentage based on correlation value
-  const getWidthPercentage = (value: number) => {
-    return `${Math.min(value * 100, 100)}%`
+  // Helper function to get the width percentage based on win rate value
+  // Win rate is a percentage (e.g., 47), so we just append '%'
+  const getWinRateWidthPercentage = (winRate: number) => {
+    return `${Math.min(winRate, 100)}%` // Ensure it doesn't exceed 100%
   }
 
   // Helper function to get the color based on correlation value (remains static)
@@ -174,12 +175,14 @@ export function CorrelationChart() {
                 </div>
 
                 {/* Progress bar background */}
-                <div className="h-4 w-full rounded-full bg-slate-800/50">
+                <div className="h-3 w-full rounded-full bg-slate-800/50">
+                  {" "}
+                  {/* Changed h-4 to h-3 */}
                   {/* Progress bar fill */}
                   <div
                     className="h-full rounded-full"
                     style={{
-                      width: getWidthPercentage(source.correlation),
+                      width: getWinRateWidthPercentage(source.winRate), // Changed to use winRate
                       backgroundColor: source.color,
                     }}
                   ></div>
@@ -187,11 +190,11 @@ export function CorrelationChart() {
 
                 {/* Scale labels */}
                 <div className="grid grid-cols-5 text-xs text-slate-400">
-                  <div>Poor (0.0)</div>
-                  <div className="text-center">Weak (0.3)</div>
-                  <div className="text-center">Moderate (0.5)</div>
-                  <div className="text-center">Strong (0.8)</div>
-                  <div className="text-right">Perfect (1.0)</div>
+                  <div>0%</div> {/* Changed from Poor (0.0) */}
+                  <div className="text-center">25%</div>
+                  <div className="text-center">50%</div>
+                  <div className="text-center">75%</div>
+                  <div className="text-right">100%</div> {/* Changed from Perfect (1.0) */}
                 </div>
               </div>
             ))}
