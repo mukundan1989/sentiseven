@@ -108,7 +108,6 @@ export function CorrelationChart() {
   ]
 
   // Helper function to get the width percentage based on win rate value
-  // Win rate is a percentage (e.g., 47), so we just append '%'
   const getWinRateWidthPercentage = (winRate: number) => {
     return `${Math.min(winRate, 100)}%` // Ensure it doesn't exceed 100%
   }
@@ -170,32 +169,49 @@ export function CorrelationChart() {
                 <div key={index} className="space-y-2">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-lg font-medium">{source.name}</div>
-                    <div className="flex items-center justify-end text-lg font-medium" style={{ color: source.color }}>
-                      {source.correlation.toFixed(2)} - {source.impact} ({source.winRate.toFixed(1)}%)
+                    <div className="flex items-center justify-end text-sm font-medium" style={{ color: source.color }}>
+                      {/* Removed correlation number */}
+                      {source.impact}
                     </div>
                   </div>
 
-                  {/* Progress bar background */}
-                  <div className="h-3 w-full rounded-full bg-slate-800/50">
-                    {" "}
-                    {/* Changed h-4 to h-3 */}
+                  {/* Progress bar container (relative for absolute children) */}
+                  <div className="relative h-3 w-full rounded-full bg-slate-800/50">
                     {/* Progress bar fill */}
                     <div
                       className="h-full rounded-full"
                       style={{
-                        width: getWinRateWidthPercentage(source.winRate), // Changed to use winRate
+                        width: getWinRateWidthPercentage(source.winRate),
                         backgroundColor: source.color,
                       }}
                     ></div>
+
+                    {/* Vertical marker */}
+                    <div
+                      className="absolute top-0 h-full w-px bg-white z-10"
+                      style={{ left: getWinRateWidthPercentage(source.winRate) }}
+                    ></div>
+
+                    {/* Percentage text below marker */}
+                    <div
+                      className="absolute top-4 text-xs text-white z-10"
+                      style={{
+                        left: getWinRateWidthPercentage(source.winRate),
+                        transform: "translateX(-50%)", // Center text on the marker
+                        textShadow: "0 0 2px rgba(0,0,0,0.5)", // Add a subtle shadow for readability
+                      }}
+                    >
+                      {source.winRate.toFixed(1)}%
+                    </div>
                   </div>
 
                   {/* Scale labels */}
                   <div className="grid grid-cols-5 text-xs text-slate-400">
-                    <div>0%</div> {/* Changed from Poor (0.0) */}
+                    <div>0%</div>
                     <div className="text-center">25%</div>
                     <div className="text-center">50%</div>
                     <div className="text-center">75%</div>
-                    <div className="text-right">100%</div> {/* Changed from Perfect (1.0) */}
+                    <div className="text-right">100%</div>
                   </div>
                 </div>
               ))}
