@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, ChevronDown, ChevronUp, Search, Calendar } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -190,6 +190,60 @@ export default function GoogleTrendSignalsPage() {
       }))
     }
   }, [filteredData, currentPrices, pricesLoading])
+
+  // Effect to send summary stats to the server after a delay
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    if (filteredData.length > 0 && !pricesLoading && summaryStats.total > 0) {
+      // Clear any existing timeout to avoid sending stale data
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+
+      timeoutRef.current = setTimeout(async () => {
+        try {
+          const positiveRatio =
+            summaryStats.negative > 0
+              ? summaryStats.positive / summaryStats.negative
+              : summaryStats.positive > 0
+                ? Number.POSITIVE_INFINITY
+                : 0
+
+          const response = await fetch("/api/signal-summaries", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              signal_type: "google_trends",
+              total_signals: summaryStats.total,
+              positive_ratio: positiveRatio,
+              win_rate_percent: summaryStats.winRate,
+              positive_signals: summaryStats.positive,
+              negative_signals: summaryStats.negative,
+            }),
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            console.error("Failed to save Google Trends signal summary:", errorData.error)
+          } else {
+            console.log("Google Trends signal summary saved successfully!")
+          }
+        } catch (error) {
+          console.error("Error sending Google Trends signal summary:", error)
+        }
+      }, 60000) // 60 seconds delay
+    }
+
+    // Cleanup function to clear the timeout if the component unmounts or dependencies change
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [filteredData, pricesLoading, summaryStats])
 
   useEffect(() => {
     // Apply filters and sorting
