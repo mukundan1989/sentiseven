@@ -20,35 +20,31 @@ export function CorrelationChart() {
         }
         const summaries = await response.json()
 
-        // Map fetched summaries to the correlation chart data structure
+        // Initial structure for correlation data, impact will be dynamic
         const updatedData = [
           {
-            name: "GTrends", // Changed from "Google Trends"
-            correlation: 0.92, // Keeping hardcoded as per previous state, only winRate is dynamic
-            impact: "Strong Positive",
+            name: "GTrends",
+            correlation: 0.92, // This correlation value is still hardcoded as it's separate from win rate impact
             color: "#10b981", // emerald-500
-            winRate: 0, // Placeholder, will be updated
+            winRate: 0,
           },
           {
             name: "Twitter",
-            correlation: 0.65, // Keeping hardcoded
-            impact: "Moderate Positive",
+            correlation: 0.65,
             color: "#f59e0b", // amber-500
-            winRate: 0, // Placeholder
+            winRate: 0,
           },
           {
             name: "Composite",
-            correlation: 0.58, // Keeping hardcoded
-            impact: "Moderate Positive",
+            correlation: 0.58,
             color: "#3b82f6", // blue-500
-            winRate: 0, // Placeholder, will be calculated
+            winRate: 0,
           },
           {
             name: "News",
-            correlation: 0.15, // Keeping hardcoded
-            impact: "Poor Correlation",
+            correlation: 0.15,
             color: "#ef4444", // red-500
-            winRate: 0, // Placeholder
+            winRate: 0,
           },
         ]
 
@@ -58,7 +54,7 @@ export function CorrelationChart() {
         summaries.forEach((summary) => {
           const winRate = summary.win_rate_percent || 0 // Default to 0 if null/undefined
           if (summary.signal_type === "google_trends") {
-            const index = updatedData.findIndex((d) => d.name === "GTrends") // Updated name here too
+            const index = updatedData.findIndex((d) => d.name === "GTrends")
             if (index !== -1) {
               updatedData[index].winRate = winRate
               totalWinRate += winRate
@@ -104,6 +100,14 @@ export function CorrelationChart() {
     return `${Math.min(winRate, 100)}%` // Ensure it doesn't exceed 100%
   }
 
+  // NEW: Helper function to get the impact text based on win rate
+  const getWinRateImpactText = (winRate: number) => {
+    if (winRate >= 76) return "Very Strong"
+    if (winRate >= 51) return "Strong"
+    if (winRate >= 26) return "Moderate"
+    return "Weak"
+  }
+
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 space-y-2 sm:space-y-0">
@@ -143,11 +147,11 @@ export function CorrelationChart() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-lg font-medium">{source.name}</div>
                     <div className="flex items-center justify-end text-sm font-medium" style={{ color: source.color }}>
-                      {source.impact}
+                      {getWinRateImpactText(source.winRate)} {/* Dynamically set impact text */}
                     </div>
                   </div>
 
-                  {/* NEW: Scale labels ABOVE progress bar */}
+                  {/* Scale labels ABOVE progress bar */}
                   <div className="grid grid-cols-4 text-xs text-slate-400 mb-1">
                     <div className="text-left">Weak</div>
                     <div className="text-center">Moderate</div>
@@ -184,7 +188,6 @@ export function CorrelationChart() {
                       }}
                     ></div>
                   </div>
-                  {/* Removed the old scale labels below the progress bar */}
                 </div>
               ))}
             </div>
