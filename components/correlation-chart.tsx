@@ -99,47 +99,20 @@ export function CorrelationChart() {
     fetchSignalSummaries()
   }, []) // Empty dependency array to run once on mount
 
-  // Define the correlation scale (remains static)
-  const correlationScale = [
-    { label: "Poor", range: "0.0-0.29", color: "#ef4444" },
-    { label: "Weak", range: "0.3-0.49", color: "#f59e0b" },
-    { label: "Moderate", range: "0.5-0.79", color: "#eab308" },
-    { label: "Strong", range: "0.8-1.0", color: "#10b981" },
-  ]
-
   // Helper function to get the width percentage based on win rate value
   const getWinRateWidthPercentage = (winRate: number) => {
     return `${Math.min(winRate, 100)}%` // Ensure it doesn't exceed 100%
-  }
-
-  // Helper function to get the color based on correlation value (remains static)
-  const getCorrelationColor = (value: number) => {
-    if (value >= 0.8) return "#10b981" // Strong - emerald
-    if (value >= 0.5) return "#f59e0b" // Moderate - amber
-    if (value >= 0.3) return "#eab308" // Weak - yellow
-    return "#ef4444" // Poor - red
-  }
-
-  // Helper function to get the text description based on correlation value (remains static)
-  const getCorrelationText = (value: number) => {
-    if (value >= 0.8) return "Strong Positive"
-    if (value >= 0.5) return "Moderate Positive"
-    if (value >= 0.3) return "Weak Positive"
-    return "Poor Correlation"
   }
 
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 space-y-2 sm:space-y-0">
         <div className="max-w-[70%] sm:max-w-[100%]">
-          {" "}
-          {/* Adjusted max-width as basket is removed */}
           <CardTitle className="text-2xl font-bold">Sentiment-Price Correlation</CardTitle>
           <CardDescription className="mt-1 text-slate-400">
             This table shows the relationship between the source of information and historical price
           </CardDescription>
         </div>
-        {/* Removed the Select Basket dropdown */}
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -166,15 +139,15 @@ export function CorrelationChart() {
             {/* Source rows in a 2x2 grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {dynamicSourceCorrelationData.map((source, index) => (
-                <div key={index} className="space-y-2">
+                <div key={index} className="space-y-1">
+                  {" "}
+                  {/* Changed space-y-2 to space-y-1 for tighter spacing */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-lg font-medium">{source.name}</div>
                     <div className="flex items-center justify-end text-sm font-medium" style={{ color: source.color }}>
-                      {/* Removed correlation number */}
                       {source.impact}
                     </div>
                   </div>
-
                   {/* Progress bar container (relative for absolute children) */}
                   <div className="relative h-3 w-full rounded-full bg-slate-800/50">
                     {/* Progress bar fill */}
@@ -188,13 +161,13 @@ export function CorrelationChart() {
 
                     {/* Vertical marker */}
                     <div
-                      className="absolute top-0 h-full w-px bg-black z-10" // Changed bg-white to bg-black
+                      className="absolute top-0 h-full w-px bg-black z-10"
                       style={{ left: getWinRateWidthPercentage(source.winRate) }}
                     ></div>
 
-                    {/* Percentage text below marker */}
+                    {/* Percentage text above marker */}
                     <div
-                      className="absolute top-4 text-xs text-black z-10" // Changed text-white to text-black
+                      className="absolute bottom-[calc(100%+0.25rem)] text-xs text-black z-10" // Positioned above
                       style={{
                         left: getWinRateWidthPercentage(source.winRate),
                         transform: "translateX(-50%)", // Center text on the marker
@@ -204,20 +177,18 @@ export function CorrelationChart() {
                       {source.winRate.toFixed(1)}%
                     </div>
                   </div>
-
                   {/* Scale labels */}
-                  <div className="grid grid-cols-5 text-xs text-slate-400">
-                    <div>0%</div>
-                    <div className="text-center">25%</div>
-                    <div className="text-center">50%</div>
-                    <div className="text-center">75%</div>
-                    <div className="text-right">100%</div>
+                  <div className="grid grid-cols-4 text-xs text-slate-400 mt-1">
+                    {" "}
+                    {/* Changed to grid-cols-4 */}
+                    <div className="text-left">Weak</div>
+                    <div className="text-center">Moderate</div>
+                    <div className="text-center">Strong</div>
+                    <div className="text-right">Very Strong</div>
                   </div>
                 </div>
               ))}
             </div>
-
-            {/* Removed the Correlation Impact Scale section */}
           </div>
         )}
       </CardContent>
