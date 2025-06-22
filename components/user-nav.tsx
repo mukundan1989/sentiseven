@@ -34,7 +34,7 @@ export function UserNav() {
   // If no user, show login button
   if (!user) {
     return (
-      <Button asChild variant="outline" className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-white">
+      <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
         <Link href="/login">Login</Link>
       </Button>
     )
