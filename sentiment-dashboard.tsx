@@ -1363,164 +1363,242 @@ const SentimentDashboard = () => {
               )}
             </div>
 
-            {/* Insights Section */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl sm:text-2xl font-bold text-foreground">Insights</h2>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleSection("insights")}>
-                  {sectionsCollapsed.insights ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
-                </Button>
-              </div>
+            {/* Conditional Insights and Performance Tracking Sections */}
+            {basketLocked ? ( // NEW CONDITIONAL WRAPPER
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {" "}
+                {/* NEW GRID LAYOUT */}
+                {/* Insights Section - NOW CONDITIONAL */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl sm:text-2xl font-bold text-foreground">Insights</h2>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleSection("insights")}>
+                      {sectionsCollapsed.insights ? (
+                        <ChevronDown className="h-5 w-5" />
+                      ) : (
+                        <ChevronUp className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </div>
 
-              {!sectionsCollapsed.insights && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {stockPerformanceData &&
-                    stockPerformanceData.map(
-                      (
-                        stock, // Defensive check
-                      ) => (
-                        <Card
-                          key={stock.id}
-                          className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                          onClick={() => handleStockClick(stock)}
-                        >
-                          <CardHeader className="pb-2">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <CardTitle className="text-lg">{stock.symbol}</CardTitle>
-                                <CardDescription className="text-sm">{stock.name}</CardDescription>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-lg font-bold">${stock.price}</div>
-                                <div className={`text-sm ${getPerformanceColor(stock.change)}`}>
-                                  {stock.change > 0 ? "+" : ""}
-                                  {stock.change.toFixed(2)}%
+                  {!sectionsCollapsed.insights && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {" "}
+                      {/* Adjusted grid for inner cards */}
+                      {stockPerformanceData &&
+                        stockPerformanceData.map(
+                          (
+                            stock, // Defensive check
+                          ) => (
+                            <Card
+                              key={stock.id}
+                              className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                              onClick={() => handleStockClick(stock)}
+                            >
+                              <CardHeader className="pb-2">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <CardTitle className="text-lg">{stock.symbol}</CardTitle>
+                                    <CardDescription className="text-sm">{stock.name}</CardDescription>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-lg font-bold">${stock.price}</div>
+                                    <div className={`text-sm ${getPerformanceColor(stock.change)}`}>
+                                      {stock.change > 0 ? "+" : ""}
+                                      {stock.change.toFixed(2)}%
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-3">
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-muted-foreground">Allocation</span>
-                                <span className="font-medium">{stock.allocation}%</span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-muted-foreground">Sentiment</span>
-                                <div className="flex items-center gap-1">
-                                  {getSentimentIcon(stock.compositeSentiment)}
-                                  <span
-                                    className={`text-sm font-medium ${getSentimentColor(stock.compositeSentiment)}`}
-                                  >
-                                    {stock.compositeSentiment.toFixed(2)}
-                                  </span>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="space-y-3">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-sm text-muted-foreground">Allocation</span>
+                                    <span className="font-medium">{stock.allocation}%</span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-sm text-muted-foreground">Sentiment</span>
+                                    <div className="flex items-center gap-1">
+                                      {getSentimentIcon(stock.compositeSentiment)}
+                                      <span
+                                        className={`text-sm font-medium ${getSentimentColor(stock.compositeSentiment)}`}
+                                      >
+                                        {stock.compositeSentiment.toFixed(2)}
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ),
-                    )}
+                              </CardContent>
+                            </Card>
+                          ),
+                        )}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+                {/* Performance Tracking Section - REMAINS CONDITIONAL, MOVED INSIDE GRID */}
+                <div id="tracking-section">
+                  {" "}
+                  {/* Removed mb-8 from here */}
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl sm:text-2xl font-bold text-foreground">Performance Tracking</h2>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleSection("tracking")}>
+                      {sectionsCollapsed.tracking ? (
+                        <ChevronDown className="h-5 w-5" />
+                      ) : (
+                        <ChevronUp className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </div>
+                  {!sectionsCollapsed.tracking && (
+                    <Card>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl mb-1">
+                              <Lock className="h-5 w-5 text-amber-500" />
+                              Locked Basket: {basketName}
+                            </CardTitle>
+                            <CardDescription className="text-xs sm:text-sm">
+                              This basket is locked for performance tracking. Unlock to make changes.
+                            </CardDescription>
+                          </div>
+                          <Button variant="outline" onClick={handleUnlockBasket} disabled={isLoading} className="gap-1">
+                            <Unlock className="h-4 w-4" />
+                            Unlock Basket
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                          <div className="text-center">
+                            <div className="text-xl sm:text-2xl font-bold text-foreground">
+                              {stocks.reduce((sum, stock) => sum + stock.allocation, 0)}%
+                            </div>
+                            <div className="text-sm text-muted-foreground">Total Allocation</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xl sm:text-2xl font-bold text-emerald-500">+2.4%</div>
+                            <div className="text-sm text-muted-foreground">Performance Since Lock</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xl sm:text-2xl font-bold text-foreground">{stocks.length}</div>
+                            <div className="text-sm text-muted-foreground">Stocks in Basket</div>
+                          </div>
+                        </div>
 
-            {/* Performance Tracking Section */}
-            {basketLocked && (
-              <div id="tracking-section" className="mb-8">
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Created:</span>
+                            <span className="font-medium">{formatDate(basketDates.created)}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Last Updated:</span>
+                            <span className="font-medium">{formatDate(basketDates.updated)}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Locked Date:</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{formatDate(basketDates.locked)}</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => setIsEditingLockDate(true)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <Popover open={isEditingLockDate} onOpenChange={setIsEditingLockDate}>
+                          <PopoverTrigger asChild>
+                            <div />
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="end">
+                            <Calendar
+                              mode="single"
+                              selected={basketDates.locked || undefined}
+                              onSelect={(date) => {
+                                if (date) {
+                                  handleUpdateLockDate(date)
+                                  setIsEditingLockDate(false)
+                                }
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            ) : (
+              // If basket is NOT locked, show Insights section as it was before
+              <div className="mb-6">
+                {" "}
+                {/* Original mb-6 for Insights */}
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl sm:text-2xl font-bold text-foreground">Performance Tracking</h2>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleSection("tracking")}>
-                    {sectionsCollapsed.tracking ? (
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground">Insights</h2>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleSection("insights")}>
+                    {sectionsCollapsed.insights ? (
                       <ChevronDown className="h-5 w-5" />
                     ) : (
                       <ChevronUp className="h-5 w-5" />
                     )}
                   </Button>
                 </div>
-
-                {!sectionsCollapsed.tracking && (
-                  <Card>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl mb-1">
-                            <Lock className="h-5 w-5 text-amber-500" />
-                            Locked Basket: {basketName}
-                          </CardTitle>
-                          <CardDescription className="text-xs sm:text-sm">
-                            This basket is locked for performance tracking. Unlock to make changes.
-                          </CardDescription>
-                        </div>
-                        <Button variant="outline" onClick={handleUnlockBasket} disabled={isLoading} className="gap-1">
-                          <Unlock className="h-4 w-4" />
-                          Unlock Basket
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <div className="text-center">
-                          <div className="text-xl sm:text-2xl font-bold text-foreground">
-                            {stocks.reduce((sum, stock) => sum + stock.allocation, 0)}%
-                          </div>
-                          <div className="text-sm text-muted-foreground">Total Allocation</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-xl sm:text-2xl font-bold text-emerald-500">+2.4%</div>
-                          <div className="text-sm text-muted-foreground">Performance Since Lock</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-xl sm:text-2xl font-bold text-foreground">{stocks.length}</div>
-                          <div className="text-sm text-muted-foreground">Stocks in Basket</div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Created:</span>
-                          <span className="font-medium">{formatDate(basketDates.created)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Last Updated:</span>
-                          <span className="font-medium">{formatDate(basketDates.updated)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Locked Date:</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{formatDate(basketDates.locked)}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() => setIsEditingLockDate(true)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Popover open={isEditingLockDate} onOpenChange={setIsEditingLockDate}>
-                        <PopoverTrigger asChild>
-                          <div />
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="end">
-                          <Calendar
-                            mode="single"
-                            selected={basketDates.locked || undefined}
-                            onSelect={(date) => {
-                              if (date) {
-                                handleUpdateLockDate(date)
-                                setIsEditingLockDate(false)
-                              }
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </CardContent>
-                  </Card>
+                {!sectionsCollapsed.insights && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {stockPerformanceData &&
+                      stockPerformanceData.map(
+                        (
+                          stock, // Defensive check
+                        ) => (
+                          <Card
+                            key={stock.id}
+                            className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                            onClick={() => handleStockClick(stock)}
+                          >
+                            <CardHeader className="pb-2">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <CardTitle className="text-lg">{stock.symbol}</CardTitle>
+                                  <CardDescription className="text-sm">{stock.name}</CardDescription>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-lg font-bold">${stock.price}</div>
+                                  <div className={`text-sm ${getPerformanceColor(stock.change)}`}>
+                                    {stock.change > 0 ? "+" : ""}
+                                    {stock.change.toFixed(2)}%
+                                  </div>
+                                </div>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-muted-foreground">Allocation</span>
+                                  <span className="font-medium">{stock.allocation}%</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-muted-foreground">Sentiment</span>
+                                  <div className="flex items-center gap-1">
+                                    {getSentimentIcon(stock.compositeSentiment)}
+                                    <span
+                                      className={`text-sm font-medium ${getSentimentColor(stock.compositeSentiment)}`}
+                                    >
+                                      {stock.compositeSentiment.toFixed(2)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ),
+                      )}
+                  </div>
                 )}
               </div>
             )}
