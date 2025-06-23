@@ -45,6 +45,16 @@ import { Edit } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { supabase } from "@/lib/supabase"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 const SentimentDashboard = () => {
   // Auth context
@@ -114,6 +124,9 @@ const SentimentDashboard = () => {
 
   // State for allocation editor
   const [isAllocationEditorOpen, setIsAllocationEditorOpen] = useState(false)
+
+  // Add a new state for the unlock alert dialog
+  const [isUnlockBasketAlertOpen, setIsUnlockBasketAlertOpen] = useState(false)
 
   // State for section collapse
   const [sectionsCollapsed, setSectionsCollapsed] = useState({
@@ -1010,7 +1023,9 @@ const SentimentDashboard = () => {
                           size="sm"
                           variant="outline"
                           className="h-8 gap-1"
-                          onClick={() => setIsStockSelectorOpen(true)}
+                          onClick={() =>
+                            basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsStockSelectorOpen(true)
+                          }
                         >
                           <Edit2 className="h-3.5 w-3.5" />
                           Edit Stocks
@@ -1112,7 +1127,13 @@ const SentimentDashboard = () => {
                           Reset
                         </Button>
                       </div>
-                      <Button size="sm" onClick={() => setIsAllocationEditorOpen(true)} disabled={basketLocked}>
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsAllocationEditorOpen(true)
+                        }
+                        disabled={basketLocked}
+                      >
                         Adjust Allocations
                       </Button>
                     </CardFooter>
@@ -1563,6 +1584,28 @@ const SentimentDashboard = () => {
               onAllocationChange={handleAllocationChange}
               onToggleLock={handleToggleLock}
             />
+            <AlertDialog open={isUnlockBasketAlertOpen} onOpenChange={setIsUnlockBasketAlertOpen}>
+              <AlertDialogContent className="bg-card border-border">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-card-foreground">Basket Locked</AlertDialogTitle>
+                  <AlertDialogDescription className="text-muted-foreground">
+                    This basket is currently locked for performance tracking. Please unlock it to make changes to stock
+                    positions or allocations.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-background text-foreground border-border hover:bg-accent">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleUnlockBasket}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    Unlock Basket
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </>
         )}
       </div>
