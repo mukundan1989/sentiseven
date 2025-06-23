@@ -192,6 +192,9 @@ export default function PerformancePage() {
         // Find stocks that appear in at least 2 out of 3 sources
         const allStocks = new Set([...googleStocks, ...twitterStocks, ...newsStocks])
         const stocksWithSignals = [...allStocks].filter((symbol) => {
+          if (selectedModels.length === 0) {
+            return false // If no models are selected, no stocks should appear
+          }
           // A stock must have a signal in ALL currently selected models
           return selectedModels.every((model) => {
             if (model === "google") return googleStocks.has(symbol)
