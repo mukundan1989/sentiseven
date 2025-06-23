@@ -1534,74 +1534,7 @@ const SentimentDashboard = () => {
                   )}
                 </div>
               </div>
-            ) : (
-              // If basket is NOT locked, show Insights section as it was before
-              <div className="mb-6">
-                {" "}
-                {/* Original mb-6 for Insights */}
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl sm:text-2xl font-bold text-foreground">Insights</h2>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleSection("insights")}>
-                    {sectionsCollapsed.insights ? (
-                      <ChevronDown className="h-5 w-5" />
-                    ) : (
-                      <ChevronUp className="h-5 w-5" />
-                    )}
-                  </Button>
-                </div>
-                {!sectionsCollapsed.insights && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {stockPerformanceData &&
-                      stockPerformanceData.map(
-                        (
-                          stock, // Defensive check
-                        ) => (
-                          <Card
-                            key={stock.id}
-                            className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                            onClick={() => handleStockClick(stock)}
-                          >
-                            <CardHeader className="pb-2">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <CardTitle className="text-lg">{stock.symbol}</CardTitle>
-                                  <CardDescription className="text-sm">{stock.name}</CardDescription>
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-lg font-bold">${stock.price}</div>
-                                  <div className={`text-sm ${getPerformanceColor(stock.change)}`}>
-                                    {stock.change > 0 ? "+" : ""}
-                                    {stock.change.toFixed(2)}%
-                                  </div>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-sm text-muted-foreground">Allocation</span>
-                                  <span className="font-medium">{stock.allocation}%</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                  <span className="text-sm text-muted-foreground">Sentiment</span>
-                                  <div className="flex items-center gap-1">
-                                    {getSentimentIcon(stock.compositeSentiment)}
-                                    <span
-                                      className={`text-sm font-medium ${getSentimentColor(stock.compositeSentiment)}`}
-                                    >
-                                      {stock.compositeSentiment.toFixed(2)}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ),
-                      )}
-                  </div>
-                )}
-              </div>
-            )}
+            ) : null}
 
             {/* Footer */}
             <div className="mt-8 pt-6 border-t text-center text-muted-foreground text-sm">
