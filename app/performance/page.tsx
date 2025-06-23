@@ -180,28 +180,43 @@ export default function PerformancePage() {
         ])
 
         // Get sets of stock symbols from each source
-        const googleStocks = new Set(googleData.map((item: StockSignal) => item.comp_symbol))
-        const twitterStocks = new Set(twitterData.map((item: StockSignal) => item.comp_symbol))
-        const newsStocks = new Set(newsData.map((item: StockSignal) => item.comp_symbol))
+        const googleStocks = new Map(googleData.map((item: StockSignal) => [item.comp_symbol, item]))
+        const twitterStocks = new Map(twitterData.map((item: StockSignal) => [item.comp_symbol, item]))
+        const newsStocks = new Map(newsData.map((item: StockSignal) => [item.comp_symbol, item]))
 
-        // Create a map to easily look up signal data by symbol
-        const googleMap = new Map(googleData.map((item: StockSignal) => [item.comp_symbol, item]))
-        const twitterMap = new Map(twitterData.map((item: StockSignal) => [item.comp_symbol, item]))
-        const newsMap = new Map(newsData.map((item: StockSignal) => [item.comp_symbol, item]))
+        // Combine all unique symbols from all sources
+        const allUniqueSymbols = new Set([
+          ...Array.from(googleStocks.keys()),
+          ...Array.from(twitterStocks.keys()),
+          ...Array.from(newsStocks.keys()),
+        ])
 
-        // Find stocks that appear in at least 2 out of 3 sources
-        const allStocks = new Set([...googleStocks, ...twitterStocks, ...newsStocks])
-        const stocksWithSignals = [...allStocks].filter((symbol) => {
+        const stocksWithSignals = [...allUniqueSymbols].filter((symbol) => {
           if (selectedModels.length === 0) {
             return false // If no models are selected, no stocks should appear
           }
-          // A stock must have a signal in ALL currently selected models
-          return selectedModels.every((model) => {
-            if (model === "google") return googleStocks.has(symbol)
-            if (model === "twitter") return twitterStocks.has(symbol)
-            if (model === "news") return newsStocks.has(symbol)
-            return false
-          })
+
+          let firstSentiment: string | null = null
+          for (const model of selectedModels) {
+            let signal: StockSignal | undefined
+
+            if (model === "google") signal = googleStocks.get(symbol)
+            else if (model === "twitter") signal = twitterStocks.get(symbol)
+            else if (model === "news") signal = newsStocks.get(symbol)
+
+            // If a signal is missing for any selected model, this stock is filtered out
+            if (!signal) {
+              return false
+            }
+
+            // Check for sentiment consistency
+            if (firstSentiment === null) {
+              firstSentiment = signal.sentiment
+            } else if (signal.sentiment !== firstSentiment) {
+              return false // Sentiments are not consistent across selected models
+            }
+          }
+          return true // Stock has signals in all selected models, and sentiments are consistent
         })
 
         let basketLockDate: string | null = null
@@ -220,10 +235,14 @@ export default function PerformancePage() {
               selectedBasketStocks = stocks
               setBasketStocks(stocks)
 
-              // For basket view, show all stocks in the basket
-              stocksToProcess = stocks.map((stock) => stock.symbol)
+              // For basket view, show all stocks in the basket that also match the signal criteria
+              stocksToProcess = stocks
+                .map((stock) => stock.symbol)
+                .filter((symbol) => stocksWithSignals.includes(symbol))
 
-              console.log(`Loaded ${stocks.length} stocks for basket "${basket.name}"`)
+              console.log(
+                `Loaded ${stocks.length} stocks for basket "${basket.name}", filtered to ${stocksToProcess.length} matching signals.`,
+              )
             } else {
               stocksToProcess = []
               console.error("Failed to load basket or stocks:", error)
@@ -233,7 +252,7 @@ export default function PerformancePage() {
             stocksToProcess = []
           }
         } else {
-          // For "All Stocks" view, only show stocks with signals in at least 2 models
+          // For "All Stocks" view, only show stocks with signals matching criteria
           stocksToProcess = stocksWithSignals
         }
 
@@ -242,24 +261,24 @@ export default function PerformancePage() {
           setLoading(false)
           if (viewMode !== "all") {
             const selectedBasketName = userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"
-            setError(`No stocks found in basket "${selectedBasketName}" that match selected models.`)
+            setError(
+              `No stocks found in basket "${selectedBasketName}" that match selected models and sentiment consistency.`,
+            )
           } else {
-            setError("No stocks found matching the selected signal models.")
+            setError("No stocks found matching the selected signal models and sentiment consistency.")
           }
           return
         }
 
-        // NEW: Batch fetch current prices for all stocks to process
+        // Batch fetch current prices for all stocks to process
         const currentPricesMap = await getCurrentPricesBatch(stocksToProcess)
 
-        // NEW: Prepare historical price promises if in basket view
+        // Prepare historical price promises if in basket view
         const historicalPricePromises: Promise<{ symbol: string; price: number }>[] = []
-        const historicalPriceRequests: { symbol: string; date: string }[] = []
 
         if (viewMode !== "all" && selectedBasket && basketLockDate) {
           const formattedLockDate = formatDate(basketLockDate)
           for (const symbol of stocksToProcess) {
-            historicalPriceRequests.push({ symbol, date: formattedLockDate })
             historicalPricePromises.push(
               getHistoricalPrice(symbol, formattedLockDate).then((price) => ({ symbol, price })),
             )
@@ -273,23 +292,9 @@ export default function PerformancePage() {
 
         for (const symbol of stocksToProcess) {
           try {
-            const googleSignal = googleMap.get(symbol)
-            const twitterSignal = twitterMap.get(symbol)
-            const newsSignal = newsMap.get(symbol)
-
-            // Check if this stock has signals in at least 2 models
-            const availableSignals = [
-              googleSignal ? { signal: googleSignal, source: "google" } : null,
-              twitterSignal ? { signal: twitterSignal, source: "twitter" } : null,
-              newsSignal ? { signal: newsSignal, source: "news" } : null,
-            ].filter(Boolean)
-
-            const hasSignals = selectedModels.every((model) => {
-              if (model === "google") return googleSignal !== undefined
-              if (model === "twitter") return twitterSignal !== undefined
-              if (model === "news") return newsSignal !== undefined
-              return false
-            })
+            const googleSignal = googleStocks.get(symbol)
+            const twitterSignal = twitterStocks.get(symbol)
+            const newsSignal = newsStocks.get(symbol)
 
             // Determine the lock date and price based on view mode
             let lockDate: string
@@ -305,25 +310,37 @@ export default function PerformancePage() {
               // Use the pre-fetched historical price
               lockPrice = historicalPricesMap.get(symbol) || 0 // Default to 0 if not found, though it should be
 
-              // If we have signals, use the sentiment from the most recent one
-              if (hasSignals) {
-                // Find the most recent signal date among available sources
-                const dates = availableSignals.map((item) => new Date(item.signal.date))
-                const mostRecentDate = new Date(Math.max(...dates.map((d) => d.getTime())))
+              // Determine sentiment from selected models for locked basket
+              if (selectedModels.length > 0) {
+                const sentiments = selectedModels
+                  .map((model) => {
+                    if (model === "google") return googleSignal?.sentiment
+                    if (model === "twitter") return twitterSignal?.sentiment
+                    if (model === "news") return newsSignal?.sentiment
+                    return undefined
+                  })
+                  .filter((s) => s !== undefined) as string[]
 
-                // Find which signal corresponds to the most recent date
-                const mostRecentSignal = availableSignals.find(
-                  (item) => new Date(item.signal.date).getTime() === mostRecentDate.getTime(),
-                )?.signal
-
-                if (mostRecentSignal) {
-                  lockSentiment = mostRecentSignal.sentiment
-                  currentSentiment = mostRecentSignal.sentiment
+                // If all sentiments are consistent, use that sentiment
+                if (sentiments.length > 0 && sentiments.every((s) => s === sentiments[0])) {
+                  lockSentiment = sentiments[0]
+                  currentSentiment = sentiments[0]
+                } else {
+                  // Fallback if sentiments are not consistent or missing for some selected models
+                  lockSentiment = "Mixed" // Or some other indicator
+                  currentSentiment = "Mixed"
                 }
+              } else {
+                lockSentiment = "N/A"
+                currentSentiment = "N/A"
               }
             } else {
-              // For "All Stocks" view, we should have at least 2 signals
-              if (!hasSignals) continue
+              // For "All Stocks" view, use the most recent signal's entry price and sentiment
+              const availableSignals = [
+                googleSignal ? { signal: googleSignal, source: "google" } : null,
+                twitterSignal ? { signal: twitterSignal, source: "twitter" } : null,
+                newsSignal ? { signal: newsSignal, source: "news" } : null,
+              ].filter(Boolean) as { signal: StockSignal; source: string }[]
 
               // Find the most recent signal date among available sources
               const dates = availableSignals.map((item) => new Date(item.signal.date))
@@ -336,9 +353,9 @@ export default function PerformancePage() {
 
               lockDate = formatDate(mostRecentDate.toISOString())
               // Use the entry_price from the signal for "All Stocks" view
-              lockPrice = Number.parseFloat(mostRecentSignal.entry_price.toString())
-              lockSentiment = mostRecentSignal.sentiment
-              currentSentiment = mostRecentSignal.sentiment
+              lockPrice = Number.parseFloat(mostRecentSignal?.entry_price.toString() || "0")
+              lockSentiment = mostRecentSignal?.sentiment || null
+              currentSentiment = mostRecentSignal?.sentiment || null
             }
 
             // Get current price using the pre-fetched batch map
@@ -346,7 +363,7 @@ export default function PerformancePage() {
 
             // Calculate change and percentage
             const change = currentPrice - lockPrice
-            const changePercent = (change / lockPrice) * 100
+            const changePercent = lockPrice !== 0 ? (change / lockPrice) * 100 : 0
 
             // Get stock name - first try from basket stocks, then from company names map
             let stockName = ""
@@ -370,7 +387,7 @@ export default function PerformancePage() {
               change,
               changePercent,
               currentSentiment,
-              hasSignals,
+              hasSignals: true, // If it passed the initial filter, it has signals
             })
           } catch (err) {
             console.error(`Error processing stock ${symbol}:`, err)
@@ -537,8 +554,8 @@ export default function PerformancePage() {
             ) : performanceData.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 {viewMode !== "all"
-                  ? `No stocks found for basket "${userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"}" matching selected signal models.`
-                  : "No stocks found matching the selected signal models."}
+                  ? `No stocks found for basket "${userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"}" matching selected models and sentiment consistency.`
+                  : "No stocks found matching the selected signal models and sentiment consistency."}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -599,7 +616,9 @@ export default function PerformancePage() {
                                     ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-800"
                                     : stock.lockSentiment.toLowerCase() === "negative"
                                       ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-800"
-                                      : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                                      : stock.lockSentiment.toLowerCase() === "neutral"
+                                        ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                                        : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800" // For "Mixed" or "N/A"
                                 }`}
                             >
                               {stock.lockSentiment}
@@ -631,7 +650,9 @@ export default function PerformancePage() {
                                     ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-800"
                                     : stock.currentSentiment.toLowerCase() === "negative"
                                       ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-800"
-                                      : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                                      : stock.currentSentiment.toLowerCase() === "neutral"
+                                        ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                                        : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800" // For "Mixed" or "N/A"
                                 }`}
                             >
                               {stock.currentSentiment}
