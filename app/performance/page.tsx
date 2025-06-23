@@ -64,7 +64,7 @@ export default function PerformancePage() {
   const [selectedBasketId, setSelectedBasketId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<"all" | string>("all") // "all" or basket ID
   const [basketStocks, setBasketStocks] = useState<BasketStock[]>([])
-  const [selectedModels, setSelectedModels] = useState<string[]>(["google", "twitter", "news"]) // Add this line
+  const [selectedModels, setSelectedModels] = useState<string[]>([]) // Changed default to empty array
 
   // Format date to YYYY-MM-DD
   const formatDate = (dateString: string) => {
@@ -259,7 +259,10 @@ export default function PerformancePage() {
         if (stocksToProcess.length === 0) {
           setPerformanceData([])
           setLoading(false)
-          if (viewMode !== "all") {
+          if (selectedModels.length === 0) {
+            // Added check for no models selected
+            setError("Please select at least one signal model to view performance data.")
+          } else if (viewMode !== "all") {
             const selectedBasketName = userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"
             setError(
               `No stocks found in basket "${selectedBasketName}" that match selected models and sentiment consistency.`,
@@ -550,9 +553,11 @@ export default function PerformancePage() {
               </div>
             ) : performanceData.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
-                {viewMode !== "all"
-                  ? `No stocks found for basket "${userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"}" matching selected models and sentiment consistency.`
-                  : "No stocks found matching the selected signal models and sentiment consistency."}
+                {selectedModels.length === 0 // Updated message for no models selected
+                  ? "Please select at least one signal model to view performance data."
+                  : viewMode !== "all"
+                    ? `No stocks found in basket "${userBaskets.find((b) => b.id === viewMode)?.name || "Unknown"}" that match selected models and sentiment consistency.`
+                    : "No stocks found matching the selected signal models and sentiment consistency."}
               </div>
             ) : (
               <div className="overflow-x-auto">
