@@ -99,25 +99,36 @@ export default function PerformancePage() {
     }
   }
 
-  // Fetch current stock price using the new API route
-  const getCurrentPrice = useCallback(async (symbol: string): Promise<number> => {
+  // NEW: Fetch current stock prices in batch using the new API route
+  const getCurrentPricesBatch = useCallback(async (symbols: string[]): Promise<Record<string, number>> => {
+    if (symbols.length === 0) return {}
     try {
-      const response = await fetch(`/api/stock-price/current/${symbol}`)
+      const response = await fetch("/api/stock-price/current/batch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ symbols }),
+      })
       const data = await response.json()
-      if (response.ok && data.price) {
-        return data.price
+      if (response.ok) {
+        return data
       }
-      throw new Error(data.error || `Failed to fetch current price for ${symbol}`)
+      throw new Error(data.error || "Failed to fetch current prices in batch")
     } catch (error) {
-      console.error(`Error fetching current price for ${symbol} from API:`, error)
-      // Fallback to a consistent mock price if API fails
-      const symbolSum = symbol.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)
-      const basePrice = (symbolSum % 490) + 10 // Price between $10 and $500
-      return Math.round(basePrice * 100) / 100
+      console.error("Error fetching current prices in batch:", error)
+      // Fallback to consistent mock prices for all symbols if batch API fails
+      const mockPrices: Record<string, number> = {}
+      symbols.forEach((symbol) => {
+        const symbolSum = symbol.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)
+        const basePrice = (symbolSum % 490) + 10 // Price between $10 and $500
+        mockPrices[symbol] = Math.round(basePrice * 100) / 100
+      })
+      return mockPrices
     }
   }, [])
 
-  // Fetch historical stock price using the new API route
+  // Fetch historical stock price using the new API route (individual call, but will be parallelized)
   const getHistoricalPrice = useCallback(async (symbol: string, date: string): Promise<number> => {
     try {
       const response = await fetch(`/api/stock-price/historical/${symbol}?date=${date}`)
@@ -235,6 +246,25 @@ export default function PerformancePage() {
           return
         }
 
+        // NEW: Batch fetch current prices for all stocks to process
+        const currentPricesMap = await getCurrentPricesBatch(stocksToProcess)
+
+        // NEW: Prepare historical price promises if in basket view
+        const historicalPricePromises: Promise<{ symbol: string; price: number }>[] = []
+        const historicalPriceRequests: { symbol: string; date: string }[] = []
+
+        if (viewMode !== "all" && selectedBasket && basketLockDate) {
+          const formattedLockDate = formatDate(basketLockDate)
+          for (const symbol of stocksToProcess) {
+            historicalPriceRequests.push({ symbol, date: formattedLockDate })
+            historicalPricePromises.push(
+              getHistoricalPrice(symbol, formattedLockDate).then((price) => ({ symbol, price })),
+            )
+          }
+        }
+        const historicalPricesResults = await Promise.all(historicalPricePromises)
+        const historicalPricesMap = new Map(historicalPricesResults.map((item) => [item.symbol, item.price]))
+
         // Process data for stocks
         const processedData: PerformanceData[] = []
 
@@ -269,8 +299,8 @@ export default function PerformancePage() {
               lockDate = formatDate(basketLockDate)
               console.log(`Processing ${symbol} with basket lock date: ${lockDate}`)
 
-              // Use our consistent historical price function from API
-              lockPrice = await getHistoricalPrice(symbol, lockDate)
+              // Use the pre-fetched historical price
+              lockPrice = historicalPricesMap.get(symbol) || 0 // Default to 0 if not found, though it should be
 
               // If we have signals, use the sentiment from the most recent one
               if (hasSignals) {
@@ -308,8 +338,8 @@ export default function PerformancePage() {
               currentSentiment = mostRecentSignal.sentiment
             }
 
-            // Get current price using the new API route
-            const currentPrice = await getCurrentPrice(symbol)
+            // Get current price using the pre-fetched batch map
+            const currentPrice = currentPricesMap[symbol] || 0 // Default to 0 if not found
 
             // Calculate change and percentage
             const change = currentPrice - lockPrice
@@ -359,7 +389,7 @@ export default function PerformancePage() {
     }
 
     fetchData()
-  }, [viewMode, userBaskets, getCurrentPrice, getHistoricalPrice, selectedModels]) // Added dependencies
+  }, [viewMode, userBaskets, getCurrentPricesBatch, getHistoricalPrice, selectedModels]) // Added dependencies
 
   return (
     <div className="min-h-screen bg-background">
@@ -546,25 +576,18 @@ export default function PerformancePage() {
                         Change
                       </th>
                       <th className="px-4 py-3 bg-muted text-muted-foreground border-b text-left font-medium">
-                        Sentiment
+                        Change %
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {performanceData.map((stock, index) => (
-                      <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-4 font-medium text-foreground">
-                          {stock.symbol}
-                          {!stock.hasSignals && viewMode !== "all" && (
-                            <span className="ml-2 text-amber-500" title="No signals in at least 2 models">
-                              <AlertCircle className="inline h-4 w-4" />
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-muted-foreground">{stock.name}</td>
-                        <td className="px-4 py-4 text-foreground bg-primary/5">{stock.lockDate}</td>
-                        <td className="px-4 py-4 text-foreground bg-primary/5">${stock.lockPrice.toFixed(2)}</td>
-                        <td className="px-4 py-4 bg-primary/5">
+                    {performanceData.map((stock) => (
+                      <tr key={stock.symbol}>
+                        <td className="px-4 py-4 font-medium text-foreground">{stock.symbol}</td>
+                        <td className="px-4 py-4 font-medium text-foreground">{stock.name}</td>
+                        <td className="px-4 py-4 font-medium text-foreground">{stock.lockDate}</td>
+                        <td className="px-4 py-4 font-medium text-foreground">${stock.lockPrice.toFixed(2)}</td>
+                        <td className="px-4 py-4">
                           {stock.lockSentiment ? (
                             <span
                               className={`px-3 py-1 rounded-full text-xs font-medium inline-block
