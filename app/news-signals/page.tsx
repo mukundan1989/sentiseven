@@ -17,6 +17,20 @@ interface NewsSignal {
   entry_price: number
 }
 
+// Helper function to safely convert a value to a string
+const safeString = (value: any): string => {
+  if (typeof value === "string") {
+    return value
+  }
+  if (typeof value === "number") {
+    return value.toString()
+  }
+  if (value === null || value === undefined) {
+    return ""
+  }
+  return String(value)
+}
+
 export default function NewsSignalsPage() {
   const [data, setData] = useState<NewsSignal[]>([])
   const [loading, setLoading] = useState(true)
@@ -252,8 +266,8 @@ export default function NewsSignalsPage() {
       const query = searchQuery.toLowerCase()
       result = result.filter(
         (item) =>
-          item.comp_symbol.toLowerCase().includes(query) ||
-          (item.analyzed_articles && item.analyzed_articles.toLowerCase().includes(query)),
+          safeString(item.comp_symbol).toLowerCase().includes(query) ||
+          safeString(item.analyzed_articles).toLowerCase().includes(query),
       )
     }
 
