@@ -274,8 +274,8 @@ export default function GoogleTrendSignalsPage() {
       const query = searchQuery.toLowerCase()
       result = result.filter(
         (item) =>
-          item.comp_symbol?.toLowerCase().includes(query) ||
-          (item.analyzed_keywords && item.analyzed_keywords.toLowerCase().includes(query)),
+          safeString(item.comp_symbol).toLowerCase().includes(query) ||
+          safeString(item.analyzed_keywords).toLowerCase().includes(query),
       )
     }
 
@@ -317,6 +317,20 @@ export default function GoogleTrendSignalsPage() {
       { symbol: "META", googleTrends: -0.2, twitter: -0.3, news: -0.1 },
       { symbol: "TSLA", googleTrends: 0.4, twitter: 0.3, news: 0.5 },
     ]
+  }
+
+  // Helper function to safely convert a value to a string
+  const safeString = (value: any): string => {
+    if (typeof value === "string") {
+      return value
+    }
+    if (typeof value === "number") {
+      return value.toString()
+    }
+    if (value === null || value === undefined) {
+      return ""
+    }
+    return String(value)
   }
 
   return (
