@@ -179,16 +179,16 @@ export default function PerformancePage() {
           newsRes.json(),
         ])
 
-        // Get sets of stock symbols from each source
-        const googleStocks = new Map(googleData.map((item: StockSignal) => [item.comp_symbol, item]))
-        const twitterStocks = new Map(twitterData.map((item: StockSignal) => [item.comp_symbol, item]))
-        const newsStocks = new Map(newsData.map((item: StockSignal) => [item.comp_symbol, item]))
+        // Get maps of stock symbols to their signal data from each source
+        const googleSignalsMap = new Map(googleData.map((item: StockSignal) => [item.comp_symbol, item]))
+        const twitterSignalsMap = new Map(twitterData.map((item: StockSignal) => [item.comp_symbol, item]))
+        const newsSignalsMap = new Map(newsData.map((item: StockSignal) => [item.comp_symbol, item]))
 
         // Combine all unique symbols from all sources
         const allUniqueSymbols = new Set([
-          ...Array.from(googleStocks.keys()),
-          ...Array.from(twitterStocks.keys()),
-          ...Array.from(newsStocks.keys()),
+          ...Array.from(googleSignalsMap.keys()),
+          ...Array.from(twitterSignalsMap.keys()),
+          ...Array.from(newsSignalsMap.keys()),
         ])
 
         const stocksWithSignals = [...allUniqueSymbols].filter((symbol) => {
@@ -200,9 +200,9 @@ export default function PerformancePage() {
           for (const model of selectedModels) {
             let signal: StockSignal | undefined
 
-            if (model === "google") signal = googleStocks.get(symbol)
-            else if (model === "twitter") signal = twitterStocks.get(symbol)
-            else if (model === "news") signal = newsStocks.get(symbol)
+            if (model === "google") signal = googleSignalsMap.get(symbol)
+            else if (model === "twitter") signal = twitterSignalsMap.get(symbol)
+            else if (model === "news") signal = newsSignalsMap.get(symbol)
 
             // If a signal is missing for any selected model, this stock is filtered out
             if (!signal) {
@@ -292,15 +292,35 @@ export default function PerformancePage() {
 
         for (const symbol of stocksToProcess) {
           try {
-            const googleSignal = googleStocks.get(symbol)
-            const twitterSignal = twitterStocks.get(symbol)
-            const newsSignal = newsStocks.get(symbol)
+            const googleSignal = googleSignalsMap.get(symbol)
+            const twitterSignal = twitterSignalsMap.get(symbol)
+            const newsSignal = newsSignalsMap.get(symbol)
 
             // Determine the lock date and price based on view mode
             let lockDate: string
             let lockPrice: number
             let lockSentiment: string | null = null
             let currentSentiment: string | null = null
+
+            // Determine the consistent sentiment for display
+            let sentimentForDisplay: string | null = null
+            if (selectedModels.length > 0) {
+              // Since the stock has passed the filter, we know sentiments are consistent.
+              // Just pick the sentiment from the first available selected model.
+              for (const model of selectedModels) {
+                let signal: StockSignal | undefined
+                if (model === "google") signal = googleSignal
+                else if (model === "twitter") signal = twitterSignal
+                else if (model === "news") signal = newsSignal
+
+                if (signal) {
+                  sentimentForDisplay = signal.sentiment
+                  break // Found a sentiment, and we know they are all consistent
+                }
+              }
+            } else {
+              sentimentForDisplay = "N/A" // No models selected
+            }
 
             if (viewMode !== "all" && selectedBasket && basketLockDate) {
               // Use basket lock date
@@ -310,52 +330,29 @@ export default function PerformancePage() {
               // Use the pre-fetched historical price
               lockPrice = historicalPricesMap.get(symbol) || 0 // Default to 0 if not found, though it should be
 
-              // Determine sentiment from selected models for locked basket
-              if (selectedModels.length > 0) {
-                const sentiments = selectedModels
-                  .map((model) => {
-                    if (model === "google") return googleSignal?.sentiment
-                    if (model === "twitter") return twitterSignal?.sentiment
-                    if (model === "news") return newsSignal?.sentiment
-                    return undefined
-                  })
-                  .filter((s) => s !== undefined) as string[]
-
-                // If all sentiments are consistent, use that sentiment
-                if (sentiments.length > 0 && sentiments.every((s) => s === sentiments[0])) {
-                  lockSentiment = sentiments[0]
-                  currentSentiment = sentiments[0]
-                } else {
-                  // Fallback if sentiments are not consistent or missing for some selected models
-                  lockSentiment = "Mixed" // Or some other indicator
-                  currentSentiment = "Mixed"
-                }
-              } else {
-                lockSentiment = "N/A"
-                currentSentiment = "N/A"
-              }
+              lockSentiment = sentimentForDisplay
+              currentSentiment = sentimentForDisplay
             } else {
               // For "All Stocks" view, use the most recent signal's entry price and sentiment
-              const availableSignals = [
+              const availableSignalsForDateAndPrice = [
                 googleSignal ? { signal: googleSignal, source: "google" } : null,
                 twitterSignal ? { signal: twitterSignal, source: "twitter" } : null,
                 newsSignal ? { signal: newsSignal, source: "news" } : null,
               ].filter(Boolean) as { signal: StockSignal; source: string }[]
 
-              // Find the most recent signal date among available sources
-              const dates = availableSignals.map((item) => new Date(item.signal.date))
+              // Find the most recent signal date among available sources (for lockDate and lockPrice)
+              const dates = availableSignalsForDateAndPrice.map((item) => new Date(item.signal.date))
               const mostRecentDate = new Date(Math.max(...dates.map((d) => d.getTime())))
 
-              // Find which signal corresponds to the most recent date
-              const mostRecentSignal = availableSignals.find(
+              const mostRecentSignal = availableSignalsForDateAndPrice.find(
                 (item) => new Date(item.signal.date).getTime() === mostRecentDate.getTime(),
               )?.signal
 
               lockDate = formatDate(mostRecentDate.toISOString())
               // Use the entry_price from the signal for "All Stocks" view
               lockPrice = Number.parseFloat(mostRecentSignal?.entry_price.toString() || "0")
-              lockSentiment = mostRecentSignal?.sentiment || null
-              currentSentiment = mostRecentSignal?.sentiment || null
+              lockSentiment = sentimentForDisplay // Use the consistent sentiment
+              currentSentiment = sentimentForDisplay // Use the consistent sentiment
             }
 
             // Get current price using the pre-fetched batch map
