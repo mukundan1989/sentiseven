@@ -176,11 +176,11 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
   return (
     <div className="w-full">
       <form onSubmit={handleSearch} className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
           placeholder="Search for stocks by symbol or name..."
-          className="pl-10 pr-10 bg-slate-800 border-slate-700 focus-visible:ring-slate-500"
+          className="pl-10 pr-10" // Rely on default shadcn styling for input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -189,7 +189,7 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+            className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             onClick={handleClearSearch}
           >
             <X className="h-4 w-4" />
@@ -201,18 +201,18 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
       </form>
 
       {searchResults.length > 0 && (
-        <div className="absolute z-10 mt-1 w-full max-w-3xl bg-slate-800 border border-slate-700 rounded-md shadow-lg">
+        <div className="absolute z-10 mt-1 w-full max-w-3xl bg-popover border border-border rounded-md shadow-lg">
           <ul className="py-1 max-h-60 overflow-auto">
             {searchResults.map((stock) => (
               <li
                 key={stock.id}
-                className="px-4 py-2 hover:bg-slate-700 cursor-pointer"
+                className="px-4 py-2 hover:bg-accent cursor-pointer text-foreground"
                 onClick={() => handleStockPreview(stock)}
               >
                 <div className="flex justify-between items-center">
                   <div>
                     <span className="font-medium">{stock.symbol}</span>
-                    <span className="ml-2 text-slate-400">{stock.name}</span>
+                    <span className="ml-2 text-muted-foreground">{stock.name}</span>
                   </div>
                   <div className="flex items-center">
                     <span className="font-medium">${stock.price.toFixed(2)}</span>
@@ -229,7 +229,7 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
       )}
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-4xl bg-slate-900 border-slate-800 text-white p-0">
+        <DialogContent className="max-w-4xl bg-card border-border text-foreground p-0">
           <div className="p-6">
             <StockDetailView
               stock={selectedStock}
@@ -244,4 +244,3 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
     </div>
   )
 }
-
