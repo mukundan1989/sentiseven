@@ -12,7 +12,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ChevronDown, Menu } from "lucide-react" // Import Menu icon
 import localFont from "next/font/local"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet" // Import Sheet components
-import { Footer } from "@/components/footer" // Import the new Footer component
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -37,9 +36,7 @@ export default function RootLayout({
       <body className={`${inter.className} ${neuropol.variable}`}>
         <ThemeProvider>
           <AuthProvider>
-            <div className="min-h-screen flex flex-col bg-background text-foreground">
-              {" "}
-              {/* Added flex flex-col */}
+            <div className="min-h-screen bg-background text-foreground">
               <nav className="border-b border-border bg-white dark:bg-card">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                   <div className="flex justify-between items-center">
@@ -160,12 +157,7 @@ export default function RootLayout({
                   </div>
                 </div>
               </nav>
-              <main className="flex-grow">
-                {" "}
-                {/* Added flex-grow to main content */}
-                {children}
-              </main>
-              <Footer /> {/* Render the Footer component */}
+              {children}
             </div>
             <Toaster />
           </AuthProvider>
