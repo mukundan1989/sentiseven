@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react" // Import useEffect and useRef
 import { Search, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -139,23 +137,49 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
   const [selectedStock, setSelectedStock] = useState<any | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!searchQuery.trim()) {
+  // Ref for the debounce timer
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Function to perform the actual search
+  const performSearch = (query: string) => {
+    if (!query.trim()) {
       setSearchResults([])
       return
     }
 
-    const query = searchQuery.toLowerCase()
+    const lowerCaseQuery = query.toLowerCase()
     const results = stockDatabase.filter(
-      (stock) => stock.symbol.toLowerCase().includes(query) || stock.name.toLowerCase().includes(query),
+      (stock) =>
+        stock.symbol.toLowerCase().includes(lowerCaseQuery) || stock.name.toLowerCase().includes(lowerCaseQuery),
     )
     setSearchResults(results)
   }
 
+  // Effect to debounce the search
+  useEffect(() => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+    }
+
+    // Only perform search if query is not empty
+    if (searchQuery.trim()) {
+      debounceTimeoutRef.current = setTimeout(() => {
+        performSearch(searchQuery)
+      }, 300) // Debounce for 300ms
+    } else {
+      setSearchResults([]) // Clear results if search query is empty
+    }
+
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+    }
+  }, [searchQuery]) // Re-run effect when searchQuery changes
+
   const handleClearSearch = () => {
     setSearchQuery("")
-    setSearchResults([])
+    setSearchResults([]) // Ensure results are cleared immediately
   }
 
   const handleStockPreview = (stock: any) => {
@@ -175,14 +199,16 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
 
   return (
     <div className="w-full">
-      <form onSubmit={handleSearch} className="relative">
+      <form onSubmit={(e) => e.preventDefault()} className="relative">
+        {" "}
+        {/* Prevent default form submission */}
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
           placeholder="Search for stocks by symbol or name..."
-          className="pl-10 pr-10" // Rely on default shadcn styling for input
+          className="pl-10 pr-10"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value)} // Update state on change
         />
         {searchQuery && (
           <Button
@@ -195,9 +221,7 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
             <X className="h-4 w-4" />
           </Button>
         )}
-        <Button type="submit" className="sr-only">
-          Search
-        </Button>
+        {/* Removed explicit submit button as search is now debounced on change */}
       </form>
 
       {searchResults.length > 0 && (
