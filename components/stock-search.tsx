@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react" // Import useEffect and useRef
+import { useState, useEffect, useRef } from "react"
 import { Search, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -137,13 +137,12 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
   const [selectedStock, setSelectedStock] = useState<any | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
 
-  // Ref for the debounce timer
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Function to perform the actual search
   const performSearch = (query: string) => {
     if (!query.trim()) {
-      setSearchResults([])
+      // If query is empty, show initial set of stocks (e.g., first 10)
+      setSearchResults(stockDatabase.slice(0, 10))
       return
     }
 
@@ -155,19 +154,18 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
     setSearchResults(results)
   }
 
-  // Effect to debounce the search
   useEffect(() => {
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current)
     }
 
-    // Only perform search if query is not empty
     if (searchQuery.trim()) {
       debounceTimeoutRef.current = setTimeout(() => {
         performSearch(searchQuery)
       }, 300) // Debounce for 300ms
     } else {
-      setSearchResults([]) // Clear results if search query is empty
+      // Immediately show initial stocks if query is empty
+      performSearch("")
     }
 
     return () => {
@@ -175,11 +173,11 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
         clearTimeout(debounceTimeoutRef.current)
       }
     }
-  }, [searchQuery]) // Re-run effect when searchQuery changes
+  }, [searchQuery])
 
   const handleClearSearch = () => {
     setSearchQuery("")
-    setSearchResults([]) // Ensure results are cleared immediately
+    // performSearch("") will be called by useEffect to show initial stocks
   }
 
   const handleStockPreview = (stock: any) => {
@@ -198,17 +196,17 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full relative">
+      {" "}
+      {/* Added 'relative' here */}
       <form onSubmit={(e) => e.preventDefault()} className="relative">
-        {" "}
-        {/* Prevent default form submission */}
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
           placeholder="Search for stocks by symbol or name..."
           className="pl-10 pr-10"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)} // Update state on change
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
         {searchQuery && (
           <Button
@@ -221,13 +219,14 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
             <X className="h-4 w-4" />
           </Button>
         )}
-        {/* Removed explicit submit button as search is now debounced on change */}
       </form>
-
-      {searchResults.length > 0 && (
-        <div className="absolute z-10 mt-1 w-full max-w-3xl bg-popover border border-border rounded-md shadow-lg">
-          <ul className="py-1 max-h-60 overflow-auto">
-            {searchResults.map((stock) => (
+      {/* Always render the search results container, even if empty, to maintain layout */}
+      <div className="mt-1 w-full bg-popover border border-border rounded-md shadow-lg overflow-hidden">
+        <ul className="py-1 max-h-60 overflow-y-auto">
+          {" "}
+          {/* Changed to overflow-y-auto for explicit vertical scroll */}
+          {searchResults.length > 0 ? (
+            searchResults.map((stock) => (
               <li
                 key={stock.id}
                 className="px-4 py-2 hover:bg-accent cursor-pointer text-foreground"
@@ -247,11 +246,12 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
                   </div>
                 </div>
               </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
+            ))
+          ) : (
+            <li className="px-4 py-2 text-muted-foreground text-center">No matching stocks found.</li>
+          )}
+        </ul>
+      </div>
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-4xl bg-card border-border text-foreground p-0">
           <div className="p-6">
