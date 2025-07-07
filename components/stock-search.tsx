@@ -196,9 +196,9 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
   }
 
   return (
-    <div className="w-full relative">
+    <div className="w-full">
       {" "}
-      {/* Added 'relative' here */}
+      {/* Removed 'relative' from here, as the dropdown is now in flow */}
       <form onSubmit={(e) => e.preventDefault()} className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -220,11 +220,11 @@ export function StockSearch({ onAddStock }: { onAddStock: (stock: any) => void }
           </Button>
         )}
       </form>
-      {/* Always render the search results container, even if empty, to maintain layout */}
-      <div className="mt-1 w-full bg-popover border border-border rounded-md shadow-lg overflow-hidden">
-        <ul className="py-1 max-h-60 overflow-y-auto">
+      {/* Search Results Container - now in normal flow */}
+      <div className="mt-2 w-full bg-popover border border-border rounded-md shadow-lg overflow-hidden">
+        <ul className="py-1 max-h-60 min-h-[150px] overflow-y-auto">
           {" "}
-          {/* Changed to overflow-y-auto for explicit vertical scroll */}
+          {/* Added min-h-[150px] and ensured overflow-y-auto */}
           {searchResults.length > 0 ? (
             searchResults.map((stock) => (
               <li
