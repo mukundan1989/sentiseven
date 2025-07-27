@@ -4,27 +4,27 @@
 
 @layer base {
   :root {
-    /* Light theme with grey background - using proper HSL format */
-    --background: 210 20% 98%; /* Light grey background */
-    --foreground: 222.2 84% 4.9%; /* Dark text */
-    --card: 0 0% 100%; /* Pure white cards */
-    --card-foreground: 222.2 84% 4.9%; /* Dark text on cards */
-    --popover: 0 0% 100%; /* White popovers */
-    --popover-foreground: 222.2 84% 4.9%; /* Dark text */
-    --primary: 220 13% 18%; /* Dark grey primary instead of blue */
-    --primary-foreground: 210 40% 98%; /* Light text on dark primary */
-    --secondary: 210 40% 96%; /* Light grey secondary */
-    --secondary-foreground: 222.2 84% 4.9%; /* Dark text */
-    --muted: 210 40% 96%; /* Muted background - light grey */
-    --muted-foreground: 215.4 16.3% 46.9%; /* Muted text */
-    --accent: 210 40% 96%; /* Accent background */
-    --accent-foreground: 222.2 84% 4.9%; /* Dark text on accent */
-    --destructive: 0 84.2% 60.2%; /* Red destructive */
-    --destructive-foreground: 210 40% 98%; /* Light text on red */
-    --border: 214.3 31.8% 91.4%; /* Light border */
-    --input: 214.3 31.8% 91.4%; /* Input border */
-    --ring: 222.2 84% 4.9%; /* Dark ring */
-    --radius: 0.5rem;
+    /* Light theme - keeping for compatibility but focusing on dark */
+    --background: 210 20% 98%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 220 13% 18%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.75rem;
 
     /* Chart colors */
     --chart-1: 12 76% 61%;
@@ -34,9 +34,9 @@
     --chart-5: 27 87% 67%;
 
     /* Sidebar colors */
-    --sidebar-background: 0 0% 100%; /* White sidebar */
+    --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 220 13% 18%; /* Dark grey primary */
+    --sidebar-primary: 220 13% 18%;
     --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 210 40% 96%;
     --sidebar-accent-foreground: 222.2 84% 4.9%;
@@ -45,43 +45,68 @@
   }
 
   .dark {
-    /* Dark theme with proper contrast hierarchy */
-    --background: 222.2 84% 4.9%; /* Very dark background */
-    --foreground: 210 40% 98%; /* Light text */
-    --card: 215 25% 20%; /* Medium dark grey for cards */
-    --card-foreground: 210 40% 98%; /* Light text on cards */
-    --popover: 215 25% 20%; /* Same as cards */
-    --popover-foreground: 210 40% 98%; /* Light text */
-    --primary: 210 40% 98%; /* Light grey primary for dark theme */
-    --primary-foreground: 222.2 84% 4.9%; /* Dark text on light primary */
-    --secondary: 215 25% 27%; /* Lighter than cards for secondary elements */
-    --secondary-foreground: 210 40% 98%; /* Light text */
-    --muted: 215 25% 12%; /* Much darker than cards - for progress bars, inputs */
-    --muted-foreground: 215 20.2% 65.1%; /* Muted light text */
-    --accent: 215 25% 27%; /* Lighter than cards for hover states */
-    --accent-foreground: 210 40% 98%; /* Light text on accent */
-    --destructive: 0 62.8% 30.6%; /* Darker red */
-    --destructive-foreground: 210 40% 98%; /* Light text on red */
-    --border: 215 25% 27%; /* Visible but subtle borders */
-    --input: 215 25% 12%; /* Same as muted - darker input backgrounds */
-    --ring: 212.7 26.8% 83.9%; /* Light ring */
+    /* Premium Dark Fintech Theme */
+    --background: 222 47% 4%; /* Deep navy background */
+    --foreground: 210 40% 98%; /* Bright white text */
 
-    /* Chart colors for dark mode */
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* Cards with glass morphism */
+    --card: 222 47% 8%; /* Slightly lighter than background */
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
 
-    /* Dark sidebar with proper contrast */
-    --sidebar-background: 215 25% 20%; /* Same as cards */
-    --sidebar-foreground: 210 40% 98%; /* Light text */
-    --sidebar-primary: 210 40% 98%; /* Light primary */
-    --sidebar-primary-foreground: 222.2 84% 4.9%; /* Dark text on light */
-    --sidebar-accent: 215 25% 27%; /* Lighter for hover */
-    --sidebar-accent-foreground: 210 40% 98%; /* Light text */
-    --sidebar-border: 215 25% 27%; /* Visible borders */
-    --sidebar-ring: 212.7 26.8% 83.9%; /* Light ring */
+    /* Primary colors - Electric blue gradient */
+    --primary: 217 91% 60%; /* Electric blue */
+    --primary-foreground: 222 47% 4%;
+
+    /* Secondary - Subtle purple */
+    --secondary: 222 47% 12%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Muted - Very dark for inputs and disabled states */
+    --muted: 222 47% 6%;
+    --muted-foreground: 215 20% 65%;
+
+    /* Accent - Cyan highlight */
+    --accent: 222 47% 12%;
+    --accent-foreground: 180 100% 70%; /* Cyan accent */
+
+    /* Destructive - Vibrant red */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Borders and inputs */
+    --border: 222 47% 15%; /* Subtle borders */
+    --input: 222 47% 8%; /* Input backgrounds */
+    --ring: 217 91% 60%; /* Electric blue ring */
+
+    /* Enhanced Chart Colors - Vibrant fintech palette */
+    --chart-1: 217 91% 60%; /* Electric blue */
+    --chart-2: 180 100% 70%; /* Cyan */
+    --chart-3: 280 100% 70%; /* Purple */
+    --chart-4: 45 100% 60%; /* Gold */
+    --chart-5: 340 100% 70%; /* Pink */
+
+    /* Sidebar with glass effect */
+    --sidebar-background: 222 47% 6%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 222 47% 4%;
+    --sidebar-accent: 222 47% 12%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 47% 15%;
+    --sidebar-ring: 217 91% 60%;
+
+    /* Custom fintech gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(280 100% 70%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(180 100% 70%) 0%, hsl(217 91% 60%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(280 100% 70%) 0%, hsl(340 100% 70%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(222 47% 8%) 0%, hsl(222 47% 12%) 100%);
+
+    /* Glass morphism variables */
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -89,19 +114,181 @@
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground text-sm md:text-base lg:text-lg; /* Added responsive font sizes */
-    font-family: Arial, Helvetica, sans-serif;
+    @apply bg-background text-foreground;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 400;
+    letter-spacing: -0.01em;
   }
 
-  /* Add Neuropol font class */
+  /* Enhanced typography */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+  }
+  h2 {
+    font-size: 2rem;
+    font-weight: 600;
+  }
+  h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  /* Neuropol font class */
   .font-neuropol {
     font-family: var(--font-neuropol), sans-serif;
+  }
+}
+
+@layer components {
+  /* Glass morphism card effect */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* Gradient button styles */
+  .btn-gradient-primary {
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .btn-gradient-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+  }
+
+  .btn-gradient-secondary {
+    background: var(--gradient-secondary);
+    border: none;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .btn-gradient-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px rgba(6, 182, 212, 0.3);
+  }
+
+  /* Enhanced card with gradient border */
+  .card-premium {
+    background: var(--gradient-card);
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+  }
+
+  .card-premium::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    background: var(--gradient-primary);
+    border-radius: inherit;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    -webkit-mask-composite: xor;
+    pointer-events: none;
+  }
+
+  /* Animated gradient text */
+  .text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glowing effect for important elements */
+  .glow-blue {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+
+  .glow-cyan {
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary));
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--accent-foreground));
   }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Backdrop blur utilities */
+  .backdrop-blur-glass {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Animation utilities */
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow {
+    from {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+    to {
+      box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+    }
+  }
+
+  /* Gradient backgrounds */
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .bg-gradient-secondary {
+    background: var(--gradient-secondary);
+  }
+
+  .bg-gradient-accent {
+    background: var(--gradient-accent);
+  }
+
+  .bg-gradient-card {
+    background: var(--gradient-card);
   }
 }
