@@ -18,6 +18,7 @@ import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { RotateCcw, Shuffle } from "lucide-react"
 
 interface Stock {
   id: string | number
@@ -198,7 +199,8 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
               onClick={resetAllocations}
               className="bg-background text-foreground border-border hover:bg-accent"
             >
-              Reset Equal
+              <RotateCcw className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Reset Equal</span>
             </Button>
             <Button
               size="sm"
@@ -206,7 +208,8 @@ const StockAllocation: React.FC<StockAllocationProps> = ({
               onClick={distributeRemaining}
               className="bg-background text-foreground border-border hover:bg-accent"
             >
-              Distribute Remaining
+              <Shuffle className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Distribute Remaining</span>
             </Button>
           </div>
         </div>
