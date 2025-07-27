@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { InfoIcon as InfoCircle, Loader2 } from "lucide-react" // Added Loader2 for loading state
+import { InfoIcon as InfoCircle, Loader2 } from "lucide-react"
 
 export function CorrelationChart() {
   const [loading, setLoading] = useState(true)
@@ -24,14 +24,14 @@ export function CorrelationChart() {
         const updatedData = [
           {
             name: "GTrends",
-            correlation: 0.92, // This correlation value is still hardcoded as it's separate from win rate impact
+            correlation: 0.92,
             color: "#10b981", // emerald-500
             winRate: 0,
           },
           {
             name: "Twitter",
             correlation: 0.65,
-            color: "#f59e0b", // amber-500
+            color: "#06b6d4", // cyan-500
             winRate: 0,
           },
           {
@@ -43,7 +43,7 @@ export function CorrelationChart() {
           {
             name: "News",
             correlation: 0.15,
-            color: "#ef4444", // red-500
+            color: "#a855f7", // purple-500
             winRate: 0,
           },
         ]
@@ -52,7 +52,7 @@ export function CorrelationChart() {
         let countForComposite = 0
 
         summaries.forEach((summary) => {
-          const winRate = summary.win_rate_percent || 0 // Default to 0 if null/undefined
+          const winRate = summary.win_rate_percent || 0
           if (summary.signal_type === "google_trends") {
             const index = updatedData.findIndex((d) => d.name === "GTrends")
             if (index !== -1) {
@@ -93,14 +93,14 @@ export function CorrelationChart() {
     }
 
     fetchSignalSummaries()
-  }, []) // Empty dependency array to run once on mount
+  }, [])
 
   // Helper function to get the width percentage based on win rate value
   const getWinRateWidthPercentage = (winRate: number) => {
-    return `${Math.min(winRate, 100)}%` // Ensure it doesn't exceed 100%
+    return `${Math.min(winRate, 100)}%`
   }
 
-  // NEW: Helper function to get the impact text based on win rate
+  // Helper function to get the impact text based on win rate
   const getWinRateImpactText = (winRate: number) => {
     if (winRate >= 76) return "Very Strong"
     if (winRate >= 51) return "Strong"
@@ -109,65 +109,69 @@ export function CorrelationChart() {
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 space-y-2 sm:space-y-0">
-        <div className="max-w-[70%] sm:max-w-[100%]">
-          <CardTitle className="text-2xl font-bold">Sentiment-Price Correlation</CardTitle>
-          <CardDescription className="mt-1 text-slate-400">
-            This table shows the relationship between the source of information and historical price
+    <Card className="glass-morphism border-border/50 shadow-premium">
+      <CardHeader className="pb-4">
+        <div className="space-y-2">
+          <CardTitle className="flex items-center gap-3 text-xl font-bold">
+            <div className="p-2 rounded-lg bg-gradient-accent">
+              <InfoCircle className="h-6 w-6 text-white" />
+            </div>
+            Sentiment-Price Correlation
+          </CardTitle>
+          <CardDescription className="text-base text-muted-foreground">
+            Relationship between information sources and historical price movements
           </CardDescription>
         </div>
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2 text-muted-foreground">Loading correlation data...</span>
+          <div className="flex justify-center items-center py-16">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="text-muted-foreground font-medium">Loading correlation data...</span>
+            </div>
           </div>
         ) : error ? (
-          <div className="p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-md">{error}</div>
+          <div className="p-6 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl backdrop-blur-sm">
+            {error}
+          </div>
         ) : (
-          <div className="space-y-6">
-            {/* Header row */}
-            <div className="grid grid-cols-2 gap-4 py-2 text-sm font-medium text-slate-400">
-              <div>Source</div>
-              <div className="flex items-center justify-end">
+          <div className="space-y-8">
+            {/* Enhanced Header row */}
+            <div className="grid grid-cols-2 gap-6 py-3 text-sm font-semibold text-muted-foreground border-b border-border/30">
+              <div>Data Source</div>
+              <div className="flex items-center justify-end gap-2">
                 Correlation Impact / Win Rate %
-                <InfoCircle className="ml-1 h-4 w-4" />
+                <InfoCircle className="h-4 w-4 text-primary" />
               </div>
             </div>
 
-            {/* Divider */}
-            <div className="h-px bg-slate-800"></div>
-
-            {/* Source rows in a 2x2 grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* Enhanced Source rows in a 2x2 grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {dynamicSourceCorrelationData.map((source, index) => (
-                <div key={index} className="space-y-1">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-lg font-medium">{source.name}</div>
-                    <div className="flex items-center justify-end text-sm font-medium" style={{ color: source.color }}>
-                      {getWinRateImpactText(source.winRate)} {/* Dynamically set impact text */}
+                <div key={index} className="space-y-4 p-4 rounded-xl bg-gradient-card border border-border/30">
+                  <div className="grid grid-cols-2 gap-4 items-center">
+                    <div className="text-lg font-bold text-foreground">{source.name}</div>
+                    <div className="flex items-center justify-end text-sm font-bold" style={{ color: source.color }}>
+                      {getWinRateImpactText(source.winRate)}
                     </div>
                   </div>
 
-                  {/* Scale labels ABOVE progress bar */}
-                  <div className="grid grid-cols-4 text-xs text-slate-400 mb-1">
+                  {/* Enhanced Scale labels */}
+                  <div className="grid grid-cols-4 text-xs text-muted-foreground mb-2">
                     <div className="text-left">Weak</div>
                     <div className="text-center">Moderate</div>
                     <div className="text-center">Strong</div>
                     <div className="text-right">Very Strong</div>
                   </div>
 
-                  {/* Progress bar container (relative for absolute children) */}
-                  <div className="relative h-3 w-full rounded-full bg-slate-800/50">
+                  {/* Enhanced Progress bar container */}
+                  <div className="relative h-4 w-full rounded-full bg-muted/30 overflow-hidden">
                     {/* Percentage text above marker */}
                     <div
-                      className="absolute bottom-[calc(100%+0.25rem)] text-xs text-black z-10"
+                      className="absolute -top-6 text-xs font-bold text-foreground z-10 transform -translate-x-1/2"
                       style={{
                         left: getWinRateWidthPercentage(source.winRate),
-                        transform: "translateX(-50%)", // Center text on the marker
-                        textShadow: "0 0 3px rgba(255,255,255,0.8)", // Stronger white shadow for readability
                       }}
                     >
                       {source.winRate.toFixed(1)}%
@@ -175,18 +179,21 @@ export function CorrelationChart() {
 
                     {/* Vertical marker */}
                     <div
-                      className="absolute top-0 h-full w-px bg-black z-10"
+                      className="absolute top-0 h-full w-0.5 bg-foreground z-10 shadow-sm"
                       style={{ left: getWinRateWidthPercentage(source.winRate) }}
-                    ></div>
+                    />
 
-                    {/* Progress bar fill */}
+                    {/* Enhanced Progress bar fill with gradient */}
                     <div
-                      className="h-full rounded-full"
+                      className="h-full rounded-full transition-all duration-500 ease-out relative overflow-hidden"
                       style={{
                         width: getWinRateWidthPercentage(source.winRate),
-                        backgroundColor: source.color,
+                        background: `linear-gradient(90deg, ${source.color}40 0%, ${source.color} 100%)`,
                       }}
-                    ></div>
+                    >
+                      {/* Animated shine effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                    </div>
                   </div>
                 </div>
               ))}
