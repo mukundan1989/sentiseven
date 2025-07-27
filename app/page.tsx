@@ -1061,7 +1061,7 @@ const SentimentDashboard = () => {
                             }
                           >
                             <Edit2 className="h-4 w-4" />
-                            Change
+                            <span className="hidden md:inline">Change</span>
                           </Button>
                           <Button
                             size="sm"
@@ -1069,9 +1069,10 @@ const SentimentDashboard = () => {
                               basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsAllocationEditorOpen(true)
                             }
                             disabled={basketLocked}
-                            className="btn-gradient-primary"
+                            className="btn-gradient-primary gap-2"
                           >
-                            Adjust Allocation
+                            <Edit2 className="h-4 w-4" />
+                            <span className="hidden md:inline">Adjust Allocation</span>
                           </Button>
                           <Button
                             size="sm"
