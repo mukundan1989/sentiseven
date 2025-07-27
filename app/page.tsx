@@ -1,1792 +1,527 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  ArrowUp,
-  ArrowDown,
-  Activity,
-  BarChart3,
-  Edit2,
-  Lock,
-  Unlock,
-  RotateCw,
-  ChevronDown,
-  ChevronUp,
-  Loader2,
-  Plus,
-  Trash2,
-} from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { StockSelector } from "@/components/stock-selector"
-import { StockDetailView } from "@/components/stock-detail-view"
-import { CorrelationChart } from "@/components/correlation-chart"
-import StockAllocation from "@/components/stock-allocation"
-import { AddBasketModal } from "@/components/add-basket-modal"
-import { useAuth } from "@/context/auth-context"
-import {
-  saveBasket,
-  getMostRecentBasket,
-  getAllUserBaskets,
-  getBasketById,
-  deleteBasket,
-  unlockBasket,
-  type StockBasket,
-  type BasketStock,
-} from "@/lib/basket-service"
-import { useToast } from "@/hooks/use-toast"
-import { Slider } from "@/components/ui/slider"
-
-// Add this import at the top with the other imports
-import { Edit } from "lucide-react"
-import { Calendar } from "@/components/ui/calendar"
+  type ColumnDef,
+  type ColumnFiltersState,
+  type SortingState,
+  type VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { supabase } from "@/lib/supabase"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toast } from "@/components/ui/use-toast"
+import { useState } from "react"
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Edit, Settings, RotateCcw, Copy, ExternalLink, Plus, Trash } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
+import { CalendarIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { PopoverClose } from "@radix-ui/react-popover"
+import type { DateRange } from "react-day-picker"
+import { addDays } from "date-fns"
+import { InputPopover } from "@/components/input-popover"
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command"
 
-const SentimentDashboard = () => {
-  // Auth context
-  const { user } = useAuth()
-  const { toast } = useToast()
+const data = [
+  { name: "Jan", uv: 4000, pv: 2400, amt: 2400 },
+  { name: "Feb", uv: 3000, pv: 1398, amt: 2210 },
+  { name: "Mar", uv: 2000, pv: 9800, amt: 2290 },
+  { name: "Apr", uv: 2780, pv: 3908, amt: 2000 },
+  { name: "May", uv: 1890, pv: 4800, amt: 2181 },
+  { name: "Jun", uv: 2390, pv: 3800, amt: 2500 },
+  { name: "Jul", uv: 3490, pv: 4300, amt: 2100 },
+]
 
-  // State for time period and source weights
-  const [timePeriod, setTimePeriod] = useState("1w")
-  const [weights, setWeights] = useState({
-    twitter: 0.4,
-    googleTrends: 0.3,
-    news: 0.3,
+const columns: ColumnDef<any>[] = [
+  {
+    accessorKey: "id",
+    header: "ID",
+  },
+  {
+    accessorKey: "firstName",
+    header: "First Name",
+  },
+  {
+    accessorKey: "lastName",
+    header: "Last Name",
+  },
+  {
+    accessorKey: "age",
+    header: "Age",
+    enableSorting: false,
+  },
+  {
+    accessorKey: "visits",
+    header: "Visits",
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+  },
+  {
+    accessorKey: "progress",
+    header: "Profile Progress",
+  },
+]
+
+function generateRows(count: number) {
+  const rows = []
+  for (let i = 1; i <= count; i++) {
+    rows.push({
+      id: i,
+      firstName: `First${i}`,
+      lastName: `Last${i}`,
+      age: Math.floor(Math.random() * 50) + 18,
+      visits: Math.floor(Math.random() * 100),
+      status: ["active", "inactive"][Math.floor(Math.random() * 2)],
+      progress: Math.floor(Math.random() * 100),
+    })
+  }
+  return rows
+}
+
+const initialData = generateRows(100)
+
+export default function Home() {
+  const [showStockSelector, setShowStockSelector] = useState(false)
+  const [showAllocation, setShowAllocation] = useState(false)
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = useState({})
+  const table = useReactTable({
+    data: initialData,
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
   })
 
-  // Add this after the weights state
-  const [weightLocks, setWeightLocks] = useState({
-    twitter: false,
-    googleTrends: false,
-    news: false,
+  const resetToDefault = () => {
+    toast({
+      title: "Portfolio Reset",
+      description: "Your portfolio has been reset to the default allocation.",
+    })
+  }
+
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: new Date(2023, 0, 10),
+    to: addDays(new Date(), 14),
   })
 
-  // Add this state for date editing near the other state declarations
-  const [isEditingLockDate, setIsEditingLockDate] = useState(false)
-
-  // Sample basket of stocks with allocation percentages
-  const [stocks, setStocks] = useState([
-    { id: 1, symbol: "AAPL", name: "Apple Inc.", sector: "Technology", allocation: 25, locked: false },
-    { id: 2, symbol: "MSFT", name: "Microsoft Corp.", sector: "Technology", allocation: 20, locked: true },
-    { id: 3, symbol: "AMZN", name: "Amazon.com Inc.", sector: "Consumer Cyclical", allocation: 20, locked: false },
-    { id: 4, symbol: "TSLA", name: "Tesla Inc.", sector: "Automotive", allocation: 15, locked: false },
-    { id: 5, symbol: "META", name: "Meta Platforms Inc.", sector: "Technology", allocation: 20, locked: true },
-  ])
-
-  // State for basket management
-  const [basketId, setBasketId] = useState<string | null>(null)
-  const [basketName, setBasketName] = useState("Tech Leaders")
-  const [basketLocked, setBasketLocked] = useState(false)
-  const [basketDates, setBasketDates] = useState({
-    created: null,
-    updated: null,
-    locked: null,
-  })
-
-  // State for basket management
-  const [allBaskets, setAllBaskets] = useState<StockBasket[]>([])
-  const [selectedBasketId, setSelectedBasketId] = useState<string | null>(null)
-  const [isLoadingBaskets, setIsLoadingBaskets] = useState(false)
-
-  // State for Add Basket Modal
-  const [isAddBasketModalOpen, setIsAddBasketModalOpen] = useState(false)
-
-  // State for loading
-  const [isLoading, setIsLoading] = useState(false)
-
-  // Sample sentiment data
-  const sentimentData = {
-    "1d": generateSentimentData(1),
-    "1w": generateSentimentData(7),
-    "1m": generateSentimentData(30),
-  }
-
-  // State for stock selector dialog
-  const [isStockSelectorOpen, setIsStockSelectorOpen] = useState(false)
-
-  // State for selected stock
-  const [selectedStock, setSelectedStock] = useState(null)
-
-  // State for allocation editor
-  const [isAllocationEditorOpen, setIsAllocationEditorOpen] = useState(false)
-
-  // Add a new state for the unlock alert dialog
-  const [isUnlockBasketAlertOpen, setIsUnlockBasketAlertOpen] = useState(false)
-
-  // State for section collapse
-  const [sectionsCollapsed, setSectionsCollapsed] = useState({
-    inputs: false,
-    insights: false,
-    tracking: false,
-  })
-
-  // Load user's baskets and most recent basket when component mounts
-  useEffect(() => {
-    if (user) {
-      loadUserBaskets()
-      loadMostRecentBasket()
-    }
-  }, [user])
-
-  // Load all user baskets
-  const loadUserBaskets = async () => {
-    setIsLoadingBaskets(true)
-    try {
-      const { baskets, error } = await getAllUserBaskets()
-
-      if (error) {
-        console.error("Error loading baskets:", error)
-        return
-      }
-
-      if (baskets) {
-        setAllBaskets(baskets)
-      }
-    } catch (error) {
-      console.error("Error in loadUserBaskets:", error)
-    } finally {
-      setIsLoadingBaskets(false)
-    }
-  }
-
-  // Load a specific basket
-  const loadBasket = async (basketId: string) => {
-    setIsLoading(true)
-    try {
-      const { basket, stocks: basketStocks, error } = await getBasketById(basketId)
-
-      if (error) {
-        console.error("Error loading basket:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load the selected basket. Please try again.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      if (basket) {
-        // Update the state with the loaded basket
-        setBasketId(basket.id)
-        setSelectedBasketId(basket.id)
-        setBasketName(basket.name)
-        setBasketLocked(basket.is_locked)
-        setWeights(basket.source_weights)
-
-        // Convert dates
-        if (basket.created_at) {
-          setBasketDates({
-            created: new Date(basket.created_at),
-            updated: basket.updated_at ? new Date(basket.updated_at) : null,
-            locked: basket.locked_at ? new Date(basket.locked_at) : null, // Add locked date
-          })
-        }
-
-        // Convert stocks format
-        if (basketStocks && basketStocks.length > 0) {
-          const formattedStocks = basketStocks.map((stock) => ({
-            id: stock.id,
-            symbol: stock.symbol,
-            name: stock.name,
-            sector: stock.sector,
-            allocation: stock.allocation,
-            locked: stock.is_locked,
-          }))
-          setStocks(formattedStocks)
-        } else {
-          setStocks([])
-        }
-
-        toast({
-          title: "Basket Loaded",
-          description: `Successfully loaded "${basket.name}" basket.`,
-        })
-      }
-    } catch (error) {
-      console.error("Error in loadBasket:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Load the most recent basket
-  const loadMostRecentBasket = async () => {
-    setIsLoading(true)
-    try {
-      const { basket, stocks: basketStocks, error } = await getMostRecentBasket()
-
-      if (error) {
-        console.error("Error loading basket:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load your basket. Please try again.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      if (basket) {
-        // Update the state with the loaded basket
-        setBasketId(basket.id)
-        setSelectedBasketId(basket.id)
-        setBasketName(basket.name)
-        setBasketLocked(basket.is_locked)
-        setWeights(basket.source_weights)
-
-        // Convert dates
-        if (basket.created_at) {
-          setBasketDates({
-            created: new Date(basket.created_at),
-            updated: basket.updated_at ? new Date(basket.updated_at) : null,
-            locked: basket.locked_at ? new Date(basket.locked_at) : null, // Add locked date
-          })
-        }
-
-        // Convert stocks format
-        if (basketStocks && basketStocks.length > 0) {
-          const formattedStocks = basketStocks.map((stock) => ({
-            id: stock.id,
-            symbol: stock.symbol,
-            name: stock.name,
-            sector: stock.sector,
-            allocation: stock.allocation,
-            locked: stock.is_locked,
-          }))
-          setStocks(formattedStocks)
-        }
-      }
-    } catch (error) {
-      console.error("Error in loadMostRecentBasket:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Save changes to current basket
-  const saveCurrentBasket = async (isLocked = false) => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to save your basket.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!basketId) {
-      toast({
-        title: "No Basket Selected",
-        description: "Please select a basket or create a new one.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      // Format the basket data
-      const basketData: StockBasket = {
-        id: basketId,
-        name: basketName,
-        source_weights: weights,
-        is_locked: isLocked,
-        locked_at: basketDates.locked?.toISOString(), // Preserve the existing locked date
-      }
-
-      // Format the stocks data
-      const stocksData: BasketStock[] = stocks.map((stock) => ({
-        symbol: stock.symbol,
-        name: stock.name,
-        sector: stock.sector || "Unknown",
-        allocation: stock.allocation,
-        is_locked: stock.locked,
-      }))
-
-      // Save the basket
-      const { error } = await saveBasket(basketData, stocksData, false)
-
-      if (error) {
-        console.error("Error saving basket:", error)
-        toast({
-          title: "Error",
-          description: "Failed to save your basket. Please try again.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      toast({
-        title: "Success",
-        description: "Your changes have been saved.",
-      })
-
-      // If locking the basket, update the state
-      if (isLocked) {
-        setBasketLocked(true)
-        const now = new Date()
-        setBasketDates({
-          created: basketDates.created || now,
-          updated: now,
-          locked: now, // Set the locked date
-        })
-
-        // Scroll to the basket tracking section
-        setTimeout(() => {
-          const trackingSection = document.getElementById("tracking-section")
-          if (trackingSection) {
-            trackingSection.scrollIntoView({ behavior: "smooth" })
-          }
-        }, 100)
-
-        // Only reload baskets list when locking (status change)
-        await loadUserBaskets()
-      }
-    } catch (error) {
-      console.error("Error in saveCurrentBasket:", error)
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Create new basket
-  const createNewBasket = async (newBasketName: string) => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to create a basket.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      // Format the basket data
-      const basketData: StockBasket = {
-        name: newBasketName,
-        source_weights: weights,
-        is_locked: false,
-      }
-
-      // Format the stocks data
-      const stocksData: BasketStock[] = stocks.map((stock) => ({
-        symbol: stock.symbol,
-        name: stock.name,
-        sector: stock.sector || "Unknown",
-        allocation: stock.allocation,
-        is_locked: stock.locked,
-      }))
-
-      // Save the new basket
-      const { error, basketId: newBasketId } = await saveBasket(basketData, stocksData, true)
-
-      if (error) {
-        console.error("Error creating basket:", error)
-        toast({
-          title: "Error",
-          description: "Failed to create new basket. Please try again.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      // Update state to switch to the new basket
-      if (newBasketId) {
-        setBasketId(newBasketId)
-        setSelectedBasketId(newBasketId)
-        setBasketName(newBasketName)
-        setBasketLocked(false)
-        const now = new Date()
-        setBasketDates({
-          created: now,
-          updated: now,
-          locked: null, // New baskets aren't locked
-        })
-      }
-
-      toast({
-        title: "Success",
-        description: `New basket "${newBasketName}" created successfully.`,
-      })
-
-      // Close modal and reload baskets list
-      setIsAddBasketModalOpen(false)
-      await loadUserBaskets()
-    } catch (error) {
-      console.error("Error in createNewBasket:", error)
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Delete basket
-  const handleDeleteBasket = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to delete a basket.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!basketId) {
-      toast({
-        title: "No Basket Selected",
-        description: "Please select a basket to delete.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (basketLocked) {
-      toast({
-        title: "Cannot Delete Locked Basket",
-        description: "Locked baskets cannot be deleted to preserve tracking data.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Confirm deletion
-    if (!confirm(`Are you sure you want to delete the basket "${basketName}"? This action cannot be undone.`)) {
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      const { error } = await deleteBasket(basketId)
-
-      if (error) {
-        console.error("Error deleting basket:", error)
-        toast({
-          title: "Error",
-          description: "Failed to delete the basket. Please try again.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      toast({
-        title: "Success",
-        description: `Basket "${basketName}" has been deleted.`,
-      })
-
-      // Reset state
-      setBasketId(null)
-      setSelectedBasketId(null)
-      setBasketName("New Basket")
-      setBasketLocked(false)
-      setBasketDates({
-        created: null,
-        updated: null,
-        locked: null, // Reset locked date
-      })
-
-      // Reload baskets list
-      await loadUserBaskets()
-    } catch (error) {
-      console.error("Error in handleDeleteBasket:", error)
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Add this function to handle updating the lock date
-  const handleUpdateLockDate = async (newDate: Date) => {
-    if (!basketId) return
-
-    setIsLoading(true)
-    try {
-      // Format the date for Supabase
-      const formattedDate = newDate.toISOString()
-
-      // Update the locked_at field in the database
-      const { error } = await supabase.from("stock_baskets").update({ locked_at: formattedDate }).eq("id", basketId)
-
-      if (error) {
-        console.error("Error updating lock date:", error)
-        toast({
-          title: "Error",
-          description: "Failed to update the lock date. Please try again.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      // Update local state
-      setBasketDates({
-        ...basketDates,
-        locked: newDate,
-      })
-
-      toast({
-        title: "Success",
-        description: "Lock date updated successfully.",
-      })
-    } catch (error) {
-      console.error("Error in handleUpdateLockDate:", error)
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Unlock basket
-  const handleUnlockBasket = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to unlock a basket.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!basketId) {
-      toast({
-        title: "No Basket Selected",
-        description: "Please select a basket to unlock.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!basketLocked) {
-      toast({
-        title: "Basket Already Unlocked",
-        description: "This basket is already in editable mode.",
-        variant: "default",
-      })
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      const { error } = await unlockBasket(basketId)
-
-      if (error) {
-        console.error("Error unlocking basket:", error)
-        toast({
-          title: "Error",
-          description: "Failed to unlock the basket. Please try again.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      toast({
-        title: "Success",
-        description: `Basket "${basketName}" has been unlocked and is now editable.`,
-      })
-
-      // Update state
-      setBasketLocked(false)
-
-      // Reload baskets list
-      await loadUserBaskets()
-    } catch (error) {
-      console.error("Error in handleUnlockBasket:", error)
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Handle basket selection change
-  const handleBasketChange = (basketId: string) => {
-    if (basketId && basketId !== selectedBasketId) {
-      loadBasket(basketId)
-    }
-  }
-
-  // Toggle section collapse
-  const toggleSection = (section) => {
-    setSectionsCollapsed({
-      ...sectionsCollapsed,
-      [section]: !sectionsCollapsed[section],
-    })
-  }
-
-  // Function to handle saving stocks from the stock selector
-  const handleSaveStocks = (newStocks) => {
-    // If these are stocks from the StockAllocation component, just update them directly
-    if (newStocks.length > 0 && newStocks[0].hasOwnProperty("allocation")) {
-      // Remove duplicates by id before setting
-      const uniqueStocks = newStocks.filter((stock, index, self) => index === self.findIndex((s) => s.id === stock.id))
-      setStocks(uniqueStocks)
-      return
-    }
-
-    // Otherwise, this is from the StockSelector - handle adding new stocks
-    const existingStockIds = stocks.map((stock) => stock.id)
-    const brandNewStocks = newStocks.filter((stock) => !existingStockIds.includes(stock.id))
-    const continuingStocks = newStocks.filter((stock) => existingStockIds.includes(stock.id))
-
-    // Preserve allocations and locked status for existing stocks
-    const updatedContinuingStocks = continuingStocks.map((newStock) => {
-      const existingStock = stocks.find((s) => s.id === newStock.id)
-      return {
-        ...newStock,
-        allocation: existingStock?.allocation || 0,
-        locked: existingStock?.locked || false,
-      }
-    })
-
-    // Set new stocks to 0% allocation by default
-    const updatedNewStocks = brandNewStocks.map((stock) => ({
-      ...stock,
-      allocation: 0,
-      locked: false,
-    }))
-
-    // Combine continuing and new stocks, ensuring no duplicates
-    const finalStocks = [...updatedContinuingStocks, ...updatedNewStocks]
-    const uniqueFinalStocks = finalStocks.filter(
-      (stock, index, self) => index === self.findIndex((s) => s.id === stock.id),
-    )
-
-    setStocks(uniqueFinalStocks)
-  }
-
-  // Generate weighted composite sentiment
-  const calculateWeightedSentiment = () => {
-    return sentimentData[timePeriod].map((day) => {
-      const weightedSentiment =
-        day.twitterSentiment * weights.twitter +
-        day.googleTrendsSentiment * weights.googleTrends +
-        day.newsSentiment * weights.news
-
-      return {
-        ...day,
-        compositeSentiment: Number.parseFloat(weightedSentiment.toFixed(2)),
-      }
-    })
-  }
-
-  // Add these functions after the calculateWeightedSentiment function
-  // Function to toggle lock status of a weight
-  const toggleWeightLock = (source) => {
-    setWeightLocks({
-      ...weightLocks,
-      [source]: !weightLocks[source],
-    })
-  }
-
-  // Update the handleWeightChange function to respect locks
-  const handleWeightChange = (source, value) => {
-    const newValue = Number.parseFloat(value[0])
-
-    // Calculate how much we need to adjust other weights to maintain sum = 1
-    const otherSources = Object.keys(weights).filter((key) => key !== source && !weightLocks[key])
-
-    // If all other sources are locked, we can't adjust
-    if (otherSources.length === 0) {
-      // Just update this source and normalize
-      const newWeights = { ...weights, [source]: newValue }
-      const sum = Object.values(newWeights).reduce((a, b) => a + b, 0)
-
-      // Normalize to ensure sum is exactly 1
-      if (Math.abs(sum - 1) > 0.001) {
-        // Adjust this source to make sum = 1
-        newWeights[source] = newValue + (1 - sum)
-      }
-
-      setWeights(newWeights)
-      return
-    }
-
-    // Calculate the total weight that should be distributed among other sources
-    const remainingWeight =
-      1 -
-      newValue -
-      Object.keys(weights)
-        .filter((key) => key !== source && weightLocks[key])
-        .reduce((sum, key) => sum + weights[key], 0)
-
-    // Calculate the current sum of other unlocked weights
-    const currentOtherSum = otherSources.reduce((sum, key) => sum + weights[key], 0)
-
-    // Create new weights object
-    const newWeights = { ...weights, [source]: newValue }
-
-    // If other weights sum to zero, distribute evenly
-    if (currentOtherSum === 0) {
-      const evenDistribution = remainingWeight / otherSources.length
-      otherSources.forEach((key) => {
-        newWeights[key] = evenDistribution
-      })
-    } else {
-      // Otherwise, distribute proportionally
-      otherSources.forEach((key) => {
-        const proportion = weights[key] / currentOtherSum
-        newWeights[key] = remainingWeight * proportion
-        newWeights[key] = isNaN(newWeights[key]) ? 0 : newWeights[key]
-      })
-    }
-
-    // Ensure all weights are non-negative and sum to 1
-    Object.keys(newWeights).forEach((key) => {
-      newWeights[key] = Math.max(0, newWeights[key])
-    })
-
-    // Normalize to ensure sum is exactly 1
-    const sum = Object.values(newWeights).reduce((a, b) => a + b, 0)
-    if (sum > 0 && Math.abs(sum - 1) > 0.001) {
-      // Find an unlocked source to adjust
-      const adjustSource = otherSources.length > 0 ? otherSources[0] : source
-      newWeights[adjustSource] += 1 - sum
-    }
-
-    setWeights(newWeights)
-  }
-
-  const weightedData = calculateWeightedSentiment()
-
-  // Function to handle clicking on a stock
-  const handleStockClick = (stock) => {
-    if (!stock) return // Guard clause to prevent clicking on undefined stock
-
-    // Find the full stock data with price
-    const stockWithPrice = stockPerformanceData.find((s) => s.id === stock.id) || {
-      ...stock,
-      price: 100, // Default price if not found
-      change: 0, // Default change if not found
-      performance: 0,
-    }
-
-    setSelectedStock(stockWithPrice)
-  }
-
-  // Function to toggle lock status of a stock
-  const handleToggleLock = (stockId) => {
-    const updatedStocks = stocks.map((stock) => (stock.id === stockId ? { ...stock, locked: !stock.locked } : stock))
-    setStocks(updatedStocks)
-  }
-
-  // Function to reset allocations to equal distribution
-  const handleResetAllocations = () => {
-    // Create a copy of stocks
-    const updatedStocks = [...stocks]
-
-    // Calculate total allocation of locked stocks
-    const lockedStocks = updatedStocks.filter((stock) => stock.locked)
-    const lockedAllocation = lockedStocks.reduce((sum, stock) => sum + stock.allocation, 0)
-
-    // Calculate number of unlocked stocks
-    const unlockedStocks = updatedStocks.filter((stock) => !stock.locked)
-    const unlockedCount = unlockedStocks.length
-
-    if (unlockedCount === 0) {
-      // If all stocks are locked, we can't reset
-      return
-    }
-
-    // Calculate equal distribution for unlocked stocks
-    const remainingAllocation = 100 - lockedAllocation
-    const equalAllocation = Math.floor(remainingAllocation / unlockedCount)
-
-    // Distribute equally among unlocked stocks
-    updatedStocks.forEach((stock) => {
-      if (!stock.locked) {
-        stock.allocation = equalAllocation
-      }
-    })
-
-    // Adjust for rounding errors
-    const newTotal = updatedStocks.reduce((sum, stock) => sum + stock.allocation, 0)
-    if (newTotal < 100) {
-      // Find the first unlocked stock to adjust
-      const firstUnlockedStock = updatedStocks.find((stock) => !stock.locked)
-      if (firstUnlockedStock) {
-        firstUnlockedStock.allocation += 100 - newTotal
-      }
-    }
-
-    setStocks(updatedStocks)
-  }
-
-  // Function to update stock allocation using slider
-  const handleAllocationChange = (stockId, newAllocation) => {
-    // Create a copy of stocks
-    const updatedStocks = [...stocks]
-
-    // Find the stock to update
-    const stockIndex = updatedStocks.findIndex((s) => s.id === stockId)
-    if (stockIndex === -1) return
-
-    // Calculate the difference in allocation
-    const oldAllocation = updatedStocks[stockIndex].allocation
-    const difference = newAllocation - oldAllocation
-
-    // Update the allocation for the selected stock
-    updatedStocks[stockIndex].allocation = newAllocation
-
-    // Find unlocked stocks to adjust (excluding the one being modified)
-    const unlockedStocks = updatedStocks.filter((s) => !s.locked && s.id !== stockId)
-
-    if (unlockedStocks.length > 0) {
-      // Get the total allocation of unlocked stocks (excluding the one being modified)
-      const totalUnlockedAllocation = unlockedStocks.reduce((sum, s) => sum + s.allocation, 0)
-
-      // Adjust each unlocked stock proportionally
-      updatedStocks.forEach((stock) => {
-        if (!stock.locked && stock.id !== stockId) {
-          // Calculate the proportion this stock represents of all unlocked stocks
-          const proportion =
-            totalUnlockedAllocation > 0 ? stock.allocation / totalUnlockedAllocation : 1 / unlockedStocks.length
-          // Reduce this stock's allocation proportionally
-          stock.allocation = Math.max(0, stock.allocation - difference * proportion)
-        }
-      })
-
-      // Ensure total allocation is exactly 100%
-      const totalAllocation = updatedStocks.reduce((sum, stock) => sum + stock.allocation, 0)
-      if (Math.abs(totalAllocation - 100) > 0.01) {
-        // Find the first unlocked stock that's not the one we're updating
-        const adjustmentStock = updatedStocks.find((s) => !s.locked && s.id !== stockId)
-        if (adjustmentStock) {
-          adjustmentStock.allocation += 100 - totalAllocation
-        }
-      }
-    }
-
-    // Round all allocations to integers
-    updatedStocks.forEach((stock) => {
-      stock.allocation = Math.round(stock.allocation)
-    })
-
-    setStocks(updatedStocks)
-  }
-
-  // Generate stock performance data
-  const stockPerformanceData = stocks.map((stock) => {
-    const basePerformance = Math.random() * 10 - 5 // Random between -5% and +5%
-    const compositeSentiment = weightedData[weightedData.length - 1].compositeSentiment
-    const sentimentImpact = compositeSentiment > 0 ? compositeSentiment * 2 : compositeSentiment
-    const performance = Number.parseFloat((basePerformance + sentimentImpact).toFixed(2))
-
-    // Generate a random price between 50 and 500
-    const price = Number.parseFloat((Math.random() * 450 + 50).toFixed(2))
-    const change = performance // Use performance as the change percentage
-
-    return {
-      ...stock,
-      price,
-      change,
-      performance,
-      twitterSentiment: weightedData[weightedData.length - 1].twitterSentiment,
-      googleTrendsSentiment: weightedData[weightedData.length - 1].googleTrendsSentiment,
-      newsSentiment: weightedData[weightedData.length - 1].compositeSentiment,
-      compositeSentiment: weightedData[weightedData.length - 1].compositeSentiment,
-    }
-  })
-
-  // Color function for sentiment
-  const getSentimentColor = (value) => {
-    if (value > 0.3) return "text-emerald-400"
-    if (value >= -0.3) return "text-amber-400"
-    return "text-red-400"
-  }
-
-  // Color function for performance
-  const getPerformanceColor = (value) => {
-    if (value > 0) return "text-emerald-400"
-    return "text-red-400"
-  }
-
-  // Get sentiment icon
-  const getSentimentIcon = (value) => {
-    if (value > 0.3) return <ArrowUp className="h-4 w-4 text-emerald-400" />
-    if (value >= -0.3) return <Activity className="h-4 w-4 text-amber-400" />
-    return <ArrowDown className="h-4 w-4 text-red-400" />
-  }
-
-  // Get overall sentiment status
-  const getOverallSentiment = () => {
-    const latestComposite = weightedData[weightedData.length - 1].compositeSentiment
-
-    if (latestComposite > 0.5) return { text: "Very Positive", color: "bg-gradient-to-r from-emerald-500 to-green-400" }
-    if (latestComposite > 0.2) return { text: "Positive", color: "bg-gradient-to-r from-emerald-400 to-emerald-300" }
-    if (latestComposite > -0.2) return { text: "Neutral", color: "bg-gradient-to-r from-amber-400 to-yellow-400" }
-    if (latestComposite > -0.5) return { text: "Negative", color: "bg-gradient-to-r from-red-400 to-red-300" }
-    return { text: "Very Negative", color: "bg-gradient-to-r from-red-500 to-red-400" }
-  }
-
-  const overallSentiment = getOverallSentiment()
-
-  // Format date for display
-  const formatDate = (date) => {
-    if (!date) return "N/A"
-    return date instanceof Date ? `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}` : "N/A"
-  }
+  const [open, setOpen] = useState(false)
 
   return (
-    <div className="bg-background min-h-screen relative overflow-hidden">
-      {/* Background gradient overlay */}
-      <div className="fixed inset-0 bg-gradient-to-br from-background via-background to-muted/20 pointer-events-none" />
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Total Revenue</CardTitle>
+            <CardDescription>Last 30 days</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">$45,231.89</div>
+            <div className="text-sm text-muted-foreground">+20.1% from last month</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Subscriptions</CardTitle>
+            <CardDescription>Last 30 days</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">+2350</div>
+            <div className="text-sm text-muted-foreground">+180.1% from last month</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Avg. Open Rate</CardTitle>
+            <CardDescription>Last 30 days</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">24.5%</div>
+            <div className="text-sm text-muted-foreground">+19% from last month</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Avg. Click Rate</CardTitle>
+            <CardDescription>Last 30 days</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">3.12%</div>
+            <div className="text-sm text-muted-foreground">+11% from last month</div>
+          </CardContent>
+        </Card>
+      </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto p-6">
-        {isLoading && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="glass-morphism p-8 rounded-2xl shadow-premium flex items-center gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <span className="text-foreground font-medium text-lg">
-                {isLoadingBaskets ? "Loading baskets..." : "Processing..."}
-              </span>
-            </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Overview</CardTitle>
+          <CardDescription>Revenue insights and transaction statistics.</CardDescription>
+        </CardHeader>
+        <CardContent className="pl-2">
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="pv" stroke="#8884d8" fill="#8884d8" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Sales</CardTitle>
+          <CardDescription>You made 265 sales this month.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                      )
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
-        )}
+        </CardContent>
+      </Card>
 
-        {selectedStock ? (
-          <StockDetailView stock={selectedStock} onBack={() => setSelectedStock(null)} timePeriod={timePeriod} />
-        ) : (
-          <>
-            {/* Enhanced Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
-              <div className="space-y-2">
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gradient">
-                  Sentiment Analysis Dashboard
-                </h1>
-                <p className="text-muted-foreground text-lg">
-                  Track market sentiment across multiple data sources with AI-powered insights
-                </p>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Badge className={`${overallSentiment.color} px-4 py-2 text-white font-medium text-sm shadow-lg`}>
-                  {overallSentiment.text}
-                </Badge>
-                <Tabs defaultValue={timePeriod} onValueChange={setTimePeriod} className="w-[220px]">
-                  <TabsList className="grid grid-cols-3 bg-card/50 backdrop-blur-sm border border-border/50">
-                    <TabsTrigger
-                      value="1d"
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                    >
-                      1D
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="1w"
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                    >
-                      1W
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="1m"
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                    >
-                      1M
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            </div>
-
-            {/* Enhanced Inputs Section */}
-            <div className="mb-10">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground">Portfolio Configuration</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+          <CardDescription>Adjust your search filters here.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Popover>
+              <PopoverTrigger asChild>
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-10 w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
-                  onClick={() => toggleSection("inputs")}
+                  variant={"outline"}
+                  className={cn("w-[300px] justify-start text-left font-normal", !date && "text-muted-foreground")}
                 >
-                  {sectionsCollapsed.inputs ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date?.from ? (
+                    date.to ? (
+                      <>
+                        {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
+                      </>
+                    ) : (
+                      format(date.from, "LLL dd, y")
+                    )
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={date?.from}
+                  selected={date}
+                  onSelect={setDate}
+                  numberOfMonths={3}
+                />
+                <PopoverClose className="absolute top-2 right-2 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary data-[state=open]:text-muted-foreground">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    stroke="currentColor"
+                    className="h-4 w-4"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span className="sr-only">Close</span>
+                </PopoverClose>
+              </PopoverContent>
+            </Popover>
+
+            <InputPopover />
+
+            <Command>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[200px] justify-between bg-transparent">
+                  Open
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0">
+                <CommandList>
+                  <CommandInput placeholder="Type a command or search..." />
+                  <CommandEmpty>No results found.</CommandEmpty>
+                  <CommandGroup heading="Suggestions">
+                    <CommandItem>
+                      <Plus className="mr-2 h-4 w-4" />
+                      <span>Create</span>
+                    </CommandItem>
+                    <CommandItem>
+                      <Copy className="mr-2 h-4 w-4" />
+                      <span>Duplicate</span>
+                    </CommandItem>
+                    <CommandItem>
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      <span>Open in new tab</span>
+                    </CommandItem>
+                    <CommandItem>
+                      <Trash className="mr-2 h-4 w-4" />
+                      <span>Delete</span>
+                    </CommandItem>
+                  </CommandGroup>
+                  <CommandSeparator />
+                  <CommandGroup heading="Settings">
+                    <CommandItem>
+                      <Edit className="mr-2 h-4 w-4" />
+                      <span>Edit Name</span>
+                    </CommandItem>
+                    <CommandItem>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Update Preferences</span>
+                    </CommandItem>
+                  </CommandGroup>
+                </CommandList>
+              </PopoverContent>
+            </Command>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Portfolio Performance</h2>
+            <Select>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Last 30 days" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Today</SelectItem>
+                <SelectItem value="week">Last 7 days</SelectItem>
+                <SelectItem value="month">Last 30 days</SelectItem>
+                <SelectItem value="year">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="pv" stroke="#8884d8" fill="#8884d8" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Sentiment Analysis</h2>
+            <Select>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Last 30 days" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Today</SelectItem>
+                <SelectItem value="week">Last 7 days</SelectItem>
+                <SelectItem value="month">Last 30 days</SelectItem>
+                <SelectItem value="year">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="pv" stroke="#82ca9d" fill="#82ca9d" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Market Trends</h2>
+            <Select>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Last 30 days" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Today</SelectItem>
+                <SelectItem value="week">Last 7 days</SelectItem>
+                <SelectItem value="month">Last 30 days</SelectItem>
+                <SelectItem value="year">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="pv" stroke="#ffc658" fill="#ffc658" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Financial News</h2>
+            <Select>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Last 30 days" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Today</SelectItem>
+                <SelectItem value="week">Last 7 days</SelectItem>
+                <SelectItem value="month">Last 30 days</SelectItem>
+                <SelectItem value="year">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="pv" stroke="#8884d8" fill="#8884d8" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Economic Indicators</h2>
+            <Select>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Last 30 days" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Today</SelectItem>
+                <SelectItem value="week">Last 7 days</SelectItem>
+                <SelectItem value="month">Last 30 days</SelectItem>
+                <SelectItem value="year">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="pv" stroke="#82ca9d" fill="#82ca9d" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex flex-col gap-4 p-4">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Stock Allocation</h3>
+              <div className="flex gap-1">
+                <Button size="sm" variant="outline" onClick={() => setShowStockSelector(true)} className="p-2">
+                  <Edit className="h-4 w-4" />
+                  <span className="hidden md:ml-2 md:inline">Change</span>
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setShowAllocation(true)} className="p-2">
+                  <Settings className="h-4 w-4" />
+                  <span className="hidden md:ml-2 md:inline">Adjust Allocation</span>
+                </Button>
+                <Button size="sm" variant="outline" onClick={resetToDefault} className="p-2 bg-transparent">
+                  <RotateCcw className="h-4 w-4" />
+                  <span className="hidden md:ml-2 md:inline">Reset</span>
                 </Button>
               </div>
-
-              {!sectionsCollapsed.inputs && (
-                <>
-                  {/* Enhanced Stock Allocation Card */}
-                  <Card className="mb-8 glass-morphism border-border/50 shadow-premium">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-2">
-                          <CardTitle className="flex items-center gap-3 text-xl md:text-2xl font-bold">
-                            <div className="p-2 rounded-lg bg-gradient-primary">
-                              <BarChart3 className="h-6 w-6 text-white" />
-                            </div>
-                            Stock Allocation
-                          </CardTitle>
-                          <CardDescription className="text-base text-muted-foreground">
-                            Adjust your portfolio allocation and lock in positions based on sentiment analysis
-                          </CardDescription>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-10 gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
-                            onClick={() =>
-                              basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsStockSelectorOpen(true)
-                            }
-                          >
-                            <Edit2 className="h-4 w-4" />
-                            <span className="hidden md:inline">Change</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsAllocationEditorOpen(true)
-                            }
-                            disabled={basketLocked}
-                            className="btn-gradient-primary gap-2"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                            <span className="hidden md:inline">Adjust Allocation</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleResetAllocations}
-                            className="h-10 w-10 p-0 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
-                            disabled={basketLocked}
-                          >
-                            <RotateCw className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-
-                    <CardContent className="space-y-6">
-                      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {stocks.map((stock) => {
-                          const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
-                          return (
-                            <div
-                              key={stock.id}
-                              className="p-3 rounded-xl bg-gradient-card border border-border/30 space-y-3"
-                            >
-                              {/* Stock Info Header */}
-                              <div className="flex items-start justify-between">
-                                {/* Left: Stock Info - Stacked vertically */}
-                                <div className="space-y-1 flex-1 min-w-0">
-                                  <div className="font-bold text-base text-foreground">{stock.symbol}</div>
-                                  <div className="text-xs text-muted-foreground line-clamp-2 pr-1">{stock.name}</div>
-                                </div>
-
-                                {/* Right: Allocation and Lock Button */}
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  <div className="text-lg font-bold text-foreground">{stock.allocation}%</div>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className={`h-7 w-7 rounded-full hover:bg-accent/50 transition-all duration-200 ${
-                                      stock.locked ? "bg-amber-400/20 border-2 border-amber-400/50" : ""
-                                    }`}
-                                    onClick={() => handleToggleLock(stock.id)}
-                                    disabled={basketLocked}
-                                  >
-                                    {stock.locked ? (
-                                      <Lock className="h-3 w-3 text-amber-400" />
-                                    ) : (
-                                      <Unlock className="h-3 w-3 text-muted-foreground" />
-                                    )}
-                                  </Button>
-                                </div>
-                              </div>
-
-                              {/* Allocation Slider */}
-                              <div className="space-y-2">
-                                <div className="relative">
-                                  <Slider
-                                    value={[stock.allocation]}
-                                    max={100}
-                                    step={1}
-                                    disabled={stock.locked || basketLocked}
-                                    onValueChange={(value) => handleAllocationChange(stock.id, value[0])}
-                                    className="py-1"
-                                  />
-                                  {/* Sentiment-based overlay */}
-                                  <div
-                                    className={`absolute top-1/2 left-0 h-2 rounded-full pointer-events-none transform -translate-y-1/2 transition-all duration-500 ${
-                                      stockData.compositeSentiment > 0.3
-                                        ? "bg-gradient-to-r from-emerald-400/30 to-emerald-500/30"
-                                        : stockData.compositeSentiment > -0.3
-                                          ? "bg-gradient-to-r from-amber-400/30 to-amber-500/30"
-                                          : "bg-gradient-to-r from-red-400/30 to-red-500/30"
-                                    }`}
-                                    style={{ width: `${stock.allocation}%` }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </CardContent>
-
-                    <CardFooter className="flex justify-center border-t border-border/30 pt-6">
-                      <div className="text-sm text-muted-foreground">
-                        <span className="font-bold text-foreground text-lg">
-                          {stocks.filter((s) => s.locked).length}
-                        </span>{" "}
-                        of {stocks.length} positions locked
-                      </div>
-                    </CardFooter>
-                  </Card>
-
-                  {/* Enhanced Source Weighting and Correlation Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    {/* Enhanced Source Weighting Controls */}
-                    <Card className="glass-morphism border-border/50 shadow-premium">
-                      <CardHeader className="pb-4">
-                        <CardTitle className="flex items-center gap-3 text-xl font-bold">
-                          <div className="p-2 rounded-lg bg-gradient-secondary">
-                            <Activity className="h-6 w-6 text-white" />
-                          </div>
-                          Source Weighting
-                        </CardTitle>
-                        <CardDescription className="text-base text-muted-foreground">
-                          Adjust the influence of each data source on the composite sentiment
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-8">
-                        <div className="space-y-6">
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <label className="text-sm font-medium text-muted-foreground">Twitter Sentiment</label>
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold bg-gradient-primary text-transparent bg-clip-text px-3 py-1 rounded-lg bg-card/50">
-                                  {(weights.twitter * 100).toFixed(0)}%
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
-                                  onClick={() => toggleWeightLock("twitter")}
-                                  disabled={basketLocked}
-                                >
-                                  {weightLocks.twitter ? (
-                                    <Lock className="h-4 w-4 text-amber-400" />
-                                  ) : (
-                                    <Unlock className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                            <Slider
-                              defaultValue={[weights.twitter]}
-                              value={[weights.twitter]}
-                              max={1}
-                              step={0.05}
-                              onValueChange={(value) => handleWeightChange("twitter", value)}
-                              className="py-2"
-                              disabled={basketLocked}
-                            />
-                          </div>
-
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <label className="text-sm font-medium text-muted-foreground">Google Trends</label>
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold bg-gradient-secondary text-transparent bg-clip-text px-3 py-1 rounded-lg bg-card/50">
-                                  {(weights.googleTrends * 100).toFixed(0)}%
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
-                                  onClick={() => toggleWeightLock("googleTrends")}
-                                  disabled={basketLocked}
-                                >
-                                  {weightLocks.googleTrends ? (
-                                    <Lock className="h-4 w-4 text-amber-400" />
-                                  ) : (
-                                    <Unlock className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                            <Slider
-                              defaultValue={[weights.googleTrends]}
-                              value={[weights.googleTrends]}
-                              max={1}
-                              step={0.05}
-                              onValueChange={(value) => handleWeightChange("googleTrends", value)}
-                              className="py-2"
-                              disabled={basketLocked}
-                            />
-                          </div>
-
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <label className="text-sm font-medium text-muted-foreground">News Sentiment</label>
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold bg-gradient-accent text-transparent bg-clip-text px-3 py-1 rounded-lg bg-card/50">
-                                  {(weights.news * 100).toFixed(0)}%
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
-                                  onClick={() => toggleWeightLock("news")}
-                                  disabled={basketLocked}
-                                >
-                                  {weightLocks.news ? (
-                                    <Lock className="h-4 w-4 text-amber-400" />
-                                  ) : (
-                                    <Unlock className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                            <Slider
-                              defaultValue={[weights.news]}
-                              value={[weights.news]}
-                              max={1}
-                              step={0.05}
-                              onValueChange={(value) => handleWeightChange("news", value)}
-                              className="py-2"
-                              disabled={basketLocked}
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Enhanced Sentiment-Performance Correlation */}
-                    <CorrelationChart stocks={stocks} weights={weights} />
-                  </div>
-
-                  {/* Enhanced Basket Management */}
-                  <Card className="mb-8 glass-morphism border-border/50 shadow-premium">
-                    <CardHeader className="pb-4">
-                      <CardTitle className="flex items-center gap-3 text-xl font-bold">
-                        <div className="p-2 rounded-lg bg-gradient-accent">
-                          <BarChart3 className="h-6 w-6 text-white" />
-                        </div>
-                        Basket Management
-                      </CardTitle>
-                      <CardDescription className="text-base text-muted-foreground">
-                        Select an existing basket or create a new one to track your portfolio performance
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="flex flex-col lg:flex-row gap-4 w-full">
-                        {/* Enhanced Basket Dropdown */}
-                        <div className="flex-1">
-                          <Select value={selectedBasketId || ""} onValueChange={handleBasketChange}>
-                            <SelectTrigger className="bg-card/50 border-border/50 h-12 text-base">
-                              <SelectValue placeholder="Select a basket" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-card/95 backdrop-blur-sm border-border/50">
-                              {allBaskets &&
-                                allBaskets.map((basket) => (
-                                  <SelectItem key={basket.id} value={basket.id} className="text-base">
-                                    <div className="flex items-center justify-between w-full">
-                                      <span>{basket.name}</span>
-                                      {basket.is_locked && <Lock className="h-4 w-4 text-amber-400 ml-3" />}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Enhanced Action Buttons */}
-                        <div className="flex flex-wrap gap-3">
-                          <Button
-                            variant="outline"
-                            onClick={() => saveCurrentBasket(false)}
-                            disabled={!basketId || isLoading || basketLocked}
-                            className="gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
-                          >
-                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                            Save Changes
-                          </Button>
-
-                          <Button
-                            variant="destructive"
-                            onClick={() => handleDeleteBasket()}
-                            disabled={!basketId || isLoading || basketLocked}
-                            className="gap-2 bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all duration-200"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                          </Button>
-
-                          <Button
-                            onClick={() => setIsAddBasketModalOpen(true)}
-                            disabled={isLoading}
-                            className="gap-2 btn-gradient-primary"
-                          >
-                            <Plus className="h-4 w-4" />
-                            New Basket
-                          </Button>
-
-                          {basketId && (
-                            <Button
-                              variant={basketLocked ? "outline" : "secondary"}
-                              onClick={() => (basketLocked ? handleUnlockBasket() : saveCurrentBasket(true))}
-                              disabled={isLoading}
-                              className={`gap-2 transition-all duration-200 ${
-                                basketLocked
-                                  ? "bg-amber-500/20 border-amber-500/30 text-amber-400 hover:bg-amber-500/30"
-                                  : "btn-gradient-secondary"
-                              }`}
-                            >
-                              {basketLocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-                              {basketLocked ? "Unlock" : "Lock"}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Enhanced Current Basket Info */}
-                      {basketId && (
-                        <div className="mt-6 pt-6 border-t border-border/30">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">Current Basket:</span>
-                              <div className="font-bold text-lg text-foreground">{basketName}</div>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">Total Stocks:</span>
-                              <div className="font-bold text-lg text-foreground">{stocks.length}</div>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">Status:</span>
-                              <div className="font-medium">
-                                {basketLocked ? (
-                                  <Badge
-                                    variant="outline"
-                                    className="border-amber-400/50 text-amber-400 bg-amber-400/10"
-                                  >
-                                    <Lock className="h-3 w-3 mr-1" />
-                                    Locked
-                                  </Badge>
-                                ) : (
-                                  <Badge
-                                    variant="outline"
-                                    className="border-emerald-400/50 text-emerald-400 bg-emerald-400/10"
-                                  >
-                                    <Unlock className="h-3 w-3 mr-1" />
-                                    Editable
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">Created:</span>
-                              <div className="font-medium text-foreground">{formatDate(basketDates.created)}</div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </>
-              )}
             </div>
-
-            {/* Conditional Enhanced Insights and Performance Tracking Sections */}
-            {basketLocked ? (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-10">
-                {/* Enhanced Insights Section */}
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl md:text-3xl font-bold text-foreground">Market Insights</h2>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-10 w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
-                      onClick={() => toggleSection("insights")}
-                    >
-                      {sectionsCollapsed.insights ? (
-                        <ChevronDown className="h-5 w-5" />
-                      ) : (
-                        <ChevronUp className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </div>
-
-                  {!sectionsCollapsed.insights && (
-                    <div className="grid grid-cols-1 gap-6">
-                      {stockPerformanceData &&
-                        stockPerformanceData.map((stock) => (
-                          <Card
-                            key={stock.id}
-                            className="glass-morphism border-border/50 shadow-premium cursor-pointer hover:shadow-glow-blue transition-all duration-300 hover:scale-[1.02]"
-                            onClick={() => handleStockClick(stock)}
-                          >
-                            <CardHeader className="pb-3">
-                              <div className="flex justify-between items-start">
-                                <div className="space-y-1">
-                                  <CardTitle className="text-xl font-bold text-foreground">{stock.symbol}</CardTitle>
-                                  <CardDescription className="text-sm text-muted-foreground">
-                                    {stock.name}
-                                  </CardDescription>
-                                </div>
-                                <div className="text-right space-y-1">
-                                  <div className="text-xl font-bold text-foreground">${stock.price}</div>
-                                  <div className={`text-sm font-medium ${getPerformanceColor(stock.change)}`}>
-                                    {stock.change > 0 ? "+" : ""}
-                                    {stock.change.toFixed(2)}%
-                                  </div>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                                <span className="text-sm font-medium text-muted-foreground">Portfolio Weight</span>
-                                <span className="font-bold text-lg text-foreground">{stock.allocation}%</span>
-                              </div>
-                              <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                                <span className="text-sm font-medium text-muted-foreground">Sentiment Score</span>
-                                <div className="flex items-center gap-2">
-                                  {getSentimentIcon(stock.compositeSentiment)}
-                                  <span className={`text-sm font-bold ${getSentimentColor(stock.compositeSentiment)}`}>
-                                    {stock.compositeSentiment.toFixed(2)}
-                                  </span>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Enhanced Performance Tracking Section */}
-                <div id="tracking-section" className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl md:text-3xl font-bold text-foreground">Performance Tracking</h2>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-10 w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
-                      onClick={() => toggleSection("tracking")}
-                    >
-                      {sectionsCollapsed.tracking ? (
-                        <ChevronDown className="h-5 w-5" />
-                      ) : (
-                        <ChevronUp className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </div>
-
-                  {!sectionsCollapsed.tracking && (
-                    <Card className="glass-morphism border-border/50 shadow-premium">
-                      <CardHeader className="pb-4">
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-2">
-                            <CardTitle className="flex items-center gap-3 text-xl font-bold">
-                              <div className="p-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-400">
-                                <Lock className="h-6 w-6 text-white" />
-                              </div>
-                              Locked Basket: {basketName}
-                            </CardTitle>
-                            <CardDescription className="text-base text-muted-foreground">
-                              This basket is locked for performance tracking. Unlock to make changes.
-                            </CardDescription>
-                          </div>
-                          <Button
-                            variant="outline"
-                            onClick={handleUnlockBasket}
-                            disabled={isLoading}
-                            className="gap-2 bg-amber-500/20 border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-all duration-200"
-                          >
-                            <Unlock className="h-4 w-4" />
-                            Unlock Basket
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div className="text-center p-4 rounded-xl bg-gradient-card border border-border/30">
-                            <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">
-                              {stocks.reduce((sum, stock) => sum + stock.allocation, 0)}%
-                            </div>
-                            <div className="text-sm text-muted-foreground">Total Allocation</div>
-                          </div>
-                          <div className="text-center p-4 rounded-xl bg-gradient-card border border-border/30">
-                            <div className="text-2xl md:text-3xl font-bold text-emerald-400 mb-1">+2.4%</div>
-                            <div className="text-sm text-muted-foreground">Performance Since Lock</div>
-                          </div>
-                          <div className="text-center p-4 rounded-xl bg-gradient-card border border-border/30">
-                            <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">{stocks.length}</div>
-                            <div className="text-sm text-muted-foreground">Stocks in Basket</div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                            <span className="text-sm font-medium text-muted-foreground">Created:</span>
-                            <span className="font-medium text-foreground">{formatDate(basketDates.created)}</span>
-                          </div>
-                          <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                            <span className="text-sm font-medium text-muted-foreground">Last Updated:</span>
-                            <span className="font-medium text-foreground">{formatDate(basketDates.updated)}</span>
-                          </div>
-                          <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                            <span className="text-sm font-medium text-muted-foreground">Locked Date:</span>
-                            <div className="flex items-center gap-3">
-                              <span className="font-medium text-foreground">{formatDate(basketDates.locked)}</span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
-                                onClick={() => setIsEditingLockDate(true)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-
-                        <Popover open={isEditingLockDate} onOpenChange={setIsEditingLockDate}>
-                          <PopoverTrigger asChild>
-                            <div />
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className="w-auto p-0 bg-card/95 backdrop-blur-sm border-border/50"
-                            align="end"
-                          >
-                            <Calendar
-                              mode="single"
-                              selected={basketDates.locked || undefined}
-                              onSelect={(date) => {
-                                if (date) {
-                                  handleUpdateLockDate(date)
-                                  setIsEditingLockDate(false)
-                                }
-                              }}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </div>
-            ) : null}
-
-            {/* Enhanced Footer */}
-            <div className="mt-16 relative">
-              {/* Gradient separator */}
-              <div className="h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent mb-12"></div>
-
-              <div className="glass-morphism rounded-2xl border border-border/30 p-8 shadow-premium">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-                  {/* Left: Branding */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-gradient-primary">
-                        <Activity className="h-5 w-5 text-white" />
-                      </div>
-                      <span className="font-neuropol text-xl font-bold text-gradient">SENTIBOARD</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      AI-powered sentiment analysis for smarter investment decisions
-                    </p>
-                  </div>
-
-                  {/* Center: Status Indicators */}
-                  <div className="flex flex-col items-center space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
-                        <div className="absolute inset-0 w-3 h-3 bg-emerald-400 rounded-full animate-ping opacity-30"></div>
-                      </div>
-                      <span className="text-sm font-medium text-emerald-400">Live Market Data</span>
-                    </div>
-
-                    <div className="flex items-center gap-6 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        <span>Twitter API</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                        <span>Google Trends</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
-                        <span>News Feed</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right: System Info */}
-                  <div className="text-right space-y-3">
-                    <div className="text-sm text-muted-foreground">
-                      Last updated:{" "}
-                      <span className="text-foreground font-medium">{new Date().toLocaleTimeString()}</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Next refresh in: <span className="text-primary font-medium">12:34</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom section */}
-                <div className="mt-8 pt-6 border-t border-border/30">
-                  <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="text-sm text-muted-foreground">
-                      © 2025 Sentiment Analysis Dashboard. All rights reserved.
-                    </div>
-
-                    <div className="flex items-center gap-6 text-xs text-muted-foreground">
-                      <span className="hover:text-primary transition-colors cursor-pointer">Privacy Policy</span>
-                      <span className="hover:text-primary transition-colors cursor-pointer">Terms of Service</span>
-                      <span className="hover:text-primary transition-colors cursor-pointer">API Documentation</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Decorative elements */}
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-8 h-8 bg-gradient-primary rounded-full opacity-20 animate-pulse"></div>
-                </div>
-                <div className="absolute bottom-2 right-4 opacity-10">
-                  <BarChart3 className="h-16 w-16 text-primary" />
-                </div>
-              </div>
-            </div>
-
-            {/* Modals */}
-            <AddBasketModal
-              open={isAddBasketModalOpen}
-              onOpenChange={setIsAddBasketModalOpen}
-              onSave={createNewBasket}
-              isLoading={isLoading}
-            />
-
-            <StockSelector
-              open={isStockSelectorOpen}
-              onOpenChange={setIsStockSelectorOpen}
-              initialStocks={stocks}
-              onSave={handleSaveStocks}
-            />
-
-            <StockAllocation
-              open={isAllocationEditorOpen}
-              onOpenChange={setIsAllocationEditorOpen}
-              stocks={stocks}
-              onSave={handleSaveStocks}
-              onAllocationChange={handleAllocationChange}
-              onToggleLock={handleToggleLock}
-            />
-
-            <AlertDialog open={isUnlockBasketAlertOpen} onOpenChange={setIsUnlockBasketAlertOpen}>
-              <AlertDialogContent className="glass-morphism border-border/50">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-foreground text-xl">Basket Locked</AlertDialogTitle>
-                  <AlertDialogDescription className="text-muted-foreground text-base">
-                    This basket is currently locked for performance tracking. Please unlock it to make changes to stock
-                    positions or allocations.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-card/50 text-foreground border-border/50 hover:bg-accent/50">
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction onClick={handleUnlockBasket} className="btn-gradient-primary">
-                    Unlock Basket
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </>
-        )}
-      </div>
+            <p className="text-sm text-muted-foreground">
+              Adjust your portfolio allocation and lock in positions based on sentiment analysis.
+            </p>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="pv" stroke="#ffc658" fill="#ffc658" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
     </div>
   )
 }
-
-// Helper function to generate sample sentiment data
-function generateSentimentData(days) {
-  const data = []
-  const now = new Date()
-  let twitterBaseline = Math.random() * 0.4 + 0.1 // 0.1 to 0.5
-  let googleBaseline = Math.random() * 0.4 - 0.2 // -0.2 to 0.2
-  let newsBaseline = Math.random() * 0.6 - 0.3 // -0.3 to 0.3
-
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now)
-    date.setDate(date.getDate() - i)
-
-    // Create some variability in the sentiment
-    const twitterVariation = Math.random() * 0.4 - 0.2 // -0.2 to 0.2
-    const googleVariation = Math.random() * 0.3 - 0.15 // -0.15 to 0.15
-    const newsVariation = Math.random() * 0.5 - 0.25 // -0.25 to 0.25
-
-    // Create some correlation between the sentiments
-    const commonFactor = Math.random() * 0.3 - 0.15 // -0.15 to 0.15
-
-    // Calculate sentiments with bounds checking
-    const twitterSentiment = clamp(twitterBaseline + twitterVariation + commonFactor, -1, 1)
-    const googleTrendsSentiment = clamp(googleBaseline + googleVariation + commonFactor, -1, 1)
-    const newsSentiment = clamp(newsBaseline + newsVariation + commonFactor, -1, 1)
-
-    // Format date as MM/DD
-    const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`
-
-    data.push({
-      date: formattedDate,
-      twitterSentiment,
-      googleTrendsSentiment,
-      newsSentiment,
-    })
-
-    // Adjust baselines slightly for trend
-    twitterBaseline += Math.random() * 0.1 - 0.05
-    googleBaseline += Math.random() * 0.08 - 0.04
-    newsBaseline += Math.random() * 0.12 - 0.06
-
-    // Keep baselines in reasonable range
-    twitterBaseline = clamp(twitterBaseline, -0.7, 0.7)
-    googleBaseline = clamp(googleBaseline, -0.7, 0.7)
-    newsBaseline = clamp(newsBaseline, -0.7, 0.7)
-  }
-
-  return data
-}
-
-// Helper function to clamp a value between min and max
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max)
-}
-
-export default SentimentDashboard
