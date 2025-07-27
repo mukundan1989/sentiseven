@@ -1,12 +1,11 @@
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
 
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "glass-card rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-premium transition-all duration-300 hover:shadow-premium-hover hover:bg-white/8 hover:border-white/20",
+      "glass-card text-card-foreground shadow-premium transition-all duration-300 hover:shadow-glow",
       className,
     )}
     {...props}
@@ -16,24 +15,26 @@ Card.displayName = "Card"
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
+    <div ref={ref} className={cn("flex flex-col space-y-2 p-6", className)} {...props} />
   ),
 )
 CardHeader.displayName = "CardHeader"
 
-const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
+const CardTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <h3
+    <div
       ref={ref}
-      className={cn("text-2xl font-semibold leading-none tracking-tight text-white/90", className)}
+      className={cn("text-2xl font-bold leading-none tracking-tight text-foreground", className)}
       {...props}
     />
   ),
 )
 CardTitle.displayName = "CardTitle"
 
-const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
-  ({ className, ...props }, ref) => <p ref={ref} className={cn("text-sm text-white/60", className)} {...props} />,
+const CardDescription = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("text-sm text-muted-foreground/80", className)} {...props} />
+  ),
 )
 CardDescription.displayName = "CardDescription"
 
