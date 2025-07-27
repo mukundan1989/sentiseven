@@ -1,8 +1,26 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
-  content: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "*.{js,ts,jsx,tsx,mdx}"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+    "*.{js,ts,jsx,tsx,mdx}",
+  ],
+  prefix: "",
   theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
+      fontFamily: {
+        inter: ["Inter", "system-ui", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -37,25 +55,25 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: {
-            DEFAULT: "hsl(var(--sidebar-primary))",
-            foreground: "hsl(var(--sidebar-primary-foreground))",
-          },
-          accent: {
-            DEFAULT: "hsl(var(--sidebar-accent))",
-            foreground: "hsl(var(--sidebar-accent-foreground))",
-          },
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
+        // Premium Fintech Colors
+        electric: {
+          DEFAULT: "hsl(var(--electric-blue))",
+          dark: "hsl(var(--electric-blue-dark))",
         },
-        // Enhanced fintech colors
-        electric: "#3b82f6",
-        cyan: "#06b6d4",
-        purple: "#a855f7",
-        gold: "#f59e0b",
+        cyan: {
+          bright: "hsl(var(--cyan-bright))",
+        },
+        purple: {
+          electric: "hsl(var(--purple-electric))",
+        },
+        gold: {
+          accent: "hsl(var(--gold-accent))",
+        },
+        navy: {
+          deep: "hsl(var(--navy-deep))",
+          medium: "hsl(var(--navy-medium))",
+          light: "hsl(var(--navy-light))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -63,11 +81,34 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       backgroundImage: {
-        "gradient-primary": "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
+        "gradient-electric": "linear-gradient(135deg, hsl(var(--electric-blue)) 0%, hsl(var(--cyan-bright)) 100%)",
+        "gradient-purple": "linear-gradient(135deg, hsl(var(--purple-electric)) 0%, hsl(var(--electric-blue)) 100%)",
+        "gradient-gold": "linear-gradient(135deg, hsl(var(--gold-accent)) 0%, hsl(var(--electric-blue)) 100%)",
+        "gradient-dark": "linear-gradient(135deg, hsl(var(--navy-deep)) 0%, hsl(var(--navy-medium)) 100%)",
       },
       boxShadow: {
-        "glow-blue": "0 0 20px rgba(59, 130, 246, 0.3)",
-        "glow-cyan": "0 0 20px rgba(6, 182, 212, 0.3)",
+        glow: "0 0 20px hsla(var(--electric-blue), 0.3)",
+        "glow-purple": "0 0 20px hsla(var(--purple-electric), 0.3)",
+        "glow-gold": "0 0 20px hsla(var(--gold-accent), 0.3)",
+        premium: "0 10px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(59, 130, 246, 0.1)",
+        glass: "0 8px 32px rgba(0, 0, 0, 0.3)",
+      },
+      backdropBlur: {
+        glass: "16px",
+      },
+      animation: {
+        float: "float 6s ease-in-out infinite",
+        glow: "glow 2s ease-in-out infinite alternate",
+      },
+      keyframes: {
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        glow: {
+          from: { boxShadow: "0 0 20px hsla(var(--electric-blue), 0.2)" },
+          to: { boxShadow: "0 0 30px hsla(var(--electric-blue), 0.4)" },
+        },
       },
     },
   },
