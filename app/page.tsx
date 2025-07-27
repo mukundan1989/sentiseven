@@ -1051,17 +1051,38 @@ const SentimentDashboard = () => {
                             Adjust your portfolio allocation and lock in positions based on sentiment analysis
                           </CardDescription>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-10 gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
-                          onClick={() =>
-                            basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsStockSelectorOpen(true)
-                          }
-                        >
-                          <Edit2 className="h-4 w-4" />
-                          Edit Stocks
-                        </Button>
+                        <div className="flex items-center gap-3">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-10 gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
+                            onClick={() =>
+                              basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsStockSelectorOpen(true)
+                            }
+                          >
+                            <Edit2 className="h-4 w-4" />
+                            Change
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsAllocationEditorOpen(true)
+                            }
+                            disabled={basketLocked}
+                            className="btn-gradient-primary"
+                          >
+                            Adjust Allocation
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleResetAllocations}
+                            className="h-10 w-10 p-0 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
+                            disabled={basketLocked}
+                          >
+                            <RotateCw className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardHeader>
 
@@ -1133,35 +1154,13 @@ const SentimentDashboard = () => {
                       </div>
                     </CardContent>
 
-                    <CardFooter className="flex flex-wrap justify-between border-t border-border/30 pt-6 gap-4">
-                      <div className="flex items-center gap-6">
-                        <div className="text-sm text-muted-foreground">
-                          <span className="font-bold text-foreground text-lg">
-                            {stocks.filter((s) => s.locked).length}
-                          </span>{" "}
-                          of {stocks.length} positions locked
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={handleResetAllocations}
-                          className="gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
-                          disabled={basketLocked}
-                        >
-                          <RotateCw className="h-4 w-4" />
-                          Reset
-                        </Button>
+                    <CardFooter className="flex justify-center border-t border-border/30 pt-6">
+                      <div className="text-sm text-muted-foreground">
+                        <span className="font-bold text-foreground text-lg">
+                          {stocks.filter((s) => s.locked).length}
+                        </span>{" "}
+                        of {stocks.length} positions locked
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsAllocationEditorOpen(true)
-                        }
-                        disabled={basketLocked}
-                        className="btn-gradient-primary"
-                      >
-                        Adjust Allocations
-                      </Button>
                     </CardFooter>
                   </Card>
 
@@ -1603,13 +1602,85 @@ const SentimentDashboard = () => {
             ) : null}
 
             {/* Enhanced Footer */}
-            <div className="mt-12 pt-8 border-t border-border/30 text-center">
-              <p className="text-muted-foreground text-sm">
-                © 2025 Sentiment Analysis Dashboard. Data refreshes every 15 minutes.
-              </p>
-              <div className="mt-2 flex justify-center items-center gap-2">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                <span className="text-xs text-emerald-400 font-medium">Live Data</span>
+            <div className="mt-16 relative">
+              {/* Gradient separator */}
+              <div className="h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent mb-12"></div>
+
+              <div className="glass-morphism rounded-2xl border border-border/30 p-8 shadow-premium">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                  {/* Left: Branding */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-gradient-primary">
+                        <Activity className="h-5 w-5 text-white" />
+                      </div>
+                      <span className="font-neuropol text-xl font-bold text-gradient">SENTIBOARD</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      AI-powered sentiment analysis for smarter investment decisions
+                    </p>
+                  </div>
+
+                  {/* Center: Status Indicators */}
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
+                        <div className="absolute inset-0 w-3 h-3 bg-emerald-400 rounded-full animate-ping opacity-30"></div>
+                      </div>
+                      <span className="text-sm font-medium text-emerald-400">Live Market Data</span>
+                    </div>
+
+                    <div className="flex items-center gap-6 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        <span>Twitter API</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-secondary rounded-full"></div>
+                        <span>Google Trends</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                        <span>News Feed</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: System Info */}
+                  <div className="text-right space-y-3">
+                    <div className="text-sm text-muted-foreground">
+                      Last updated:{" "}
+                      <span className="text-foreground font-medium">{new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Next refresh in: <span className="text-primary font-medium">12:34</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom section */}
+                <div className="mt-8 pt-6 border-t border-border/30">
+                  <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="text-sm text-muted-foreground">
+                      © 2025 Sentiment Analysis Dashboard. All rights reserved.
+                    </div>
+
+                    <div className="flex items-center gap-6 text-xs text-muted-foreground">
+                      <span className="hover:text-primary transition-colors cursor-pointer">Privacy Policy</span>
+                      <span className="hover:text-primary transition-colors cursor-pointer">Terms of Service</span>
+                      <span className="hover:text-primary transition-colors cursor-pointer">API Documentation</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Decorative elements */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <div className="w-8 h-8 bg-gradient-primary rounded-full opacity-20 animate-pulse"></div>
+                </div>
+                <div className="absolute bottom-2 right-4 opacity-10">
+                  <BarChart3 className="h-16 w-16 text-primary" />
+                </div>
               </div>
             </div>
 
