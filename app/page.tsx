@@ -20,7 +20,7 @@ import { useState } from "react"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Edit, Settings, RotateCcw, Copy, ExternalLink, Plus, Trash } from "lucide-react"
+import { Edit, Settings, Copy, ExternalLink, Plus, Trash, Edit2, RotateCw, BarChart3 } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -138,6 +138,14 @@ export default function Home() {
   })
 
   const [open, setOpen] = useState(false)
+  const [isStockSelectorOpen, setIsStockSelectorOpen] = useState(false)
+  const [isAllocationEditorOpen, setIsAllocationEditorOpen] = useState(false)
+  const [isUnlockBasketAlertOpen, setIsUnlockBasketAlertOpen] = useState(false)
+  const [basketLocked, setBasketLocked] = useState(false)
+
+  const handleResetAllocations = () => {
+    // Logic to reset allocations
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -488,29 +496,51 @@ export default function Home() {
       </Card>
 
       <Card>
-        <CardContent className="flex flex-col gap-4 p-4">
-          <div className="flex flex-col gap-2">
+        <CardHeader className="pb-4">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Stock Allocation</h3>
-              <div className="flex gap-1">
-                <Button size="sm" variant="outline" onClick={() => setShowStockSelector(true)} className="p-2">
-                  <Edit className="h-4 w-4" />
-                  <span className="hidden md:ml-2 md:inline">Change</span>
+              <CardTitle className="flex items-center gap-3 text-xl md:text-2xl font-bold">
+                <div className="p-2 rounded-lg bg-gradient-primary">
+                  <BarChart3 className="h-6 w-6 text-white" />
+                </div>
+                Stock Allocation
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-10 w-10 p-0 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200 md:w-auto md:px-3 md:gap-2"
+                  onClick={() => (basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsStockSelectorOpen(true))}
+                >
+                  <Edit2 className="h-4 w-4" />
+                  <span className="hidden md:inline">Change</span>
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setShowAllocation(true)} className="p-2">
-                  <Settings className="h-4 w-4" />
-                  <span className="hidden md:ml-2 md:inline">Adjust Allocation</span>
+                <Button
+                  size="sm"
+                  onClick={() => (basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsAllocationEditorOpen(true))}
+                  disabled={basketLocked}
+                  className="btn-gradient-primary h-10 w-10 p-0 md:w-auto md:px-3 md:gap-2"
+                >
+                  <Edit2 className="h-4 w-4" />
+                  <span className="hidden md:inline">Adjust Allocation</span>
                 </Button>
-                <Button size="sm" variant="outline" onClick={resetToDefault} className="p-2 bg-transparent">
-                  <RotateCcw className="h-4 w-4" />
-                  <span className="hidden md:ml-2 md:inline">Reset</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleResetAllocations}
+                  className="h-10 w-10 p-0 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
+                  disabled={basketLocked}
+                >
+                  <RotateCw className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Adjust your portfolio allocation and lock in positions based on sentiment analysis.
-            </p>
+            <CardDescription className="text-base text-muted-foreground">
+              Adjust your portfolio allocation and lock in positions based on sentiment analysis
+            </CardDescription>
           </div>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 p-4">
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" />
