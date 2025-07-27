@@ -1087,45 +1087,45 @@ const SentimentDashboard = () => {
                     </CardHeader>
 
                     <CardContent className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         {stocks.map((stock) => {
                           const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
                           return (
                             <div
                               key={stock.id}
-                              className="p-4 rounded-xl bg-gradient-card border border-border/30 space-y-4"
+                              className="p-3 rounded-xl bg-gradient-card border border-border/30 space-y-3"
                             >
                               {/* Stock Info Header */}
                               <div className="flex items-start justify-between">
                                 {/* Left: Stock Info - Stacked vertically */}
-                                <div className="space-y-1 flex-1">
-                                  <div className="font-bold text-lg text-foreground">{stock.symbol}</div>
-                                  <div className="text-sm text-muted-foreground line-clamp-2 pr-2">{stock.name}</div>
+                                <div className="space-y-1 flex-1 min-w-0">
+                                  <div className="font-bold text-base text-foreground">{stock.symbol}</div>
+                                  <div className="text-xs text-muted-foreground line-clamp-2 pr-1">{stock.name}</div>
                                 </div>
 
                                 {/* Right: Allocation and Lock Button */}
-                                <div className="flex items-center gap-3 flex-shrink-0">
-                                  <div className="text-xl font-bold text-foreground">{stock.allocation}%</div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <div className="text-lg font-bold text-foreground">{stock.allocation}%</div>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className={`h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200 ${
+                                    className={`h-7 w-7 rounded-full hover:bg-accent/50 transition-all duration-200 ${
                                       stock.locked ? "bg-amber-400/20 border-2 border-amber-400/50" : ""
                                     }`}
                                     onClick={() => handleToggleLock(stock.id)}
                                     disabled={basketLocked}
                                   >
                                     {stock.locked ? (
-                                      <Lock className="h-4 w-4 text-amber-400" />
+                                      <Lock className="h-3 w-3 text-amber-400" />
                                     ) : (
-                                      <Unlock className="h-4 w-4 text-muted-foreground" />
+                                      <Unlock className="h-3 w-3 text-muted-foreground" />
                                     )}
                                   </Button>
                                 </div>
                               </div>
 
                               {/* Allocation Slider */}
-                              <div className="space-y-3">
+                              <div className="space-y-2">
                                 <div className="relative">
                                   <Slider
                                     value={[stock.allocation]}
@@ -1133,7 +1133,7 @@ const SentimentDashboard = () => {
                                     step={1}
                                     disabled={stock.locked || basketLocked}
                                     onValueChange={(value) => handleAllocationChange(stock.id, value[0])}
-                                    className="py-2"
+                                    className="py-1"
                                   />
                                   {/* Sentiment-based overlay */}
                                   <div
