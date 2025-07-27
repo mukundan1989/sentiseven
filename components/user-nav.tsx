@@ -44,34 +44,40 @@ export function UserNav() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-10 w-10 border border-slate-700">
-            <AvatarFallback className="bg-slate-800 text-slate-200">{getInitials()}</AvatarFallback>
+          <Avatar className="h-10 w-10 border-2 border-border">
+            <AvatarFallback className="bg-muted text-foreground font-medium">{getInitials()}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 bg-slate-900 border-slate-800" align="end">
+      <DropdownMenuContent className="w-56 bg-card/95 backdrop-blur-md border-border shadow-lg" align="end">
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium text-slate-200">{user.user_metadata?.name || "User"}</p>
-            <p className="text-xs text-slate-400 truncate">{user.email}</p>
+            <p className="text-sm font-medium text-foreground">{user.user_metadata?.name || "User"}</p>
+            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-slate-800" />
-        <DropdownMenuItem className="text-slate-200 focus:bg-slate-800 focus:text-slate-200 cursor-pointer" asChild>
+        <DropdownMenuSeparator className="bg-border" />
+        <DropdownMenuItem
+          className="text-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
+          asChild
+        >
           <Link href="/profile">
             <User className="mr-2 h-4 w-4" />
             <span>Profile</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem className="text-slate-200 focus:bg-slate-800 focus:text-slate-200 cursor-pointer" asChild>
+        <DropdownMenuItem
+          className="text-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
+          asChild
+        >
           <Link href="/settings">
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-slate-800" />
+        <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuItem
-          className="text-slate-200 focus:bg-slate-800 focus:text-slate-200 cursor-pointer"
+          className="text-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
           onClick={() => signOut()}
         >
           <LogOut className="mr-2 h-4 w-4" />
