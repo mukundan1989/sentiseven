@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 
@@ -26,18 +25,27 @@ export function ImpactCard({
       transition={{ duration: 0.3 }}
       className="h-full"
     >
-      <Card className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 border-slate-700 h-full">
-        <CardContent className="p-6 flex flex-col items-center text-center">
-          <div className="rounded-full bg-amber-500/20 p-3 mb-4">
-            <div className="text-amber-500">{icon}</div>
+      <Card className="glass-morphism border-border/50 shadow-premium h-full hover:shadow-glow-blue transition-all duration-300 hover:scale-[1.02]">
+        <CardContent className="p-8 flex flex-col items-center text-center h-full justify-center space-y-6">
+          <motion.div
+            className="rounded-full bg-gradient-primary p-4 shadow-glow-blue"
+            whileHover={{ scale: 1.1 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="text-white text-2xl">{icon}</div>
+          </motion.div>
+
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-foreground">{title}</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
           </div>
-          <h3 className="text-xl font-bold mb-1">{title}</h3>
-          <p className="text-sm text-slate-400 mb-4">{description}</p>
-          <div className="text-3xl font-bold text-amber-500 mb-1">{value}</div>
-          <p className="text-sm text-slate-400">{comparison}</p>
+
+          <div className="space-y-2">
+            <div className="text-4xl font-bold text-gradient">{value}</div>
+            <p className="text-sm text-muted-foreground">{comparison}</p>
+          </div>
         </CardContent>
       </Card>
     </motion.div>
   )
 }
-
