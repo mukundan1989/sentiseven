@@ -37,7 +37,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <div className="min-h-screen bg-background text-foreground">
-              <nav className="border-b border-border bg-card/95 backdrop-blur-md shadow-lg relative z-50">
+              <nav className="border-b border-border bg-slate-900/95 backdrop-blur-md shadow-lg relative z-50">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center">
@@ -52,7 +52,7 @@ export default function RootLayout({
                           </SheetTrigger>
                           <SheetContent
                             side="left"
-                            className="w-[250px] sm:w-[300px] bg-card/95 backdrop-blur-md border-border p-6"
+                            className="w-[250px] sm:w-[300px] bg-slate-900/95 backdrop-blur-md border-slate-800 p-6"
                           >
                             <div className="flex flex-col space-y-4">
                               <span className="font-neuropol text-foreground text-lg mb-4">SENTIBOARD</span>
@@ -64,7 +64,7 @@ export default function RootLayout({
                                   Signals
                                   <ChevronDown className="ml-1 h-4 w-4" />
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="bg-card/95 backdrop-blur-md border-border w-[calc(100%-1rem)]">
+                                <DropdownMenuContent className="bg-slate-900/95 backdrop-blur-md border-slate-800 w-[calc(100%-1rem)]">
                                   <DropdownMenuItem asChild>
                                     <Link
                                       href="/google-trend-signals"
@@ -120,7 +120,7 @@ export default function RootLayout({
                           Signals
                           <ChevronDown className="ml-1 h-4 w-4" />
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="bg-card/95 backdrop-blur-md border-border shadow-lg">
+                        <DropdownMenuContent className="bg-slate-900/95 backdrop-blur-md border-slate-800 shadow-lg">
                           <DropdownMenuItem asChild>
                             <Link
                               href="/google-trend-signals"
