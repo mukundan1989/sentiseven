@@ -37,7 +37,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <div className="min-h-screen bg-background text-foreground">
-              <nav className="border-b border-border bg-white dark:bg-card">
+              <nav className="border-b border-border bg-card/95 backdrop-blur-md shadow-lg relative z-50">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center">
@@ -50,7 +50,10 @@ export default function RootLayout({
                               <span className="sr-only">Open menu</span>
                             </button>
                           </SheetTrigger>
-                          <SheetContent side="left" className="w-[250px] sm:w-[300px] bg-background p-6">
+                          <SheetContent
+                            side="left"
+                            className="w-[250px] sm:w-[300px] bg-card/95 backdrop-blur-md border-border p-6"
+                          >
                             <div className="flex flex-col space-y-4">
                               <span className="font-neuropol text-foreground text-lg mb-4">SENTIBOARD</span>
                               <Link href="/" className="text-foreground hover:text-primary transition-colors w-full">
@@ -61,7 +64,7 @@ export default function RootLayout({
                                   Signals
                                   <ChevronDown className="ml-1 h-4 w-4" />
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="bg-background border-border w-[calc(100%-1rem)]">
+                                <DropdownMenuContent className="bg-card/95 backdrop-blur-md border-border w-[calc(100%-1rem)]">
                                   <DropdownMenuItem asChild>
                                     <Link
                                       href="/google-trend-signals"
@@ -99,22 +102,25 @@ export default function RootLayout({
                         </Sheet>
                       </div>
                       {/* SENTIBOARD Logo - stays on left */}
-                      <span className="font-neuropol text-foreground text-lg">SENTIBOARD</span>
+                      <span className="font-neuropol text-foreground text-xl font-bold">SENTIBOARD</span>
                     </div>
 
-                    <div className="hidden xl:flex items-center space-x-4">
+                    <div className="hidden xl:flex items-center space-x-6">
                       {/* Navigation menu items */}
-                      <Link href="/" className="text-foreground hover:text-primary transition-colors whitespace-nowrap">
+                      <Link
+                        href="/"
+                        className="text-foreground hover:text-primary transition-colors whitespace-nowrap font-medium"
+                      >
                         Home
                       </Link>
 
                       {/* Signals Dropdown Menu */}
                       <DropdownMenu>
-                        <DropdownMenuTrigger className="text-foreground hover:text-primary transition-colors whitespace-nowrap flex items-center">
+                        <DropdownMenuTrigger className="text-foreground hover:text-primary transition-colors whitespace-nowrap flex items-center font-medium">
                           Signals
                           <ChevronDown className="ml-1 h-4 w-4" />
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="bg-background border-border">
+                        <DropdownMenuContent className="bg-card/95 backdrop-blur-md border-border shadow-lg">
                           <DropdownMenuItem asChild>
                             <Link
                               href="/google-trend-signals"
@@ -144,7 +150,7 @@ export default function RootLayout({
 
                       <Link
                         href="/performance"
-                        className="text-foreground hover:text-primary transition-colors whitespace-nowrap"
+                        className="text-foreground hover:text-primary transition-colors whitespace-nowrap font-medium"
                       >
                         Performance
                       </Link>
