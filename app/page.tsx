@@ -21,11 +21,11 @@ import {
   Trash2,
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { StockSelector } from "./components/stock-selector"
-import { StockDetailView } from "./components/stock-detail-view"
-import { CorrelationChart } from "./components/correlation-chart"
-import StockAllocation from "./components/stock-allocation"
-import { AddBasketModal } from "./components/add-basket-modal"
+import { StockSelector } from "@/components/stock-selector"
+import { StockDetailView } from "@/components/stock-detail-view"
+import { CorrelationChart } from "@/components/correlation-chart"
+import StockAllocation from "@/components/stock-allocation"
+import { AddBasketModal } from "@/components/add-basket-modal"
 import { useAuth } from "@/context/auth-context"
 import {
   saveBasket,
