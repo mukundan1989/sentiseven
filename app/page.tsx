@@ -1074,28 +1074,33 @@ const SentimentDashboard = () => {
                               key={stock.id}
                               className="p-4 rounded-xl bg-gradient-card border border-border/30 space-y-4"
                             >
-                              {/* Stock Info - Stacked vertically */}
-                              <div className="space-y-2">
-                                <div className="font-bold text-lg text-foreground">{stock.symbol}</div>
-                                <div className="text-sm text-muted-foreground line-clamp-2">{stock.name}</div>
-                              </div>
+                              {/* Stock Info Header */}
+                              <div className="flex items-start justify-between">
+                                {/* Left: Stock Info - Stacked vertically */}
+                                <div className="space-y-1 flex-1">
+                                  <div className="font-bold text-lg text-foreground">{stock.symbol}</div>
+                                  <div className="text-sm text-muted-foreground line-clamp-2 pr-2">{stock.name}</div>
+                                </div>
 
-                              {/* Allocation and Lock Button */}
-                              <div className="flex items-center justify-between">
-                                <div className="text-xl font-bold text-foreground">{stock.allocation}%</div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200 flex-shrink-0"
-                                  onClick={() => handleToggleLock(stock.id)}
-                                  disabled={basketLocked}
-                                >
-                                  {stock.locked ? (
-                                    <Lock className="h-4 w-4 text-amber-400" />
-                                  ) : (
-                                    <Unlock className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </Button>
+                                {/* Right: Allocation and Lock Button */}
+                                <div className="flex items-center gap-3 flex-shrink-0">
+                                  <div className="text-xl font-bold text-foreground">{stock.allocation}%</div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={`h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200 ${
+                                      stock.locked ? "bg-amber-400/20 border-2 border-amber-400/50" : ""
+                                    }`}
+                                    onClick={() => handleToggleLock(stock.id)}
+                                    disabled={basketLocked}
+                                  >
+                                    {stock.locked ? (
+                                      <Lock className="h-4 w-4 text-amber-400" />
+                                    ) : (
+                                      <Unlock className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                  </Button>
+                                </div>
                               </div>
 
                               {/* Allocation Slider */}
@@ -1121,12 +1126,6 @@ const SentimentDashboard = () => {
                                     style={{ width: `${stock.allocation}%` }}
                                   />
                                 </div>
-                                {stock.locked && (
-                                  <div className="text-xs text-amber-400 flex items-center gap-2 bg-amber-400/10 px-2 py-1 rounded-lg">
-                                    <Lock className="h-3 w-3" />
-                                    Locked at {stock.allocation}%
-                                  </div>
-                                )}
                               </div>
                             </div>
                           )
