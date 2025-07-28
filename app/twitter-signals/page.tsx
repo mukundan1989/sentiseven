@@ -387,7 +387,7 @@ export default function TwitterSignalsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Header with premium styling */}
         <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-neuropol text-gradient mb-2">Twitter Signals</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gradient mb-2">Twitter Signals</h1>
           <p className="text-muted-foreground text-lg">Real-time sentiment analysis from Twitter conversations</p>
         </div>
 
@@ -576,7 +576,7 @@ export default function TwitterSignalsPage() {
         <div className="glass-card rounded-2xl p-6 shadow-glow-purple">
           <div className="flex items-center gap-3 mb-6">
             <Calendar className="h-5 w-5 text-blue-400" />
-            <h2 className="text-xl font-neuropol text-gradient">Signal Source Comparison</h2>
+            <h2 className="text-xl font-bold text-gradient">Signal Source Comparison</h2>
           </div>
           <p className="text-muted-foreground mb-6">Compare Twitter with Google Trends and News signals</p>
           <div className="h-[300px]">
