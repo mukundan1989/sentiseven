@@ -1707,42 +1707,39 @@ const SentimentDashboard = () => {
               <div className="h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent mb-8 sm:mb-12"></div>
 
               <div className="glass-morphism rounded-2xl border border-border/30 p-6 sm:p-8 shadow-premium">
-                <div className="flex flex-col items-center gap-6 sm:gap-8">
-                  {/* Center: Branding */}
-                  <div className="text-center space-y-3">
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="p-1.5 sm:p-2 rounded-lg bg-foreground">
-                        <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-background" />
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
+                  {/* Left: Branding */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-foreground/30">
+                        <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-foreground/70" />
                       </div>
-                      <span className="font-neuropol text-lg sm:text-xl font-bold text-foreground">SENTIBOARD</span>
+                      <span className="font-neuropol text-lg sm:text-xl font-bold text-foreground/70">SENTIBOARD</span>
                     </div>
-                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-xs">
                       AI-powered sentiment analysis for smarter investment decisions
                     </p>
                   </div>
 
-                  {/* Bottom section */}
-                  <div className="w-full pt-4 sm:pt-6 border-t border-border/30">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4">
-                      <div className="text-xs sm:text-sm text-muted-foreground">
-                        © 2025 Sentiment Analysis Dashboard. All rights reserved.
-                      </div>
-
-                      <div className="flex items-center gap-4 sm:gap-6 text-xs text-muted-foreground">
-                        <span className="hover:text-primary transition-colors cursor-pointer">Privacy Policy</span>
-                        <span className="hover:text-primary transition-colors cursor-pointer">Terms of Service</span>
-                        <span className="hover:text-primary transition-colors cursor-pointer">API Documentation</span>
-                      </div>
+                  {/* Right: Copyright and Links */}
+                  <div className="text-right space-y-3">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
+                      © 2025 Sentiment Analysis Dashboard. All rights reserved.
+                    </div>
+                    <div className="flex flex-col gap-2 text-xs text-muted-foreground">
+                      <span className="hover:text-primary transition-colors cursor-pointer">Privacy Policy</span>
+                      <span className="hover:text-primary transition-colors cursor-pointer">Terms of Service</span>
+                      <span className="hover:text-primary transition-colors cursor-pointer">API Documentation</span>
                     </div>
                   </div>
+                </div>
 
-                  {/* Decorative elements */}
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-primary rounded-full opacity-20 animate-pulse"></div>
-                  </div>
-                  <div className="absolute bottom-2 right-4 opacity-10">
-                    <BarChart3 className="h-12 w-12 sm:h-16 sm:w-16 text-primary" />
-                  </div>
+                {/* Decorative elements */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-primary rounded-full opacity-20 animate-pulse"></div>
+                </div>
+                <div className="absolute bottom-2 right-4 opacity-10">
+                  <BarChart3 className="h-12 w-12 sm:h-16 sm:w-16 text-primary" />
                 </div>
               </div>
             </div>
