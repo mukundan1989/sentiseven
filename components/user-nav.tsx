@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, User, Settings } from "lucide-react"
+import { LogOut, User, Settings, LogIn } from "lucide-react"
 import Link from "next/link"
 
 export function UserNav() {
@@ -31,11 +31,15 @@ export function UserNav() {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   }
 
-  // If no user, show login button
+  // If no user, show login button - responsive
   if (!user) {
     return (
       <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-        <Link href="/login">Login</Link>
+        <Link href="/login">
+          {/* Show icon only on mobile, text on larger screens */}
+          <LogIn className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Login</span>
+        </Link>
       </Button>
     )
   }
