@@ -991,21 +991,26 @@ const SentimentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-background">
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-6 pt-12 pb-8">
-        <div className="text-center mb-12">
-          <div className="inline-block p-8 rounded-2xl bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-indigo-600/20 backdrop-blur-sm border border-white/10 shadow-2xl">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 font-neuropol">
-              Advanced Sentiment Analytics
-            </h1>
-            <p className="text-xl text-slate-300 mb-6 max-w-2xl mx-auto">
-              Make smarter trading decisions with real-time sentiment analysis across multiple data sources
-            </p>
+      {/* Simplified Hero Section */}
+      <div className="max-w-7xl mx-auto px-6 pt-16 pb-12">
+        <div className="text-center">
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 font-neuropol">Advanced Sentiment Analytics</h1>
+          <p className="text-xl text-slate-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+            Make smarter trading decisions with real-time sentiment analysis across multiple data sources
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              Create Account
+              Get Started
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-white/20 text-white hover:bg-white/10 font-semibold px-8 py-4 rounded-xl transition-all duration-200 bg-transparent"
+            >
+              Learn More
             </Button>
           </div>
         </div>
