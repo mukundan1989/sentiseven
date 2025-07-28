@@ -32,10 +32,10 @@
     --chart-5: 160 60% 45%;
     --radius: 0.75rem;
 
-    /* Premium fintech colors - Updated for elegance */
-    --electric-blue: 220 50% 30%; /* Muted, deeper blue */
-    --cyber-cyan: 210 55% 35%; /* Slightly lighter, still muted blue */
-    --neon-purple: 260 40% 40%; /* Muted, elegant purple */
+    /* Premium fintech colors */
+    --electric-blue: 210 80% 40%; /* Adjusted for elegance */
+    --cyber-cyan: 180 100% 50%;
+    --neon-purple: 260 70% 50%; /* Adjusted for elegance and closeness to blue */
     --gold-accent: 45 100% 60%;
     --success-green: 160 60% 45%;
     --warning-amber: 35 100% 50%;
