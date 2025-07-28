@@ -980,7 +980,7 @@ const SentimentDashboard = () => {
       {/* Background gradient overlay */}
       <div className="fixed inset-0 bg-gradient-to-br from-background via-background to-muted/20 pointer-events-none" />
 
-      <div className="relative z-10 max-w-7xl mx-auto p-6">
+      <div className="relative z-10 max-w-7xl mx-auto p-4 sm:p-6">
         {isLoading && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="glass-morphism p-8 rounded-2xl shadow-premium flex items-center gap-4">
@@ -997,32 +997,32 @@ const SentimentDashboard = () => {
         ) : (
           <>
             {/* Hero Section */}
-            <div className="relative overflow-hidden mb-10">
+            <div className="relative overflow-hidden mb-8 sm:mb-10">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10" />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.1),transparent_50%)]" />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
 
-              <div className="relative max-w-7xl mx-auto px-6 py-12">
-                <div className="glass-morphism rounded-3xl border border-border/30 shadow-premium p-8">
-                  <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+              <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+                <div className="glass-morphism rounded-3xl border border-border/30 shadow-premium p-6 sm:p-8">
+                  <div className="flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
                     <div className="flex-1 text-center lg:text-left">
-                      <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
-                        <div className="p-3 rounded-xl bg-gradient-primary">
-                          <Brain className="h-8 w-8 text-white" />
+                      <div className="flex items-center justify-center lg:justify-start gap-3 mb-4 sm:mb-6">
+                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-primary">
+                          <Brain className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                         </div>
-                        <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20">
-                          <Activity className="h-8 w-8 text-primary" />
+                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20">
+                          <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                         </div>
-                        <div className="p-3 rounded-xl bg-gradient-to-r from-green-500/20 to-blue-500/20">
-                          <Zap className="h-8 w-8 text-green-500" />
+                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-r from-green-500/20 to-blue-500/20">
+                          <Zap className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
                         </div>
                       </div>
 
-                      <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-gradient leading-tight">
+                      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 text-gradient leading-tight">
                         Sentiment Analysis Dashboard
                       </h1>
 
-                      <p className="text-xl text-muted-foreground mb-8 max-w-2xl">
+                      <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl">
                         Track market sentiment across multiple data sources with AI-powered insights. Make informed
                         investment decisions with real-time sentiment analysis.
                       </p>
@@ -1031,18 +1031,18 @@ const SentimentDashboard = () => {
                         <Link href="/login">
                           <Button
                             size="lg"
-                            className="bg-gradient-primary hover:opacity-90 text-white px-8 py-3 text-lg"
+                            className="bg-gradient-primary hover:opacity-90 text-white px-6 sm:px-8 py-3 text-base sm:text-lg"
                           >
-                            <LogIn className="mr-2 h-5 w-5" />
+                            <LogIn className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                             Get Started
                           </Button>
                         </Link>
                         <Button
                           variant="outline"
                           size="lg"
-                          className="px-8 py-3 text-lg border-border/50 hover:bg-accent/50 bg-transparent"
+                          className="px-6 sm:px-8 py-3 text-base sm:text-lg border-border/50 hover:bg-accent/50 bg-transparent"
                         >
-                          <Sparkles className="mr-2 h-5 w-5" />
+                          <Sparkles className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                           Learn More
                         </Button>
                       </div>
@@ -1051,28 +1051,28 @@ const SentimentDashboard = () => {
                     <div className="flex-1 max-w-md">
                       <div className="relative">
                         <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl blur-xl" />
-                        <div className="relative glass-morphism rounded-2xl p-6 border border-border/30">
+                        <div className="relative glass-morphism rounded-2xl p-4 sm:p-6 border border-border/30">
                           <div className="flex items-center gap-3 mb-4">
-                            <Shield className="h-6 w-6 text-primary" />
-                            <span className="font-semibold">Live Sentiment Analysis</span>
+                            <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                            <span className="font-semibold text-sm sm:text-base">Live Sentiment Analysis</span>
                           </div>
 
                           <div className="space-y-4">
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-muted-foreground">Market Confidence</span>
-                              <span className="text-sm font-medium text-green-500">+72%</span>
+                              <span className="text-xs sm:text-sm text-muted-foreground">Market Confidence</span>
+                              <span className="text-xs sm:text-sm font-medium text-green-500">+72%</span>
                             </div>
                             <Progress value={72} className="h-2" />
 
-                            <div className="grid grid-cols-2 gap-4 mt-6">
-                              <div className="text-center p-3 rounded-lg bg-accent/30">
-                                <TrendingUp className="h-5 w-5 text-green-500 mx-auto mb-1" />
-                                <div className="text-sm font-medium">Bullish</div>
+                            <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-4 sm:mt-6">
+                              <div className="text-center p-2 sm:p-3 rounded-lg bg-accent/30">
+                                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mx-auto mb-1" />
+                                <div className="text-xs sm:text-sm font-medium">Bullish</div>
                                 <div className="text-xs text-muted-foreground">45%</div>
                               </div>
-                              <div className="text-center p-3 rounded-lg bg-accent/30">
-                                <TrendingDown className="h-5 w-5 text-red-500 mx-auto mb-1" />
-                                <div className="text-sm font-medium">Bearish</div>
+                              <div className="text-center p-2 sm:p-3 rounded-lg bg-accent/30">
+                                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 mx-auto mb-1" />
+                                <div className="text-xs sm:text-sm font-medium">Bearish</div>
                                 <div className="text-xs text-muted-foreground">28%</div>
                               </div>
                             </div>
@@ -1086,41 +1086,45 @@ const SentimentDashboard = () => {
             </div>
 
             {/* Enhanced Inputs Section */}
-            <div className="mb-10">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground">Portfolio Configuration</h2>
+            <div className="mb-8 sm:mb-10">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Portfolio Configuration</h2>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-10 w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
+                  className="h-8 w-8 sm:h-10 sm:w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
                   onClick={() => toggleSection("inputs")}
                 >
-                  {sectionsCollapsed.inputs ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
+                  {sectionsCollapsed.inputs ? (
+                    <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5" />
+                  )}
                 </Button>
               </div>
 
               {!sectionsCollapsed.inputs && (
                 <>
                   {/* Enhanced Stock Allocation Card */}
-                  <Card className="mb-8 glass-morphism border-border/50 shadow-premium">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <CardTitle className="flex items-center gap-3 text-xl md:text-2xl font-bold">
-                          <div className="p-2 rounded-lg bg-gradient-primary">
-                            <BarChart3 className="h-6 w-6 text-white" />
+                  <Card className="mb-6 sm:mb-8 glass-morphism border-border/50 shadow-premium">
+                    <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
+                      <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl md:text-2xl font-bold">
+                          <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-primary">
+                            <BarChart3 className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                           </div>
                           Stock Allocation
                         </CardTitle>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-9 w-9 p-0 md:w-auto md:px-3 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
+                            className="h-8 w-8 p-0 sm:h-9 sm:w-9 md:w-auto md:px-3 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
                             onClick={() =>
                               basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsStockSelectorOpen(true)
                             }
                           >
-                            <Edit2 className="h-4 w-4" />
+                            <Edit2 className="h-3 w-3 sm:h-4 sm:w-4" />
                             <span className="hidden md:inline md:ml-2">Change</span>
                           </Button>
                           <Button
@@ -1129,63 +1133,61 @@ const SentimentDashboard = () => {
                               basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsAllocationEditorOpen(true)
                             }
                             disabled={basketLocked}
-                            className="h-9 w-9 p-0 md:w-auto md:px-3 btn-gradient-primary"
+                            className="h-8 w-8 p-0 sm:h-9 sm:w-9 md:w-auto md:px-3 btn-gradient-primary"
                           >
-                            <Edit2 className="h-4 w-4" />
+                            <Edit2 className="h-3 w-3 sm:h-4 sm:w-4" />
                             <span className="hidden md:inline md:ml-2">Adjust Allocation</span>
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={handleResetAllocations}
-                            className="h-9 w-9 p-0 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
+                            className="h-8 w-8 p-0 sm:h-9 sm:w-9 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
                             disabled={basketLocked}
                           >
-                            <RotateCw className="h-4 w-4" />
+                            <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                         </div>
                       </div>
-                      <CardDescription className="text-base text-muted-foreground">
+                      <CardDescription className="text-sm sm:text-base text-muted-foreground">
                         Adjust your portfolio allocation and lock in positions based on sentiment analysis
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
+                      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                         {stocks.map((stock) => {
                           const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
                           return (
                             <div
                               key={stock.id}
-                              className="p-3 rounded-xl bg-gradient-card border border-border/30 space-y-3"
+                              className="p-2 sm:p-3 rounded-xl bg-gradient-card border border-border/30 space-y-2 sm:space-y-3"
                             >
                               {/* Stock Info Header */}
                               <div className="flex items-start justify-between">
                                 {/* Left: Stock Info - Stacked vertically */}
-                                <div className="space-y-1 flex-1 min-w-0">
-                                  <div className="font-bold text-sm sm:text-base text-foreground">{stock.symbol}</div>
-                                  <div className="text-xs text-muted-foreground line-clamp-2 pr-1 mt-0.5">
-                                    {stock.name}
-                                  </div>
+                                <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
+                                  <div className="font-bold text-xs sm:text-sm text-foreground">{stock.symbol}</div>
+                                  <div className="text-xs text-muted-foreground line-clamp-2 pr-1">{stock.name}</div>
                                 </div>
 
                                 {/* Right: Allocation and Lock Button */}
-                                <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <div className="text-base sm:text-lg font-bold text-foreground">
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  <div className="text-sm sm:text-base font-bold text-foreground">
                                     {stock.allocation}%
                                   </div>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className={`h-6 w-6 sm:h-7 sm:w-7 rounded-full hover:bg-accent/50 transition-all duration-200 ${
+                                    className={`h-5 w-5 sm:h-6 sm:w-6 rounded-full hover:bg-accent/50 transition-all duration-200 ${
                                       stock.locked ? "bg-amber-400/20 border-2 border-amber-400/50" : ""
                                     }`}
                                     onClick={() => handleToggleLock(stock.id)}
                                     disabled={basketLocked}
                                   >
                                     {stock.locked ? (
-                                      <Lock className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-amber-400" />
+                                      <Lock className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-amber-400" />
                                     ) : (
-                                      <Unlock className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground" />
+                                      <Unlock className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-muted-foreground" />
                                     )}
                                   </Button>
                                 </div>
@@ -1220,9 +1222,9 @@ const SentimentDashboard = () => {
                         })}
                       </div>
                     </CardContent>
-                    <CardFooter className="flex justify-center border-t border-border/30 pt-6">
+                    <CardFooter className="flex justify-center border-t border-border/30 pt-4 sm:pt-6 p-4 sm:p-6">
                       <div className="text-sm text-muted-foreground">
-                        <span className="font-bold text-foreground text-lg">
+                        <span className="font-bold text-foreground text-base sm:text-lg">
                           {stocks.filter((s) => s.locked).length}
                         </span>{" "}
                         of {stocks.length} positions locked
@@ -1231,40 +1233,42 @@ const SentimentDashboard = () => {
                   </Card>
 
                   {/* Enhanced Source Weighting and Correlation Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-6 sm:mb-8">
                     {/* Enhanced Source Weighting Controls */}
                     <Card className="glass-morphism border-border/50 shadow-premium">
-                      <CardHeader className="pb-4">
-                        <CardTitle className="flex items-center gap-3 text-xl font-bold">
-                          <div className="p-2 rounded-lg bg-gradient-secondary">
-                            <Activity className="h-6 w-6 text-white" />
+                      <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
+                        <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl font-bold">
+                          <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-secondary">
+                            <Activity className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                           </div>
                           Source Weighting
                         </CardTitle>
-                        <CardDescription className="text-base text-muted-foreground">
+                        <CardDescription className="text-sm sm:text-base text-muted-foreground">
                           Adjust the influence of each data source on the composite sentiment
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-8">
-                        <div className="space-y-6">
-                          <div className="space-y-3">
+                      <CardContent className="space-y-6 sm:space-y-8 p-4 sm:p-6 pt-0">
+                        <div className="space-y-4 sm:space-y-6">
+                          <div className="space-y-2 sm:space-y-3">
                             <div className="flex justify-between items-center">
-                              <label className="text-sm font-medium text-muted-foreground">Twitter Sentiment</label>
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold bg-gradient-primary text-transparent bg-clip-text px-3 py-1 rounded-lg bg-card/50">
+                              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
+                                Twitter Sentiment
+                              </label>
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <span className="text-xs sm:text-sm font-bold bg-gradient-primary text-transparent bg-clip-text px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg bg-card/50">
                                   {(weights.twitter * 100).toFixed(0)}%
                                 </span>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
+                                  className="h-6 w-6 sm:h-8 sm:w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
                                   onClick={() => toggleWeightLock("twitter")}
                                   disabled={basketLocked}
                                 >
                                   {weightLocks.twitter ? (
-                                    <Lock className="h-4 w-4 text-amber-400" />
+                                    <Lock className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400" />
                                   ) : (
-                                    <Unlock className="h-4 w-4 text-muted-foreground" />
+                                    <Unlock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                                   )}
                                 </Button>
                               </div>
@@ -1275,29 +1279,31 @@ const SentimentDashboard = () => {
                               max={1}
                               step={0.05}
                               onValueChange={(value) => handleWeightChange("twitter", value)}
-                              className="py-2"
+                              className="py-1 sm:py-2"
                               disabled={basketLocked}
                             />
                           </div>
 
-                          <div className="space-y-3">
+                          <div className="space-y-2 sm:space-y-3">
                             <div className="flex justify-between items-center">
-                              <label className="text-sm font-medium text-muted-foreground">Google Trends</label>
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold bg-gradient-secondary text-transparent bg-clip-text px-3 py-1 rounded-lg bg-card/50">
+                              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
+                                Google Trends
+                              </label>
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <span className="text-xs sm:text-sm font-bold bg-gradient-secondary text-transparent bg-clip-text px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg bg-card/50">
                                   {(weights.googleTrends * 100).toFixed(0)}%
                                 </span>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
+                                  className="h-6 w-6 sm:h-8 sm:w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
                                   onClick={() => toggleWeightLock("googleTrends")}
                                   disabled={basketLocked}
                                 >
                                   {weightLocks.googleTrends ? (
-                                    <Lock className="h-4 w-4 text-amber-400" />
+                                    <Lock className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400" />
                                   ) : (
-                                    <Unlock className="h-4 w-4 text-muted-foreground" />
+                                    <Unlock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                                   )}
                                 </Button>
                               </div>
@@ -1308,29 +1314,31 @@ const SentimentDashboard = () => {
                               max={1}
                               step={0.05}
                               onValueChange={(value) => handleWeightChange("googleTrends", value)}
-                              className="py-2"
+                              className="py-1 sm:py-2"
                               disabled={basketLocked}
                             />
                           </div>
 
-                          <div className="space-y-3">
+                          <div className="space-y-2 sm:space-y-3">
                             <div className="flex justify-between items-center">
-                              <label className="text-sm font-medium text-muted-foreground">News Sentiment</label>
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold bg-gradient-accent text-transparent bg-clip-text px-3 py-1 rounded-lg bg-card/50">
+                              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
+                                News Sentiment
+                              </label>
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <span className="text-xs sm:text-sm font-bold bg-gradient-accent text-transparent bg-clip-text px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg bg-card/50">
                                   {(weights.news * 100).toFixed(0)}%
                                 </span>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
+                                  className="h-6 w-6 sm:h-8 sm:w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
                                   onClick={() => toggleWeightLock("news")}
                                   disabled={basketLocked}
                                 >
                                   {weightLocks.news ? (
-                                    <Lock className="h-4 w-4 text-amber-400" />
+                                    <Lock className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400" />
                                   ) : (
-                                    <Unlock className="h-4 w-4 text-muted-foreground" />
+                                    <Unlock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                                   )}
                                 </Button>
                               </div>
@@ -1341,7 +1349,7 @@ const SentimentDashboard = () => {
                               max={1}
                               step={0.05}
                               onValueChange={(value) => handleWeightChange("news", value)}
-                              className="py-2"
+                              className="py-1 sm:py-2"
                               disabled={basketLocked}
                             />
                           </div>
@@ -1354,33 +1362,35 @@ const SentimentDashboard = () => {
                   </div>
 
                   {/* Enhanced Basket Management */}
-                  <Card className="mb-8 glass-morphism border-border/50 shadow-premium">
-                    <CardHeader className="pb-4">
-                      <CardTitle className="flex items-center gap-3 text-xl font-bold">
-                        <div className="p-2 rounded-lg bg-gradient-accent">
-                          <BarChart3 className="h-6 w-6 text-white" />
+                  <Card className="mb-6 sm:mb-8 glass-morphism border-border/50 shadow-premium">
+                    <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
+                      <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl font-bold">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-accent">
+                          <BarChart3 className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                         </div>
                         Basket Management
                       </CardTitle>
-                      <CardDescription className="text-base text-muted-foreground">
+                      <CardDescription className="text-sm sm:text-base text-muted-foreground">
                         Select an existing basket or create a new one to track your portfolio performance
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="flex flex-col lg:flex-row gap-4 w-full">
+                    <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
+                      <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 w-full">
                         {/* Enhanced Basket Dropdown */}
                         <div className="flex-1">
                           <Select value={selectedBasketId || ""} onValueChange={handleBasketChange}>
-                            <SelectTrigger className="bg-card/50 border-border/50 h-12 text-base">
+                            <SelectTrigger className="bg-card/50 border-border/50 h-10 sm:h-12 text-sm sm:text-base">
                               <SelectValue placeholder="Select a basket" />
                             </SelectTrigger>
                             <SelectContent className="bg-card/95 backdrop-blur-sm border-border/50">
                               {allBaskets &&
                                 allBaskets.map((basket) => (
-                                  <SelectItem key={basket.id} value={basket.id} className="text-base">
+                                  <SelectItem key={basket.id} value={basket.id} className="text-sm sm:text-base">
                                     <div className="flex items-center justify-between w-full">
                                       <span>{basket.name}</span>
-                                      {basket.is_locked && <Lock className="h-4 w-4 text-amber-400 ml-3" />}
+                                      {basket.is_locked && (
+                                        <Lock className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400 ml-3" />
+                                      )}
                                     </div>
                                   </SelectItem>
                                 ))}
@@ -1389,14 +1399,14 @@ const SentimentDashboard = () => {
                         </div>
 
                         {/* Enhanced Action Buttons */}
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-wrap gap-2 sm:gap-3">
                           <Button
                             variant="outline"
                             onClick={() => saveCurrentBasket(false)}
                             disabled={!basketId || isLoading || basketLocked}
-                            className="gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
+                            className="gap-1 sm:gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10"
                           >
-                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            {isLoading ? <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" /> : null}
                             Save Changes
                           </Button>
 
@@ -1404,18 +1414,18 @@ const SentimentDashboard = () => {
                             variant="destructive"
                             onClick={() => handleDeleteBasket()}
                             disabled={!basketId || isLoading || basketLocked}
-                            className="gap-2 bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all duration-200"
+                            className="gap-1 sm:gap-2 bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                             Delete
                           </Button>
 
                           <Button
                             onClick={() => setIsAddBasketModalOpen(true)}
                             disabled={isLoading}
-                            className="gap-2 btn-gradient-primary"
+                            className="gap-1 sm:gap-2 btn-gradient-primary text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10"
                           >
-                            <Plus className="h-4 w-4" />
+                            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                             New Basket
                           </Button>
 
@@ -1424,13 +1434,17 @@ const SentimentDashboard = () => {
                               variant={basketLocked ? "outline" : "secondary"}
                               onClick={() => (basketLocked ? handleUnlockBasket() : saveCurrentBasket(true))}
                               disabled={isLoading}
-                              className={`gap-2 transition-all duration-200 ${
+                              className={`gap-1 sm:gap-2 transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10 ${
                                 basketLocked
                                   ? "bg-amber-500/20 border-amber-500/30 text-amber-400 hover:bg-amber-500/30"
                                   : "btn-gradient-secondary"
                               }`}
                             >
-                              {basketLocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                              {basketLocked ? (
+                                <Unlock className="h-3 w-3 sm:h-4 sm:w-4" />
+                              ) : (
+                                <Lock className="h-3 w-3 sm:h-4 sm:w-4" />
+                              )}
                               {basketLocked ? "Unlock" : "Lock"}
                             </Button>
                           )}
@@ -1439,15 +1453,15 @@ const SentimentDashboard = () => {
 
                       {/* Enhanced Current Basket Info */}
                       {basketId && (
-                        <div className="mt-6 pt-6 border-t border-border/30">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
+                        <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border/30">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 text-sm">
                             <div className="space-y-1">
                               <span className="text-muted-foreground">Current Basket:</span>
-                              <div className="font-bold text-lg text-foreground">{basketName}</div>
+                              <div className="font-bold text-base sm:text-lg text-foreground">{basketName}</div>
                             </div>
                             <div className="space-y-1">
                               <span className="text-muted-foreground">Total Stocks:</span>
-                              <div className="font-bold text-lg text-foreground">{stocks.length}</div>
+                              <div className="font-bold text-base sm:text-lg text-foreground">{stocks.length}</div>
                             </div>
                             <div className="space-y-1">
                               <span className="text-muted-foreground">Status:</span>
@@ -1486,27 +1500,27 @@ const SentimentDashboard = () => {
 
             {/* Conditional Enhanced Insights and Performance Tracking Sections */}
             {basketLocked ? (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-10">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-10">
                 {/* Enhanced Insights Section */}
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-2xl md:text-3xl font-bold text-foreground">Market Insights</h2>
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Market Insights</h2>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-10 w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
+                      className="h-8 w-8 sm:h-10 sm:w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
                       onClick={() => toggleSection("insights")}
                     >
                       {sectionsCollapsed.insights ? (
-                        <ChevronDown className="h-5 w-5" />
+                        <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
                       ) : (
-                        <ChevronUp className="h-5 w-5" />
+                        <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5" />
                       )}
                     </Button>
                   </div>
 
                   {!sectionsCollapsed.insights && (
-                    <div className="grid grid-cols-1 gap-6">
+                    <div className="grid grid-cols-1 gap-4 sm:gap-6">
                       {stockPerformanceData &&
                         stockPerformanceData.map((stock) => (
                           <Card
@@ -1514,33 +1528,45 @@ const SentimentDashboard = () => {
                             className="glass-morphism border-border/50 shadow-premium cursor-pointer hover:shadow-glow-blue transition-all duration-300 hover:scale-[1.02]"
                             onClick={() => handleStockClick(stock)}
                           >
-                            <CardHeader className="pb-3">
+                            <CardHeader className="pb-2 sm:pb-3 p-4 sm:p-6">
                               <div className="flex justify-between items-start">
                                 <div className="space-y-1">
-                                  <CardTitle className="text-xl font-bold text-foreground">{stock.symbol}</CardTitle>
-                                  <CardDescription className="text-sm text-muted-foreground">
+                                  <CardTitle className="text-lg sm:text-xl font-bold text-foreground">
+                                    {stock.symbol}
+                                  </CardTitle>
+                                  <CardDescription className="text-xs sm:text-sm text-muted-foreground">
                                     {stock.name}
                                   </CardDescription>
                                 </div>
                                 <div className="text-right space-y-1">
-                                  <div className="text-xl font-bold text-foreground">${stock.price}</div>
-                                  <div className={`text-sm font-medium ${getPerformanceColor(stock.change)}`}>
+                                  <div className="text-lg sm:text-xl font-bold text-foreground">${stock.price}</div>
+                                  <div
+                                    className={`text-xs sm:text-sm font-medium ${getPerformanceColor(stock.change)}`}
+                                  >
                                     {stock.change > 0 ? "+" : ""}
                                     {stock.change.toFixed(2)}%
                                   </div>
                                 </div>
                               </div>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                              <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                                <span className="text-sm font-medium text-muted-foreground">Portfolio Weight</span>
-                                <span className="font-bold text-lg text-foreground">{stock.allocation}%</span>
+                            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
+                              <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-gradient-card">
+                                <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+                                  Portfolio Weight
+                                </span>
+                                <span className="font-bold text-base sm:text-lg text-foreground">
+                                  {stock.allocation}%
+                                </span>
                               </div>
-                              <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                                <span className="text-sm font-medium text-muted-foreground">Sentiment Score</span>
+                              <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-gradient-card">
+                                <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+                                  Sentiment Score
+                                </span>
                                 <div className="flex items-center gap-2">
                                   {getSentimentIcon(stock.compositeSentiment)}
-                                  <span className={`text-sm font-bold ${getSentimentColor(stock.compositeSentiment)}`}>
+                                  <span
+                                    className={`text-xs sm:text-sm font-bold ${getSentimentColor(stock.compositeSentiment)}`}
+                                  >
                                     {stock.compositeSentiment.toFixed(2)}
                                   </span>
                                 </div>
@@ -1553,35 +1579,35 @@ const SentimentDashboard = () => {
                 </div>
 
                 {/* Enhanced Performance Tracking Section */}
-                <div id="tracking-section" className="space-y-6">
+                <div id="tracking-section" className="space-y-4 sm:space-y-6">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-2xl md:text-3xl font-bold text-foreground">Performance Tracking</h2>
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Performance Tracking</h2>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-10 w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
+                      className="h-8 w-8 sm:h-10 sm:w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
                       onClick={() => toggleSection("tracking")}
                     >
                       {sectionsCollapsed.tracking ? (
-                        <ChevronDown className="h-5 w-5" />
+                        <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
                       ) : (
-                        <ChevronUp className="h-5 w-5" />
+                        <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5" />
                       )}
                     </Button>
                   </div>
 
                   {!sectionsCollapsed.tracking && (
                     <Card className="glass-morphism border-border/50 shadow-premium">
-                      <CardHeader className="pb-4">
+                      <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
                         <div className="flex justify-between items-start">
                           <div className="space-y-2">
-                            <CardTitle className="flex items-center gap-3 text-xl font-bold">
-                              <div className="p-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-400">
-                                <Lock className="h-6 w-6 text-white" />
+                            <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl font-bold">
+                              <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-400">
+                                <Lock className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                               </div>
                               Locked Basket: {basketName}
                             </CardTitle>
-                            <CardDescription className="text-base text-muted-foreground">
+                            <CardDescription className="text-sm sm:text-base text-muted-foreground">
                               This basket is locked for performance tracking. Unlock to make changes.
                             </CardDescription>
                           </div>
@@ -1589,51 +1615,59 @@ const SentimentDashboard = () => {
                             variant="outline"
                             onClick={handleUnlockBasket}
                             disabled={isLoading}
-                            className="gap-2 bg-amber-500/20 border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-all duration-200"
+                            className="gap-1 sm:gap-2 bg-amber-500/20 border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10"
                           >
-                            <Unlock className="h-4 w-4" />
+                            <Unlock className="h-3 w-3 sm:h-4 sm:w-4" />
                             Unlock Basket
                           </Button>
                         </div>
                       </CardHeader>
-                      <CardContent className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div className="text-center p-4 rounded-xl bg-gradient-card border border-border/30">
-                            <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">
+                      <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                          <div className="text-center p-3 sm:p-4 rounded-xl bg-gradient-card border border-border/30">
+                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1">
                               {stocks.reduce((sum, stock) => sum + stock.allocation, 0)}%
                             </div>
-                            <div className="text-sm text-muted-foreground">Total Allocation</div>
+                            <div className="text-xs sm:text-sm text-muted-foreground">Total Allocation</div>
                           </div>
-                          <div className="text-center p-4 rounded-xl bg-gradient-card border border-border/30">
-                            <div className="text-2xl md:text-3xl font-bold text-emerald-400 mb-1">+2.4%</div>
-                            <div className="text-sm text-muted-foreground">Performance Since Lock</div>
+                          <div className="text-center p-3 sm:p-4 rounded-xl bg-gradient-card border border-border/30">
+                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-emerald-400 mb-1">+2.4%</div>
+                            <div className="text-xs sm:text-sm text-muted-foreground">Performance Since Lock</div>
                           </div>
-                          <div className="text-center p-4 rounded-xl bg-gradient-card border border-border/30">
-                            <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">{stocks.length}</div>
-                            <div className="text-sm text-muted-foreground">Stocks in Basket</div>
+                          <div className="text-center p-3 sm:p-4 rounded-xl bg-gradient-card border border-border/30">
+                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1">
+                              {stocks.length}
+                            </div>
+                            <div className="text-xs sm:text-sm text-muted-foreground">Stocks in Basket</div>
                           </div>
                         </div>
 
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                            <span className="text-sm font-medium text-muted-foreground">Created:</span>
-                            <span className="font-medium text-foreground">{formatDate(basketDates.created)}</span>
+                        <div className="space-y-3 sm:space-y-4">
+                          <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-gradient-card">
+                            <span className="text-xs sm:text-sm font-medium text-muted-foreground">Created:</span>
+                            <span className="font-medium text-foreground text-xs sm:text-sm">
+                              {formatDate(basketDates.created)}
+                            </span>
                           </div>
-                          <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                            <span className="text-sm font-medium text-muted-foreground">Last Updated:</span>
-                            <span className="font-medium text-foreground">{formatDate(basketDates.updated)}</span>
+                          <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-gradient-card">
+                            <span className="text-xs sm:text-sm font-medium text-muted-foreground">Last Updated:</span>
+                            <span className="font-medium text-foreground text-xs sm:text-sm">
+                              {formatDate(basketDates.updated)}
+                            </span>
                           </div>
-                          <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                            <span className="text-sm font-medium text-muted-foreground">Locked Date:</span>
-                            <div className="flex items-center gap-3">
-                              <span className="font-medium text-foreground">{formatDate(basketDates.locked)}</span>
+                          <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-gradient-card">
+                            <span className="text-xs sm:text-sm font-medium text-muted-foreground">Locked Date:</span>
+                            <div className="flex items-center gap-2 sm:gap-3">
+                              <span className="font-medium text-foreground text-xs sm:text-sm">
+                                {formatDate(basketDates.locked)}
+                              </span>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
+                                className="h-6 w-6 sm:h-8 sm:w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
                                 onClick={() => setIsEditingLockDate(true)}
                               >
-                                <Edit className="h-4 w-4" />
+                                <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                               </Button>
                             </div>
                           </div>
@@ -1668,54 +1702,54 @@ const SentimentDashboard = () => {
             ) : null}
 
             {/* Enhanced Footer */}
-            <div className="mt-16 relative">
+            <div className="mt-12 sm:mt-16 relative">
               {/* Gradient separator */}
-              <div className="h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent mb-12"></div>
+              <div className="h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent mb-8 sm:mb-12"></div>
 
-              <div className="glass-morphism rounded-2xl border border-border/30 p-8 shadow-premium">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+              <div className="glass-morphism rounded-2xl border border-border/30 p-6 sm:p-8 shadow-premium">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-center">
                   {/* Left: Branding */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-gradient-primary">
-                        <Activity className="h-5 w-5 text-white" />
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-primary">
+                        <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                       </div>
-                      <span className="font-neuropol text-xl font-bold text-gradient">SENTIBOARD</span>
+                      <span className="font-neuropol text-lg sm:text-xl font-bold text-gradient">SENTIBOARD</span>
                     </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                       AI-powered sentiment analysis for smarter investment decisions
                     </p>
                   </div>
 
                   {/* Center: Status Indicators */}
-                  <div className="flex flex-col items-center space-y-4">
+                  <div className="flex flex-col items-center space-y-3 sm:space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
-                        <div className="absolute inset-0 w-3 h-3 bg-emerald-400 rounded-full animate-ping opacity-30"></div>
+                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-400 rounded-full animate-pulse"></div>
+                        <div className="absolute inset-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-400 rounded-full animate-ping opacity-30"></div>
                       </div>
-                      <span className="text-sm font-medium text-emerald-400">Live Market Data</span>
+                      <span className="text-xs sm:text-sm font-medium text-emerald-400">Live Market Data</span>
                     </div>
 
-                    <div className="flex items-center gap-6 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                    <div className="flex items-center gap-4 sm:gap-6 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full"></div>
                         <span>Twitter API</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-secondary rounded-full"></div>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-secondary rounded-full"></div>
                         <span>Google Trends</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-amber-400 rounded-full"></div>
                         <span>News Feed</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Right: System Info */}
-                  <div className="text-right space-y-3">
-                    <div className="text-sm text-muted-foreground">
+                  <div className="text-right space-y-2 sm:space-y-3">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       Last updated:{" "}
                       <span className="text-foreground font-medium">{new Date().toLocaleTimeString()}</span>
                     </div>
@@ -1726,13 +1760,13 @@ const SentimentDashboard = () => {
                 </div>
 
                 {/* Bottom section */}
-                <div className="mt-8 pt-6 border-t border-border/30">
-                  <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="text-sm text-muted-foreground">
+                <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-border/30">
+                  <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       © 2025 Sentiment Analysis Dashboard. All rights reserved.
                     </div>
 
-                    <div className="flex items-center gap-6 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-4 sm:gap-6 text-xs text-muted-foreground">
                       <span className="hover:text-primary transition-colors cursor-pointer">Privacy Policy</span>
                       <span className="hover:text-primary transition-colors cursor-pointer">Terms of Service</span>
                       <span className="hover:text-primary transition-colors cursor-pointer">API Documentation</span>
@@ -1742,10 +1776,10 @@ const SentimentDashboard = () => {
 
                 {/* Decorative elements */}
                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-8 h-8 bg-gradient-primary rounded-full opacity-20 animate-pulse"></div>
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-primary rounded-full opacity-20 animate-pulse"></div>
                 </div>
                 <div className="absolute bottom-2 right-4 opacity-10">
-                  <BarChart3 className="h-16 w-16 text-primary" />
+                  <BarChart3 className="h-12 w-12 sm:h-16 sm:w-16 text-primary" />
                 </div>
               </div>
             </div>
@@ -1777,8 +1811,8 @@ const SentimentDashboard = () => {
             <AlertDialog open={isUnlockBasketAlertOpen} onOpenChange={setIsUnlockBasketAlertOpen}>
               <AlertDialogContent className="glass-morphism border-border/50">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-foreground text-xl">Basket Locked</AlertDialogTitle>
-                  <AlertDialogDescription className="text-muted-foreground text-base">
+                  <AlertDialogTitle className="text-foreground text-lg sm:text-xl">Basket Locked</AlertDialogTitle>
+                  <AlertDialogDescription className="text-muted-foreground text-sm sm:text-base">
                     This basket is currently locked for performance tracking. Please unlock it to make changes to stock
                     positions or allocations.
                   </AlertDialogDescription>
