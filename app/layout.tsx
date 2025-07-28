@@ -37,8 +37,8 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <div className="min-h-screen bg-background text-foreground">
-              <nav className="glass-morphism border-b border-border/30 shadow-premium relative z-50 mx-6 mt-6 rounded-2xl">
-                <div className="max-w-7xl mx-auto px-6 py-4">
+              <nav className="border-b border-border/30 relative z-50 mx-6 mt-6">
+                <div className="max-w-7xl mx-auto px-6 py-6">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center">
                       {/* Mobile Menu Dropdown */}
