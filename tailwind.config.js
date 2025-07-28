@@ -93,7 +93,8 @@ module.exports = {
         glow: "glow 2s ease-in-out infinite",
       },
       fontFamily: {
-        neuropol: ["Neuropol", "sans-serif"],
+        sans: ["Roboto", "sans-serif"],
+        roboto: ["Roboto", "sans-serif"],
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
