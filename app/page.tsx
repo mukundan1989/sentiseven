@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,7 +20,6 @@ import {
   Trash2,
   TrendingUp,
   TrendingDown,
-  PieChart,
   Brain,
   Zap,
   Shield,
@@ -33,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { StockSelector } from "@/components/stock-selector"
 import { StockDetailView } from "@/components/stock-detail-view"
 import { CorrelationChart } from "@/components/correlation-chart"
-import { StockAllocation } from "@/components/stock-allocation"
+import StockAllocation from "@/components/stock-allocation"
 import { AddBasketModal } from "@/components/add-basket-modal"
 import { useAuth } from "@/context/auth-context"
 import {
@@ -63,27 +61,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Progress } from "@/components/ui/progress"
-import { ModelAccuracy } from "@/components/model-accuracy"
-import { SourceWeighting } from "@/components/source-weighting"
-import { PortfolioChangeChart } from "@/components/portfolio-change-chart"
-import { ImpactCard } from "@/components/impact-card"
-
-// Mock data for demonstration
-const mockData = {
-  overallSentiment: "Bullish",
-  sentimentScore: 72,
-  signalSummaries: [
-    { source: "Twitter", sentiment: "Bullish", confidence: 85, change: "+5%" },
-    { source: "News", sentiment: "Neutral", confidence: 70, change: "+2%" },
-    { source: "Google Trends", sentiment: "Bearish", confidence: 60, change: "-3%" },
-  ],
-  topStocks: [
-    { symbol: "AAPL", sentiment: "Bullish", score: 85, change: "+2.5%" },
-    { symbol: "GOOGL", sentiment: "Bullish", score: 78, change: "+1.8%" },
-    { symbol: "MSFT", sentiment: "Neutral", score: 65, change: "+0.5%" },
-    { symbol: "TSLA", sentiment: "Bearish", score: 45, change: "-1.2%" },
-  ],
-}
 
 const SentimentDashboard = () => {
   // Auth context
@@ -170,6 +147,7 @@ const SentimentDashboard = () => {
     setMounted(true)
   }, [])
 
+  // Load user's baskets and most recent basket when component mounts
   useEffect(() => {
     if (user) {
       loadUserBaskets()
@@ -179,28 +157,6 @@ const SentimentDashboard = () => {
 
   if (!mounted) {
     return null
-  }
-
-  const getSentimentColor = (sentiment: string) => {
-    switch (sentiment.toLowerCase()) {
-      case "bullish":
-        return "text-green-500"
-      case "bearish":
-        return "text-red-500"
-      default:
-        return "text-yellow-500"
-    }
-  }
-
-  const getSentimentBadgeVariant = (sentiment: string) => {
-    switch (sentiment.toLowerCase()) {
-      case "bullish":
-        return "default"
-      case "bearish":
-        return "destructive"
-      default:
-        return "secondary"
-    }
   }
 
   // Load all user baskets
@@ -981,7 +937,7 @@ const SentimentDashboard = () => {
   })
 
   // Color function for sentiment
-  const getSentimentColorInner = (value) => {
+  const getSentimentColor = (value) => {
     if (value > 0.3) return "text-emerald-400"
     if (value >= -0.3) return "text-amber-400"
     return "text-red-400"
@@ -1127,37 +1083,6 @@ const SentimentDashboard = () => {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Signal Summaries */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-              {mockData.signalSummaries.map((signal, index) => (
-                <Card key={index} className="glass-morphism border-border/30 shadow-premium">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center justify-between">
-                      {signal.source}
-                      <Badge variant={getSentimentBadgeVariant(signal.sentiment)}>{signal.sentiment}</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Confidence</span>
-                        <span className="text-sm font-medium">{signal.confidence}%</span>
-                      </div>
-                      <Progress value={signal.confidence} className="h-2" />
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">24h Change</span>
-                        <span
-                          className={`text-sm font-medium ${signal.change.startsWith("+") ? "text-green-500" : "text-red-500"}`}
-                        >
-                          {signal.change}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
             </div>
 
             {/* Enhanced Inputs Section */}
@@ -1611,9 +1536,7 @@ const SentimentDashboard = () => {
                                 <span className="text-sm font-medium text-muted-foreground">Sentiment Score</span>
                                 <div className="flex items-center gap-2">
                                   {getSentimentIcon(stock.compositeSentiment)}
-                                  <span
-                                    className={`text-sm font-bold ${getSentimentColorInner(stock.compositeSentiment)}`}
-                                  >
+                                  <span className={`text-sm font-bold ${getSentimentColor(stock.compositeSentiment)}`}>
                                     {stock.compositeSentiment.toFixed(2)}
                                   </span>
                                 </div>
@@ -1869,50 +1792,6 @@ const SentimentDashboard = () => {
           </>
         )}
       </div>
-      {/* Analytics Section */}
-      <Tabs defaultValue="model" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 glass-morphism border-border/30">
-          <TabsTrigger value="model" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Model Accuracy</span>
-            <span className="sm:hidden">Model</span>
-          </TabsTrigger>
-          <TabsTrigger value="sources" className="flex items-center gap-2">
-            <PieChart className="h-4 w-4" />
-            <span className="hidden sm:inline">Source Weighting</span>
-            <span className="sm:hidden">Sources</span>
-          </TabsTrigger>
-          <TabsTrigger value="correlation" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            <span className="hidden sm:inline">Correlation</span>
-            <span className="sm:hidden">Corr</span>
-          </TabsTrigger>
-          <TabsTrigger value="portfolio" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">Portfolio</span>
-            <span className="sm:hidden">Port</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="model" className="mt-6">
-          <ModelAccuracy />
-        </TabsContent>
-
-        <TabsContent value="sources" className="mt-6">
-          <SourceWeighting />
-        </TabsContent>
-
-        <TabsContent value="correlation" className="mt-6">
-          <CorrelationChart />
-        </TabsContent>
-
-        <TabsContent value="portfolio" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <PortfolioChangeChart />
-            <ImpactCard />
-          </div>
-        </TabsContent>
-      </Tabs>
     </div>
   )
 }
