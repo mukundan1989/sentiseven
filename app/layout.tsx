@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Roboto } from "next/font/google"
 import Link from "next/link"
 import "./globals.css"
 import { AuthProvider } from "@/context/auth-context"
@@ -10,15 +10,12 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Toaster } from "@/components/ui/toaster"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ChevronDown, Menu, Activity } from "lucide-react"
-import localFont from "next/font/local"
 import { Button } from "@/components/ui/button"
 
-const inter = Inter({ subsets: ["latin"] })
-
-// Load Neuropol font locally
-const neuropol = localFont({
-  src: "../public/fonts/neuropol.otf",
-  variable: "--font-neuropol",
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700", "900"],
+  variable: "--font-roboto",
 })
 
 export const metadata: Metadata = {
@@ -33,7 +30,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} ${neuropol.variable}`}>
+      <body className={`${roboto.className} ${roboto.variable}`}>
         <ThemeProvider>
           <AuthProvider>
             <div className="min-h-screen bg-background text-foreground">
@@ -109,7 +106,7 @@ export default function RootLayout({
                           <Activity className="h-6 w-6 text-white" />
                         </div>
                         {/* Hide text on mobile, show on larger screens */}
-                        <span className="hidden sm:block font-neuropol text-foreground text-xl font-bold text-gradient">
+                        <span className="hidden sm:block font-roboto text-foreground text-xl font-bold text-gradient">
                           SENTIBOARD
                         </span>
                       </div>
