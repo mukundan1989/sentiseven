@@ -1,163 +1,1851 @@
-import { TrendingUp, Clock, Activity, Zap, ArrowRight, Sparkles } from "lucide-react"
+"use client"
+
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import {
+  ArrowUp,
+  ArrowDown,
+  Activity,
+  BarChart3,
+  Edit2,
+  Lock,
+  Unlock,
+  RotateCw,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Plus,
+  Trash2,
+  TrendingUp,
+  TrendingDown,
+  Brain,
+  Zap,
+  Shield,
+  LogIn,
+  Sparkles,
+  Edit,
+} from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { StockSelector } from "@/components/stock-selector"
+import { StockDetailView } from "@/components/stock-detail-view"
+import { CorrelationChart } from "@/components/correlation-chart"
+import StockAllocation from "@/components/stock-allocation"
+import { AddBasketModal } from "@/components/add-basket-modal"
+import { useAuth } from "@/context/auth-context"
+import {
+  saveBasket,
+  getMostRecentBasket,
+  getAllUserBaskets,
+  getBasketById,
+  deleteBasket,
+  unlockBasket,
+  type StockBasket,
+  type BasketStock,
+} from "@/lib/basket-service"
+import { useToast } from "@/hooks/use-toast"
+import { Slider } from "@/components/ui/slider"
 import Link from "next/link"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { supabase } from "@/lib/supabase"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Progress } from "@/components/ui/progress"
 
-export default function Home() {
+const SentimentDashboard = () => {
+  // Auth context
+  const { user } = useAuth()
+  const { toast } = useToast()
+
+  // State for time period and source weights
+  const [timePeriod, setTimePeriod] = useState("1w")
+  const [weights, setWeights] = useState({
+    twitter: 0.4,
+    googleTrends: 0.3,
+    news: 0.3,
+  })
+
+  // Add this after the weights state
+  const [weightLocks, setWeightLocks] = useState({
+    twitter: false,
+    googleTrends: false,
+    news: false,
+  })
+
+  // Add this state for date editing near the other state declarations
+  const [isEditingLockDate, setIsEditingLockDate] = useState(false)
+
+  // Sample basket of stocks with allocation percentages
+  const [stocks, setStocks] = useState([
+    { id: 1, symbol: "AAPL", name: "Apple Inc.", sector: "Technology", allocation: 25, locked: false },
+    { id: 2, symbol: "MSFT", name: "Microsoft Corp.", sector: "Technology", allocation: 20, locked: true },
+    { id: 3, symbol: "AMZN", name: "Amazon.com Inc.", sector: "Consumer Cyclical", allocation: 20, locked: false },
+    { id: 4, symbol: "TSLA", name: "Tesla Inc.", sector: "Automotive", allocation: 15, locked: false },
+    { id: 5, symbol: "META", name: "Meta Platforms Inc.", sector: "Technology", allocation: 20, locked: true },
+  ])
+
+  // State for basket management
+  const [basketId, setBasketId] = useState<string | null>(null)
+  const [basketName, setBasketName] = useState("Tech Leaders")
+  const [basketLocked, setBasketLocked] = useState(false)
+  const [basketDates, setBasketDates] = useState({
+    created: null,
+    updated: null,
+    locked: null,
+  })
+
+  // State for basket management
+  const [allBaskets, setAllBaskets] = useState<StockBasket[]>([])
+  const [selectedBasketId, setSelectedBasketId] = useState<string | null>(null)
+  const [isLoadingBaskets, setIsLoadingBaskets] = useState(false)
+
+  // State for Add Basket Modal
+  const [isAddBasketModalOpen, setIsAddBasketModalOpen] = useState(false)
+
+  // State for loading
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Sample sentiment data
+  const sentimentData = {
+    "1d": generateSentimentData(1),
+    "1w": generateSentimentData(7),
+    "1m": generateSentimentData(30),
+  }
+
+  // State for stock selector dialog
+  const [isStockSelectorOpen, setIsStockSelectorOpen] = useState(false)
+
+  // State for selected stock
+  const [selectedStock, setSelectedStock] = useState(null)
+
+  // State for allocation editor
+  const [isAllocationEditorOpen, setIsAllocationEditorOpen] = useState(false)
+
+  // Add a new state for the unlock alert dialog
+  const [isUnlockBasketAlertOpen, setIsUnlockBasketAlertOpen] = useState(false)
+
+  // State for section collapse
+  const [sectionsCollapsed, setSectionsCollapsed] = useState({
+    inputs: false,
+    insights: false,
+    tracking: false,
+  })
+
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Load user's baskets and most recent basket when component mounts
+  useEffect(() => {
+    if (user) {
+      loadUserBaskets()
+      loadMostRecentBasket()
+    }
+  }, [user])
+
+  if (!mounted) {
+    return null
+  }
+
+  // Load all user baskets
+  const loadUserBaskets = async () => {
+    setIsLoadingBaskets(true)
+    try {
+      const { baskets, error } = await getAllUserBaskets()
+
+      if (error) {
+        console.error("Error loading baskets:", error)
+        return
+      }
+
+      if (baskets) {
+        setAllBaskets(baskets)
+      }
+    } catch (error) {
+      console.error("Error in loadUserBaskets:", error)
+    } finally {
+      setIsLoadingBaskets(false)
+    }
+  }
+
+  // Load a specific basket
+  const loadBasket = async (basketId: string) => {
+    setIsLoading(true)
+    try {
+      const { basket, stocks: basketStocks, error } = await getBasketById(basketId)
+
+      if (error) {
+        console.error("Error loading basket:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load the selected basket. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (basket) {
+        // Update the state with the loaded basket
+        setBasketId(basket.id)
+        setSelectedBasketId(basket.id)
+        setBasketName(basket.name)
+        setBasketLocked(basket.is_locked)
+        setWeights(basket.source_weights)
+
+        // Convert dates
+        if (basket.created_at) {
+          setBasketDates({
+            created: new Date(basket.created_at),
+            updated: basket.updated_at ? new Date(basket.updated_at) : null,
+            locked: basket.locked_at ? new Date(basket.locked_at) : null, // Add locked date
+          })
+        }
+
+        // Convert stocks format
+        if (basketStocks && basketStocks.length > 0) {
+          const formattedStocks = basketStocks.map((stock) => ({
+            id: stock.id,
+            symbol: stock.symbol,
+            name: stock.name,
+            sector: stock.sector,
+            allocation: stock.allocation,
+            locked: stock.is_locked,
+          }))
+          setStocks(formattedStocks)
+        } else {
+          setStocks([])
+        }
+
+        toast({
+          title: "Basket Loaded",
+          description: `Successfully loaded "${basket.name}" basket.`,
+        })
+      }
+    } catch (error) {
+      console.error("Error in loadBasket:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Load the most recent basket
+  const loadMostRecentBasket = async () => {
+    setIsLoading(true)
+    try {
+      const { basket, stocks: basketStocks, error } = await getMostRecentBasket()
+
+      if (error) {
+        console.error("Error loading basket:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load your basket. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (basket) {
+        // Update the state with the loaded basket
+        setBasketId(basket.id)
+        setSelectedBasketId(basket.id)
+        setBasketName(basket.name)
+        setBasketLocked(basket.is_locked)
+        setWeights(basket.source_weights)
+
+        // Convert dates
+        if (basket.created_at) {
+          setBasketDates({
+            created: new Date(basket.created_at),
+            updated: basket.updated_at ? new Date(basket.updated_at) : null,
+            locked: basket.locked_at ? new Date(basket.locked_at) : null, // Add locked date
+          })
+        }
+
+        // Convert stocks format
+        if (basketStocks && basketStocks.length > 0) {
+          const formattedStocks = basketStocks.map((stock) => ({
+            id: stock.id,
+            symbol: stock.symbol,
+            name: stock.name,
+            sector: stock.sector,
+            allocation: stock.allocation,
+            locked: stock.is_locked,
+          }))
+          setStocks(formattedStocks)
+        }
+      }
+    } catch (error) {
+      console.error("Error in loadMostRecentBasket:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Save changes to current basket
+  const saveCurrentBasket = async (isLocked = false) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to save your basket.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!basketId) {
+      toast({
+        title: "No Basket Selected",
+        description: "Please select a basket or create a new one.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Format the basket data
+      const basketData: StockBasket = {
+        id: basketId,
+        name: basketName,
+        source_weights: weights,
+        is_locked: isLocked,
+        locked_at: basketDates.locked?.toISOString(), // Preserve the existing locked date
+      }
+
+      // Format the stocks data
+      const stocksData: BasketStock[] = stocks.map((stock) => ({
+        symbol: stock.symbol,
+        name: stock.name,
+        sector: stock.sector || "Unknown",
+        allocation: stock.allocation,
+        is_locked: stock.locked,
+      }))
+
+      // Save the basket
+      const { error } = await saveBasket(basketData, stocksData, false)
+
+      if (error) {
+        console.error("Error saving basket:", error)
+        toast({
+          title: "Error",
+          description: "Failed to save your basket. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      toast({
+        title: "Success",
+        description: "Your changes have been saved.",
+      })
+
+      // If locking the basket, update the state
+      if (isLocked) {
+        setBasketLocked(true)
+        const now = new Date()
+        setBasketDates({
+          created: basketDates.created || now,
+          updated: now,
+          locked: now, // Set the locked date
+        })
+
+        // Scroll to the basket tracking section
+        setTimeout(() => {
+          const trackingSection = document.getElementById("tracking-section")
+          if (trackingSection) {
+            trackingSection.scrollIntoView({ behavior: "smooth" })
+          }
+        }, 100)
+
+        // Only reload baskets list when locking (status change)
+        await loadUserBaskets()
+      }
+    } catch (error) {
+      console.error("Error in saveCurrentBasket:", error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Create new basket
+  const createNewBasket = async (newBasketName: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to create a basket.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Format the basket data
+      const basketData: StockBasket = {
+        name: newBasketName,
+        source_weights: weights,
+        is_locked: false,
+      }
+
+      // Format the stocks data
+      const stocksData: BasketStock[] = stocks.map((stock) => ({
+        symbol: stock.symbol,
+        name: stock.name,
+        sector: stock.sector || "Unknown",
+        allocation: stock.allocation,
+        is_locked: stock.locked,
+      }))
+
+      // Save the new basket
+      const { error, basketId: newBasketId } = await saveBasket(basketData, stocksData, true)
+
+      if (error) {
+        console.error("Error creating basket:", error)
+        toast({
+          title: "Error",
+          description: "Failed to create new basket. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Update state to switch to the new basket
+      if (newBasketId) {
+        setBasketId(newBasketId)
+        setSelectedBasketId(newBasketId)
+        setBasketName(newBasketName)
+        setBasketLocked(false)
+        const now = new Date()
+        setBasketDates({
+          created: now,
+          updated: now,
+          locked: null, // New baskets aren't locked
+        })
+      }
+
+      toast({
+        title: "Success",
+        description: `New basket "${newBasketName}" created successfully.`,
+      })
+
+      // Close modal and reload baskets list
+      setIsAddBasketModalOpen(false)
+      await loadUserBaskets()
+    } catch (error) {
+      console.error("Error in createNewBasket:", error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Delete basket
+  const handleDeleteBasket = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to delete a basket.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!basketId) {
+      toast({
+        title: "No Basket Selected",
+        description: "Please select a basket to delete.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (basketLocked) {
+      toast({
+        title: "Cannot Delete Locked Basket",
+        description: "Locked baskets cannot be deleted to preserve tracking data.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Confirm deletion
+    if (!confirm(`Are you sure you want to delete the basket "${basketName}"? This action cannot be undone.`)) {
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const { error } = await deleteBasket(basketId)
+
+      if (error) {
+        console.error("Error deleting basket:", error)
+        toast({
+          title: "Error",
+          description: "Failed to delete the basket. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      toast({
+        title: "Success",
+        description: `Basket "${basketName}" has been deleted.`,
+      })
+
+      // Reset state
+      setBasketId(null)
+      setSelectedBasketId(null)
+      setBasketName("New Basket")
+      setBasketLocked(false)
+      setBasketDates({
+        created: null,
+        updated: null,
+        locked: null, // Reset locked date
+      })
+
+      // Reload baskets list
+      await loadUserBaskets()
+    } catch (error) {
+      console.error("Error in handleDeleteBasket:", error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Add this function to handle updating the lock date
+  const handleUpdateLockDate = async (newDate: Date) => {
+    if (!basketId) return
+
+    setIsLoading(true)
+    try {
+      // Format the date for Supabase
+      const formattedDate = newDate.toISOString()
+
+      // Update the locked_at field in the database
+      const { error } = await supabase.from("stock_baskets").update({ locked_at: formattedDate }).eq("id", basketId)
+
+      if (error) {
+        console.error("Error updating lock date:", error)
+        toast({
+          title: "Error",
+          description: "Failed to update the lock date. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Update local state
+      setBasketDates({
+        ...basketDates,
+        locked: newDate,
+      })
+
+      toast({
+        title: "Success",
+        description: "Lock date updated successfully.",
+      })
+    } catch (error) {
+      console.error("Error in handleUpdateLockDate:", error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Unlock basket
+  const handleUnlockBasket = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to unlock a basket.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!basketId) {
+      toast({
+        title: "No Basket Selected",
+        description: "Please select a basket to unlock.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!basketLocked) {
+      toast({
+        title: "Basket Already Unlocked",
+        description: "This basket is already in editable mode.",
+        variant: "default",
+      })
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const { error } = await unlockBasket(basketId)
+
+      if (error) {
+        console.error("Error unlocking basket:", error)
+        toast({
+          title: "Error",
+          description: "Failed to unlock the basket. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      toast({
+        title: "Success",
+        description: `Basket "${basketName}" has been unlocked and is now editable.`,
+      })
+
+      // Update state
+      setBasketLocked(false)
+
+      // Reload baskets list
+      await loadUserBaskets()
+    } catch (error) {
+      console.error("Error in handleUnlockBasket:", error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Handle basket selection change
+  const handleBasketChange = (basketId: string) => {
+    if (basketId && basketId !== selectedBasketId) {
+      loadBasket(basketId)
+    }
+  }
+
+  // Toggle section collapse
+  const toggleSection = (section) => {
+    setSectionsCollapsed({
+      ...sectionsCollapsed,
+      [section]: !sectionsCollapsed[section],
+    })
+  }
+
+  // Function to handle saving stocks from the stock selector
+  const handleSaveStocks = (newStocks) => {
+    // If these are stocks from the StockAllocation component, just update them directly
+    if (newStocks.length > 0 && newStocks[0].hasOwnProperty("allocation")) {
+      // Remove duplicates by id before setting
+      const uniqueStocks = newStocks.filter((stock, index, self) => index === self.findIndex((s) => s.id === stock.id))
+      setStocks(uniqueStocks)
+      return
+    }
+
+    // Otherwise, this is from the StockSelector - handle adding new stocks
+    const existingStockIds = stocks.map((stock) => stock.id)
+    const brandNewStocks = newStocks.filter((stock) => !existingStockIds.includes(stock.id))
+    const continuingStocks = newStocks.filter((stock) => existingStockIds.includes(stock.id))
+
+    // Preserve allocations and locked status for existing stocks
+    const updatedContinuingStocks = continuingStocks.map((newStock) => {
+      const existingStock = stocks.find((s) => s.id === newStock.id)
+      return {
+        ...newStock,
+        allocation: existingStock?.allocation || 0,
+        locked: existingStock?.locked || false,
+      }
+    })
+
+    // Set new stocks to 0% allocation by default
+    const updatedNewStocks = brandNewStocks.map((stock) => ({
+      ...stock,
+      allocation: 0,
+      locked: false,
+    }))
+
+    // Combine continuing and new stocks, ensuring no duplicates
+    const finalStocks = [...updatedContinuingStocks, ...updatedNewStocks]
+    const uniqueFinalStocks = finalStocks.filter(
+      (stock, index, self) => index === self.findIndex((s) => s.id === stock.id),
+    )
+
+    setStocks(uniqueFinalStocks)
+  }
+
+  // Generate weighted composite sentiment
+  const calculateWeightedSentiment = () => {
+    return sentimentData[timePeriod].map((day) => {
+      const weightedSentiment =
+        day.twitterSentiment * weights.twitter +
+        day.googleTrendsSentiment * weights.googleTrends +
+        day.newsSentiment * weights.news
+
+      return {
+        ...day,
+        compositeSentiment: Number.parseFloat(weightedSentiment.toFixed(2)),
+      }
+    })
+  }
+
+  // Add these functions after the calculateWeightedSentiment function
+  // Function to toggle lock status of a weight
+  const toggleWeightLock = (source) => {
+    setWeightLocks({
+      ...weightLocks,
+      [source]: !weightLocks[source],
+    })
+  }
+
+  // Update the handleWeightChange function to respect locks
+  const handleWeightChange = (source, value) => {
+    const newValue = Number.parseFloat(value[0])
+
+    // Calculate how much we need to adjust other weights to maintain sum = 1
+    const otherSources = Object.keys(weights).filter((key) => key !== source && !weightLocks[key])
+
+    // If all other sources are locked, we can't adjust
+    if (otherSources.length === 0) {
+      // Just update this source and normalize
+      const newWeights = { ...weights, [source]: newValue }
+      const sum = Object.values(newWeights).reduce((a, b) => a + b, 0)
+
+      // Normalize to ensure sum is exactly 1
+      if (Math.abs(sum - 1) > 0.001) {
+        // Adjust this source to make sum = 1
+        newWeights[source] = newValue + (1 - sum)
+      }
+
+      setWeights(newWeights)
+      return
+    }
+
+    // Calculate the total weight that should be distributed among other sources
+    const remainingWeight =
+      1 -
+      newValue -
+      Object.keys(weights)
+        .filter((key) => key !== source && weightLocks[key])
+        .reduce((sum, key) => sum + weights[key], 0)
+
+    // Calculate the current sum of other unlocked weights
+    const currentOtherSum = otherSources.reduce((sum, key) => sum + weights[key], 0)
+
+    // Create new weights object
+    const newWeights = { ...weights, [source]: newValue }
+
+    // If other weights sum to zero, distribute evenly
+    if (currentOtherSum === 0) {
+      const evenDistribution = remainingWeight / otherSources.length
+      otherSources.forEach((key) => {
+        newWeights[key] = evenDistribution
+      })
+    } else {
+      // Otherwise, distribute proportionally
+      otherSources.forEach((key) => {
+        const proportion = weights[key] / currentOtherSum
+        newWeights[key] = remainingWeight * proportion
+        newWeights[key] = isNaN(newWeights[key]) ? 0 : newWeights[key]
+      })
+    }
+
+    // Ensure all weights are non-negative and sum to 1
+    Object.keys(newWeights).forEach((key) => {
+      newWeights[key] = Math.max(0, newWeights[key])
+    })
+
+    // Normalize to ensure sum is exactly 1
+    const sum = Object.values(newWeights).reduce((a, b) => a + b, 0)
+    if (sum > 0 && Math.abs(sum - 1) > 0.001) {
+      // Find an unlocked source to adjust
+      const adjustSource = otherSources.length > 0 ? otherSources[0] : source
+      newWeights[adjustSource] += 1 - sum
+    }
+
+    setWeights(newWeights)
+  }
+
+  const weightedData = calculateWeightedSentiment()
+
+  // Function to handle clicking on a stock
+  const handleStockClick = (stock) => {
+    if (!stock) return // Guard clause to prevent clicking on undefined stock
+
+    // Find the full stock data with price
+    const stockWithPrice = stockPerformanceData.find((s) => s.id === stock.id) || {
+      ...stock,
+      price: 100, // Default price if not found
+      change: 0, // Default change if not found
+      performance: 0,
+    }
+
+    setSelectedStock(stockWithPrice)
+  }
+
+  // Function to toggle lock status of a stock
+  const handleToggleLock = (stockId) => {
+    const updatedStocks = stocks.map((stock) => (stock.id === stockId ? { ...stock, locked: !stock.locked } : stock))
+    setStocks(updatedStocks)
+  }
+
+  // Function to reset allocations to equal distribution
+  const handleResetAllocations = () => {
+    // Create a copy of stocks
+    const updatedStocks = [...stocks]
+
+    // Calculate total allocation of locked stocks
+    const lockedStocks = updatedStocks.filter((stock) => stock.locked)
+    const lockedAllocation = lockedStocks.reduce((sum, stock) => sum + stock.allocation, 0)
+
+    // Calculate number of unlocked stocks
+    const unlockedStocks = updatedStocks.filter((stock) => !stock.locked)
+    const unlockedCount = unlockedStocks.length
+
+    if (unlockedCount === 0) {
+      // If all stocks are locked, we can't reset
+      return
+    }
+
+    // Calculate equal distribution for unlocked stocks
+    const remainingAllocation = 100 - lockedAllocation
+    const equalAllocation = Math.floor(remainingAllocation / unlockedCount)
+
+    // Distribute equally among unlocked stocks
+    updatedStocks.forEach((stock) => {
+      if (!stock.locked) {
+        stock.allocation = equalAllocation
+      }
+    })
+
+    // Adjust for rounding errors
+    const newTotal = updatedStocks.reduce((sum, stock) => sum + stock.allocation, 0)
+    if (newTotal < 100) {
+      // Find the first unlocked stock to adjust
+      const firstUnlockedStock = updatedStocks.find((stock) => !stock.locked)
+      if (firstUnlockedStock) {
+        firstUnlockedStock.allocation += 100 - newTotal
+      }
+    }
+
+    setStocks(updatedStocks)
+  }
+
+  // Function to update stock allocation using slider
+  const handleAllocationChange = (stockId, newAllocation) => {
+    // Create a copy of stocks
+    const updatedStocks = [...stocks]
+
+    // Find the stock to update
+    const stockIndex = updatedStocks.findIndex((s) => s.id === stockId)
+    if (stockIndex === -1) return
+
+    // Calculate the difference in allocation
+    const oldAllocation = updatedStocks[stockIndex].allocation
+    const difference = newAllocation - oldAllocation
+
+    // Update the allocation for the selected stock
+    updatedStocks[stockIndex].allocation = newAllocation
+
+    // Find unlocked stocks to adjust (excluding the one being modified)
+    const unlockedStocks = updatedStocks.filter((s) => !s.locked && s.id !== stockId)
+
+    if (unlockedStocks.length > 0) {
+      // Get the total allocation of unlocked stocks (excluding the one being modified)
+      const totalUnlockedAllocation = unlockedStocks.reduce((sum, s) => sum + s.allocation, 0)
+
+      // Adjust each unlocked stock proportionally
+      updatedStocks.forEach((stock) => {
+        if (!stock.locked && stock.id !== stockId) {
+          // Calculate the proportion this stock represents of all unlocked stocks
+          const proportion =
+            totalUnlockedAllocation > 0 ? stock.allocation / totalUnlockedAllocation : 1 / unlockedStocks.length
+          // Reduce this stock's allocation proportionally
+          stock.allocation = Math.max(0, stock.allocation - difference * proportion)
+        }
+      })
+
+      // Ensure total allocation is exactly 100%
+      const totalAllocation = updatedStocks.reduce((sum, stock) => sum + stock.allocation, 0)
+      if (Math.abs(totalAllocation - 100) > 0.01) {
+        // Find the first unlocked stock that's not the one we're updating
+        const adjustmentStock = updatedStocks.find((s) => !s.locked && s.id !== stockId)
+        if (adjustmentStock) {
+          adjustmentStock.allocation += 100 - totalAllocation
+        }
+      }
+    }
+
+    // Round all allocations to integers
+    updatedStocks.forEach((stock) => {
+      stock.allocation = Math.round(stock.allocation)
+    })
+
+    setStocks(updatedStocks)
+  }
+
+  // Generate stock performance data
+  const stockPerformanceData = stocks.map((stock) => {
+    const basePerformance = Math.random() * 10 - 5 // Random between -5% and +5%
+    const compositeSentiment = weightedData[weightedData.length - 1].compositeSentiment
+    const sentimentImpact = compositeSentiment > 0 ? compositeSentiment * 2 : compositeSentiment
+    const performance = Number.parseFloat((basePerformance + sentimentImpact).toFixed(2))
+
+    // Generate a random price between 50 and 500
+    const price = Number.parseFloat((Math.random() * 450 + 50).toFixed(2))
+    const change = performance // Use performance as the change percentage
+
+    return {
+      ...stock,
+      price,
+      change,
+      performance,
+      twitterSentiment: weightedData[weightedData.length - 1].twitterSentiment,
+      googleTrendsSentiment: weightedData[weightedData.length - 1].googleTrendsSentiment,
+      newsSentiment: weightedData[weightedData.length - 1].compositeSentiment,
+      compositeSentiment: weightedData[weightedData.length - 1].compositeSentiment,
+    }
+  })
+
+  // Color function for sentiment
+  const getSentimentColor = (value) => {
+    if (value > 0.3) return "text-emerald-400"
+    if (value >= -0.3) return "text-amber-400"
+    return "text-red-400"
+  }
+
+  // Color function for performance
+  const getPerformanceColor = (value) => {
+    if (value > 0) return "text-emerald-400"
+    return "text-red-400"
+  }
+
+  // Get sentiment icon
+  const getSentimentIcon = (value) => {
+    if (value > 0.3) return <ArrowUp className="h-4 w-4 text-emerald-400" />
+    if (value >= -0.3) return <Activity className="h-4 w-4 text-amber-400" />
+    return <ArrowDown className="h-4 w-4 text-red-400" />
+  }
+
+  // Get overall sentiment status
+  const getOverallSentiment = () => {
+    const latestComposite = weightedData[weightedData.length - 1].compositeSentiment
+
+    if (latestComposite > 0.5) return { text: "Very Positive", color: "bg-gradient-to-r from-emerald-500 to-green-400" }
+    if (latestComposite > 0.2) return { text: "Positive", color: "bg-gradient-to-r from-emerald-400 to-emerald-300" }
+    if (latestComposite > -0.2) return { text: "Neutral", color: "bg-gradient-to-r from-amber-400 to-yellow-400" }
+    if (latestComposite > -0.5) return { text: "Negative", color: "bg-gradient-to-r from-red-400 to-red-300" }
+    return { text: "Very Negative", color: "bg-gradient-to-r from-red-500 to-red-400" }
+  }
+
+  const overallSentiment = getOverallSentiment()
+
+  // Format date for display
+  const formatDate = (date) => {
+    if (!date) return "N/A"
+    return date instanceof Date ? `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}` : "N/A"
+  }
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-      {/* Hero Section - Direct content without extra containers */}
-      <section className="relative overflow-hidden">
-        {/* Background effects */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_70%)]" />
+    <div className="bg-background min-h-screen relative overflow-hidden">
+      {/* Background gradient overlay */}
+      <div className="fixed inset-0 bg-gradient-to-br from-background via-background to-muted/20 pointer-events-none" />
 
-        <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left Content */}
-            <div className="space-y-8">
-              {/* Icon Grid */}
-              <div className="flex gap-4">
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg">
-                  <Clock className="h-8 w-8 text-white" />
-                </div>
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-                  <Activity className="h-8 w-8 text-white" />
-                </div>
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg">
-                  <Zap className="h-8 w-8 text-white" />
-                </div>
-              </div>
-
-              {/* Main Heading */}
-              <div className="space-y-6">
-                <h1 className="text-5xl lg:text-7xl font-bold text-white leading-tight">
-                  <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    Sentiment Analysis
-                  </span>
-                  <br />
-                  <span className="text-white">Dashboard</span>
-                </h1>
-
-                <p className="text-xl text-slate-300 leading-relaxed max-w-2xl">
-                  Track market sentiment across multiple data sources with AI-powered insights. Make informed investment
-                  decisions with real-time sentiment analysis.
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/sentiment-dashboard">
-                  <Button
-                    size="lg"
-                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-                  >
-                    <ArrowRight className="mr-2 h-5 w-5" />
-                    Get Started
-                  </Button>
-                </Link>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-slate-600 text-slate-300 hover:bg-slate-800 px-8 py-4 rounded-xl text-lg font-semibold bg-transparent"
-                >
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Learn More
-                </Button>
-              </div>
+      <div className="relative z-10 max-w-7xl mx-auto p-4 sm:p-6">
+        {isLoading && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="glass-morphism p-8 rounded-2xl shadow-premium flex items-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="text-foreground font-medium text-lg">
+                {isLoadingBaskets ? "Loading baskets..." : "Processing..."}
+              </span>
             </div>
+          </div>
+        )}
 
-            {/* Right Content - Live Sentiment Card */}
-            <div className="relative">
-              <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50 backdrop-blur-sm shadow-2xl">
-                <CardContent className="p-8">
-                  <div className="space-y-6">
-                    {/* Header */}
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600">
-                        <Activity className="h-5 w-5 text-white" />
+        {selectedStock ? (
+          <StockDetailView stock={selectedStock} onBack={() => setSelectedStock(null)} timePeriod={timePeriod} />
+        ) : (
+          <>
+            {/* Hero Section */}
+            <div className="relative overflow-hidden mb-8 sm:mb-10">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.1),transparent_50%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+
+              <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+                <div className="glass-morphism rounded-3xl border border-border/30 shadow-premium p-6 sm:p-8">
+                  <div className="flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
+                    <div className="flex-1 text-center lg:text-left">
+                      <div className="flex items-center justify-center lg:justify-start gap-3 mb-4 sm:mb-6">
+                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-primary">
+                          <Brain className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                        </div>
+                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20">
+                          <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                        </div>
+                        <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-r from-green-500/20 to-blue-500/20">
+                          <Zap className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
+                        </div>
                       </div>
-                      <h3 className="text-xl font-semibold text-white">Live Sentiment Analysis</h3>
+
+                      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 text-gradient leading-tight">
+                        Sentiment Analysis Dashboard
+                      </h1>
+
+                      <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl">
+                        Track market sentiment across multiple data sources with AI-powered insights. Make informed
+                        investment decisions with real-time sentiment analysis.
+                      </p>
+
+                      <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <Link href="/login">
+                          <Button
+                            size="lg"
+                            className="bg-gradient-primary hover:opacity-90 text-white px-6 sm:px-8 py-3 text-base sm:text-lg"
+                          >
+                            <LogIn className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                            Get Started
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="px-6 sm:px-8 py-3 text-base sm:text-lg border-border/50 hover:bg-accent/50 bg-transparent"
+                        >
+                          <Sparkles className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                          Learn More
+                        </Button>
+                      </div>
                     </div>
 
-                    {/* Market Confidence */}
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400">Market Confidence</span>
-                        <span className="text-emerald-400 font-bold">+72%</span>
-                      </div>
+                    <div className="flex-1 max-w-md">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl blur-xl" />
+                        <div className="relative glass-morphism rounded-2xl p-4 sm:p-6 border border-border/30">
+                          <div className="flex items-center gap-3 mb-4">
+                            <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                            <span className="font-semibold text-sm sm:text-base">Live Sentiment Analysis</span>
+                          </div>
 
-                      {/* Progress Bar */}
-                      <div className="relative h-3 bg-slate-700 rounded-full overflow-hidden">
-                        <div
-                          className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full"
-                          style={{ width: "72%" }}
-                        />
-                      </div>
-                    </div>
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs sm:text-sm text-muted-foreground">Market Confidence</span>
+                              <span className="text-xs sm:text-sm font-medium text-green-500">+72%</span>
+                            </div>
+                            <Progress value={72} className="h-2" />
 
-                    {/* Sentiment Breakdown */}
-                    <div className="grid grid-cols-2 gap-6 pt-4">
-                      <div className="text-center space-y-2">
-                        <div className="flex items-center justify-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-emerald-400" />
-                          <span className="text-emerald-400 font-semibold">Bullish</span>
+                            <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-4 sm:mt-6">
+                              <div className="text-center p-2 sm:p-3 rounded-lg bg-accent/30">
+                                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mx-auto mb-1" />
+                                <div className="text-xs sm:text-sm font-medium">Bullish</div>
+                                <div className="text-xs text-muted-foreground">45%</div>
+                              </div>
+                              <div className="text-center p-2 sm:p-3 rounded-lg bg-accent/30">
+                                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 mx-auto mb-1" />
+                                <div className="text-xs sm:text-sm font-medium">Bearish</div>
+                                <div className="text-xs text-muted-foreground">28%</div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-2xl font-bold text-white">45%</div>
-                      </div>
-                      <div className="text-center space-y-2">
-                        <div className="flex items-center justify-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-red-400 rotate-180" />
-                          <span className="text-red-400 font-semibold">Bearish</span>
-                        </div>
-                        <div className="text-2xl font-bold text-white">28%</div>
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="relative border-t border-white/10">
-        {/* Decorative gradient line */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
-
-        <div className="glass-morphism">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
-              {/* Left side - Logo and tagline */}
-              <div className="flex items-center gap-3">
-                <div className="bg-foreground/30 p-2 rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-foreground/70" />
-                </div>
-                <div>
-                  <span className="text-lg font-neuropol text-foreground/70">SentiSeven</span>
-                  <p className="text-sm text-muted-foreground max-w-xs">
-                    Advanced sentiment analysis for smarter trading decisions
-                  </p>
-                </div>
-              </div>
-
-              {/* Right side - Copyright and legal links */}
-              <div className="flex flex-col items-end gap-2">
-                <p className="text-sm text-muted-foreground">© 2024 SentiSeven. All rights reserved.</p>
-                <div className="flex flex-col items-end gap-1">
-                  <a href="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    Privacy Policy
-                  </a>
-                  <a href="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    Terms of Service
-                  </a>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </footer>
-    </main>
+
+            {/* Enhanced Inputs Section */}
+            <div className="mb-8 sm:mb-10">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Portfolio Configuration</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 sm:h-10 sm:w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
+                  onClick={() => toggleSection("inputs")}
+                >
+                  {sectionsCollapsed.inputs ? (
+                    <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5" />
+                  )}
+                </Button>
+              </div>
+
+              {!sectionsCollapsed.inputs && (
+                <>
+                  {/* Enhanced Stock Allocation Card */}
+                  <Card className="mb-6 sm:mb-8 glass-morphism border-border/50 shadow-premium">
+                    <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
+                      <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl md:text-2xl font-bold">
+                          <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-primary">
+                            <BarChart3 className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+                          </div>
+                          Stock Allocation
+                        </CardTitle>
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-8 p-0 sm:h-9 sm:w-9 md:w-auto md:px-3 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
+                            onClick={() =>
+                              basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsStockSelectorOpen(true)
+                            }
+                          >
+                            <Edit2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="hidden md:inline md:ml-2">Change</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsAllocationEditorOpen(true)
+                            }
+                            disabled={basketLocked}
+                            className="h-8 w-8 p-0 sm:h-9 sm:w-9 md:w-auto md:px-3 btn-gradient-primary"
+                          >
+                            <Edit2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="hidden md:inline md:ml-2">Adjust Allocation</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleResetAllocations}
+                            className="h-8 w-8 p-0 sm:h-9 sm:w-9 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
+                            disabled={basketLocked}
+                          >
+                            <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <CardDescription className="text-sm sm:text-base text-muted-foreground">
+                        Adjust your portfolio allocation and lock in positions based on sentiment analysis
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
+                      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                        {stocks.map((stock) => {
+                          const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
+                          return (
+                            <div
+                              key={stock.id}
+                              className="p-2 sm:p-3 rounded-xl bg-gradient-card border border-border/30 space-y-2 sm:space-y-3"
+                            >
+                              {/* Stock Info Header */}
+                              <div className="flex items-start justify-between">
+                                {/* Left: Stock Info - Stacked vertically */}
+                                <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
+                                  <div className="font-bold text-xs sm:text-sm text-foreground">{stock.symbol}</div>
+                                  <div className="text-xs text-muted-foreground line-clamp-2 pr-1">{stock.name}</div>
+                                </div>
+
+                                {/* Right: Allocation and Lock Button */}
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  <div className="text-sm sm:text-base font-bold text-foreground">
+                                    {stock.allocation}%
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={`h-5 w-5 sm:h-6 sm:w-6 rounded-full hover:bg-accent/50 transition-all duration-200 ${
+                                      stock.locked ? "bg-amber-400/20 border-2 border-amber-400/50" : ""
+                                    }`}
+                                    onClick={() => handleToggleLock(stock.id)}
+                                    disabled={basketLocked}
+                                  >
+                                    {stock.locked ? (
+                                      <Lock className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-amber-400" />
+                                    ) : (
+                                      <Unlock className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-muted-foreground" />
+                                    )}
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Allocation Slider */}
+                              <div className="space-y-2">
+                                <div className="relative">
+                                  <Slider
+                                    value={[stock.allocation]}
+                                    max={100}
+                                    step={1}
+                                    disabled={stock.locked || basketLocked}
+                                    onValueChange={(value) => handleAllocationChange(stock.id, value[0])}
+                                    className="py-1"
+                                  />
+                                  {/* Sentiment-based overlay */}
+                                  <div
+                                    className={`absolute top-1/2 left-0 h-2 rounded-full pointer-events-none transform -translate-y-1/2 transition-all duration-500 ${
+                                      stockData.compositeSentiment > 0.3
+                                        ? "bg-gradient-to-r from-emerald-400/30 to-emerald-500/30"
+                                        : stockData.compositeSentiment > -0.3
+                                          ? "bg-gradient-to-r from-amber-400/30 to-amber-500/30"
+                                          : "bg-gradient-to-r from-red-400/30 to-red-500/30"
+                                    }`}
+                                    style={{ width: `${stock.allocation}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-center border-t border-border/30 pt-4 sm:pt-6 p-4 sm:p-6">
+                      <div className="text-sm text-muted-foreground">
+                        <span className="font-bold text-foreground text-base sm:text-lg">
+                          {stocks.filter((s) => s.locked).length}
+                        </span>{" "}
+                        of {stocks.length} positions locked
+                      </div>
+                    </CardFooter>
+                  </Card>
+
+                  {/* Enhanced Source Weighting and Correlation Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-6 sm:mb-8">
+                    {/* Enhanced Source Weighting Controls */}
+                    <Card className="glass-morphism border-border/50 shadow-premium">
+                      <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
+                        <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl font-bold">
+                          <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-secondary">
+                            <Activity className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+                          </div>
+                          Source Weighting
+                        </CardTitle>
+                        <CardDescription className="text-sm sm:text-base text-muted-foreground">
+                          Adjust the influence of each data source on the composite sentiment
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6 sm:space-y-8 p-4 sm:p-6 pt-0">
+                        <div className="space-y-4 sm:space-y-6">
+                          <div className="space-y-2 sm:space-y-3">
+                            <div className="flex justify-between items-center">
+                              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
+                                Twitter Sentiment
+                              </label>
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <span className="text-xs sm:text-sm font-bold bg-gradient-primary text-transparent bg-clip-text px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg bg-card/50">
+                                  {(weights.twitter * 100).toFixed(0)}%
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 sm:h-8 sm:w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
+                                  onClick={() => toggleWeightLock("twitter")}
+                                  disabled={basketLocked}
+                                >
+                                  {weightLocks.twitter ? (
+                                    <Lock className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400" />
+                                  ) : (
+                                    <Unlock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                            <Slider
+                              defaultValue={[weights.twitter]}
+                              value={[weights.twitter]}
+                              max={1}
+                              step={0.05}
+                              onValueChange={(value) => handleWeightChange("twitter", value)}
+                              className="py-1 sm:py-2"
+                              disabled={basketLocked}
+                            />
+                          </div>
+
+                          <div className="space-y-2 sm:space-y-3">
+                            <div className="flex justify-between items-center">
+                              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
+                                Google Trends
+                              </label>
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <span className="text-xs sm:text-sm font-bold bg-gradient-secondary text-transparent bg-clip-text px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg bg-card/50">
+                                  {(weights.googleTrends * 100).toFixed(0)}%
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 sm:h-8 sm:w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
+                                  onClick={() => toggleWeightLock("googleTrends")}
+                                  disabled={basketLocked}
+                                >
+                                  {weightLocks.googleTrends ? (
+                                    <Lock className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400" />
+                                  ) : (
+                                    <Unlock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                            <Slider
+                              defaultValue={[weights.googleTrends]}
+                              value={[weights.googleTrends]}
+                              max={1}
+                              step={0.05}
+                              onValueChange={(value) => handleWeightChange("googleTrends", value)}
+                              className="py-1 sm:py-2"
+                              disabled={basketLocked}
+                            />
+                          </div>
+
+                          <div className="space-y-2 sm:space-y-3">
+                            <div className="flex justify-between items-center">
+                              <label className="text-xs sm:text-sm font-medium text-muted-foreground">
+                                News Sentiment
+                              </label>
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <span className="text-xs sm:text-sm font-bold bg-gradient-accent text-transparent bg-clip-text px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg bg-card/50">
+                                  {(weights.news * 100).toFixed(0)}%
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 sm:h-8 sm:w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
+                                  onClick={() => toggleWeightLock("news")}
+                                  disabled={basketLocked}
+                                >
+                                  {weightLocks.news ? (
+                                    <Lock className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400" />
+                                  ) : (
+                                    <Unlock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                            <Slider
+                              defaultValue={[weights.news]}
+                              value={[weights.news]}
+                              max={1}
+                              step={0.05}
+                              onValueChange={(value) => handleWeightChange("news", value)}
+                              className="py-1 sm:py-2"
+                              disabled={basketLocked}
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Enhanced Sentiment-Performance Correlation */}
+                    <CorrelationChart stocks={stocks} weights={weights} />
+                  </div>
+
+                  {/* Enhanced Basket Management */}
+                  <Card className="mb-6 sm:mb-8 glass-morphism border-border/50 shadow-premium">
+                    <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
+                      <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl font-bold">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-accent">
+                          <BarChart3 className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+                        </div>
+                        Basket Management
+                      </CardTitle>
+                      <CardDescription className="text-sm sm:text-base text-muted-foreground">
+                        Select an existing basket or create a new one to track your portfolio performance
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
+                      <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 w-full">
+                        {/* Enhanced Basket Dropdown */}
+                        <div className="flex-1">
+                          <Select value={selectedBasketId || ""} onValueChange={handleBasketChange}>
+                            <SelectTrigger className="bg-card/50 border-border/50 h-10 sm:h-12 text-sm sm:text-base">
+                              <SelectValue placeholder="Select a basket" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card/95 backdrop-blur-sm border-border/50">
+                              {allBaskets &&
+                                allBaskets.map((basket) => (
+                                  <SelectItem key={basket.id} value={basket.id} className="text-sm sm:text-base">
+                                    <div className="flex items-center justify-between w-full">
+                                      <span>{basket.name}</span>
+                                      {basket.is_locked && (
+                                        <Lock className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400 ml-3" />
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Enhanced Action Buttons */}
+                        <div className="flex flex-wrap gap-2 sm:gap-3">
+                          <Button
+                            variant="outline"
+                            onClick={() => saveCurrentBasket(false)}
+                            disabled={!basketId || isLoading || basketLocked}
+                            className="gap-1 sm:gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10"
+                          >
+                            {isLoading ? <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" /> : null}
+                            Save Changes
+                          </Button>
+
+                          <Button
+                            variant="destructive"
+                            onClick={() => handleDeleteBasket()}
+                            disabled={!basketId || isLoading || basketLocked}
+                            className="gap-1 sm:gap-2 bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10"
+                          >
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                            Delete
+                          </Button>
+
+                          <Button
+                            onClick={() => setIsAddBasketModalOpen(true)}
+                            disabled={isLoading}
+                            className="gap-1 sm:gap-2 btn-gradient-primary text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10"
+                          >
+                            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                            New Basket
+                          </Button>
+
+                          {basketId && (
+                            <Button
+                              variant={basketLocked ? "outline" : "secondary"}
+                              onClick={() => (basketLocked ? handleUnlockBasket() : saveCurrentBasket(true))}
+                              disabled={isLoading}
+                              className={`gap-1 sm:gap-2 transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10 ${
+                                basketLocked
+                                  ? "bg-amber-500/20 border-amber-500/30 text-amber-400 hover:bg-amber-500/30"
+                                  : "btn-gradient-secondary"
+                              }`}
+                            >
+                              {basketLocked ? (
+                                <Unlock className="h-3 w-3 sm:h-4 sm:w-4" />
+                              ) : (
+                                <Lock className="h-3 w-3 sm:h-4 sm:w-4" />
+                              )}
+                              {basketLocked ? "Unlock" : "Lock"}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Enhanced Current Basket Info */}
+                      {basketId && (
+                        <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border/30">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 text-sm">
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">Current Basket:</span>
+                              <div className="font-bold text-base sm:text-lg text-foreground">{basketName}</div>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">Total Stocks:</span>
+                              <div className="font-bold text-base sm:text-lg text-foreground">{stocks.length}</div>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">Status:</span>
+                              <div className="font-medium">
+                                {basketLocked ? (
+                                  <Badge
+                                    variant="outline"
+                                    className="border-amber-400/50 text-amber-400 bg-amber-400/10"
+                                  >
+                                    <Lock className="h-3 w-3 mr-1" />
+                                    Locked
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="outline"
+                                    className="border-emerald-400/50 text-emerald-400 bg-emerald-400/10"
+                                  >
+                                    <Unlock className="h-3 w-3 mr-1" />
+                                    Editable
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground">Created:</span>
+                              <div className="font-medium text-foreground">{formatDate(basketDates.created)}</div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
+
+            {/* Conditional Enhanced Insights and Performance Tracking Sections */}
+            {basketLocked ? (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-10">
+                {/* Enhanced Insights Section */}
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Market Insights</h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 sm:h-10 sm:w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
+                      onClick={() => toggleSection("insights")}
+                    >
+                      {sectionsCollapsed.insights ? (
+                        <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
+                      ) : (
+                        <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5" />
+                      )}
+                    </Button>
+                  </div>
+
+                  {!sectionsCollapsed.insights && (
+                    <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                      {stockPerformanceData &&
+                        stockPerformanceData.map((stock) => (
+                          <Card
+                            key={stock.id}
+                            className="glass-morphism border-border/50 shadow-premium cursor-pointer hover:shadow-glow-blue transition-all duration-300 hover:scale-[1.02]"
+                            onClick={() => handleStockClick(stock)}
+                          >
+                            <CardHeader className="pb-2 sm:pb-3 p-4 sm:p-6">
+                              <div className="flex justify-between items-start">
+                                <div className="space-y-1">
+                                  <CardTitle className="text-lg sm:text-xl font-bold text-foreground">
+                                    {stock.symbol}
+                                  </CardTitle>
+                                  <CardDescription className="text-xs sm:text-sm text-muted-foreground">
+                                    {stock.name}
+                                  </CardDescription>
+                                </div>
+                                <div className="text-right space-y-1">
+                                  <div className="text-lg sm:text-xl font-bold text-foreground">${stock.price}</div>
+                                  <div
+                                    className={`text-xs sm:text-sm font-medium ${getPerformanceColor(stock.change)}`}
+                                  >
+                                    {stock.change > 0 ? "+" : ""}
+                                    {stock.change.toFixed(2)}%
+                                  </div>
+                                </div>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
+                              <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-gradient-card">
+                                <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+                                  Portfolio Weight
+                                </span>
+                                <span className="font-bold text-base sm:text-lg text-foreground">
+                                  {stock.allocation}%
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-gradient-card">
+                                <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+                                  Sentiment Score
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  {getSentimentIcon(stock.compositeSentiment)}
+                                  <span
+                                    className={`text-xs sm:text-sm font-bold ${getSentimentColor(stock.compositeSentiment)}`}
+                                  >
+                                    {stock.compositeSentiment.toFixed(2)}
+                                  </span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Enhanced Performance Tracking Section */}
+                <div id="tracking-section" className="space-y-4 sm:space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Performance Tracking</h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 sm:h-10 sm:w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
+                      onClick={() => toggleSection("tracking")}
+                    >
+                      {sectionsCollapsed.tracking ? (
+                        <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
+                      ) : (
+                        <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5" />
+                      )}
+                    </Button>
+                  </div>
+
+                  {!sectionsCollapsed.tracking && (
+                    <Card className="glass-morphism border-border/50 shadow-premium">
+                      <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2">
+                            <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl font-bold">
+                              <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-400">
+                                <Lock className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+                              </div>
+                              Locked Basket: {basketName}
+                            </CardTitle>
+                            <CardDescription className="text-sm sm:text-base text-muted-foreground">
+                              This basket is locked for performance tracking. Unlock to make changes.
+                            </CardDescription>
+                          </div>
+                          <Button
+                            variant="outline"
+                            onClick={handleUnlockBasket}
+                            disabled={isLoading}
+                            className="gap-1 sm:gap-2 bg-amber-500/20 border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-10"
+                          >
+                            <Unlock className="h-3 w-3 sm:h-4 sm:w-4" />
+                            Unlock Basket
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                          <div className="text-center p-3 sm:p-4 rounded-xl bg-gradient-card border border-border/30">
+                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1">
+                              {stocks.reduce((sum, stock) => sum + stock.allocation, 0)}%
+                            </div>
+                            <div className="text-xs sm:text-sm text-muted-foreground">Total Allocation</div>
+                          </div>
+                          <div className="text-center p-3 sm:p-4 rounded-xl bg-gradient-card border border-border/30">
+                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-emerald-400 mb-1">+2.4%</div>
+                            <div className="text-xs sm:text-sm text-muted-foreground">Performance Since Lock</div>
+                          </div>
+                          <div className="text-center p-3 sm:p-4 rounded-xl bg-gradient-card border border-border/30">
+                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1">
+                              {stocks.length}
+                            </div>
+                            <div className="text-xs sm:text-sm text-muted-foreground">Stocks in Basket</div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 sm:space-y-4">
+                          <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-gradient-card">
+                            <span className="text-xs sm:text-sm font-medium text-muted-foreground">Created:</span>
+                            <span className="font-medium text-foreground text-xs sm:text-sm">
+                              {formatDate(basketDates.created)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-gradient-card">
+                            <span className="text-xs sm:text-sm font-medium text-muted-foreground">Last Updated:</span>
+                            <span className="font-medium text-foreground text-xs sm:text-sm">
+                              {formatDate(basketDates.updated)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-gradient-card">
+                            <span className="text-xs sm:text-sm font-medium text-muted-foreground">Locked Date:</span>
+                            <div className="flex items-center gap-2 sm:gap-3">
+                              <span className="font-medium text-foreground text-xs sm:text-sm">
+                                {formatDate(basketDates.locked)}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 sm:h-8 sm:w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
+                                onClick={() => setIsEditingLockDate(true)}
+                              >
+                                <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <Popover open={isEditingLockDate} onOpenChange={setIsEditingLockDate}>
+                          <PopoverTrigger asChild>
+                            <div />
+                          </PopoverTrigger>
+                          <PopoverContent
+                            className="w-auto p-0 bg-card/95 backdrop-blur-sm border-border/50"
+                            align="end"
+                          >
+                            <Calendar
+                              mode="single"
+                              selected={basketDates.locked || undefined}
+                              onSelect={(date) => {
+                                if (date) {
+                                  handleUpdateLockDate(date)
+                                  setIsEditingLockDate(false)
+                                }
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            ) : null}
+
+            {/* Enhanced Footer */}
+            <div className="mt-12 sm:mt-16 relative">
+              {/* Gradient separator */}
+              <div className="h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent mb-8 sm:mb-12"></div>
+
+              <div className="glass-morphism rounded-2xl border border-border/30 p-6 sm:p-8 shadow-premium">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
+                  {/* Left: Branding */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-foreground/30">
+                        <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-foreground/70" />
+                      </div>
+                      <span className="font-neuropol text-lg sm:text-xl font-bold text-foreground/70">SENTIBOARD</span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-xs">
+                      AI-powered sentiment analysis for smarter investment decisions
+                    </p>
+                  </div>
+
+                  {/* Right: Copyright and Links */}
+                  <div className="text-right space-y-3">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
+                      © 2025 Sentiment Analysis Dashboard. All rights reserved.
+                    </div>
+                    <div className="flex flex-col gap-2 text-xs text-muted-foreground">
+                      <span className="hover:text-primary transition-colors cursor-pointer">Privacy Policy</span>
+                      <span className="hover:text-primary transition-colors cursor-pointer">Terms of Service</span>
+                      <span className="hover:text-primary transition-colors cursor-pointer">API Documentation</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Decorative elements */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-primary rounded-full opacity-20 animate-pulse"></div>
+                </div>
+                <div className="absolute bottom-2 right-4 opacity-10">
+                  <BarChart3 className="h-12 w-12 sm:h-16 sm:w-16 text-primary" />
+                </div>
+              </div>
+            </div>
+
+            {/* Modals */}
+            <AddBasketModal
+              open={isAddBasketModalOpen}
+              onOpenChange={setIsAddBasketModalOpen}
+              onSave={createNewBasket}
+              isLoading={isLoading}
+            />
+
+            <StockSelector
+              open={isStockSelectorOpen}
+              onOpenChange={setIsStockSelectorOpen}
+              initialStocks={stocks}
+              onSave={handleSaveStocks}
+            />
+
+            <StockAllocation
+              open={isAllocationEditorOpen}
+              onOpenChange={setIsAllocationEditorOpen}
+              stocks={stocks}
+              onSave={handleSaveStocks}
+              onAllocationChange={handleAllocationChange}
+              onToggleLock={handleToggleLock}
+            />
+
+            <AlertDialog open={isUnlockBasketAlertOpen} onOpenChange={setIsUnlockBasketAlertOpen}>
+              <AlertDialogContent className="glass-morphism border-border/50">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-foreground text-lg sm:text-xl">Basket Locked</AlertDialogTitle>
+                  <AlertDialogDescription className="text-muted-foreground text-sm sm:text-base">
+                    This basket is currently locked for performance tracking. Please unlock it to make changes to stock
+                    positions or allocations.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-card/50 text-foreground border-border/50 hover:bg-accent/50">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction onClick={handleUnlockBasket} className="btn-gradient-primary">
+                    Unlock Basket
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
+        )}
+      </div>
+    </div>
   )
 }
+
+// Helper function to generate sample sentiment data
+function generateSentimentData(days) {
+  const data = []
+  const now = new Date()
+  let twitterBaseline = Math.random() * 0.4 + 0.1 // 0.1 to 0.5
+  let googleBaseline = Math.random() * 0.4 - 0.2 // -0.2 to 0.2
+  let newsBaseline = Math.random() * 0.6 - 0.3 // -0.3 to 0.3
+
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date(now)
+    date.setDate(date.getDate() - i)
+
+    // Create some variability in the sentiment
+    const twitterVariation = Math.random() * 0.4 - 0.2 // -0.2 to 0.2
+    const googleVariation = Math.random() * 0.3 - 0.15 // -0.15 to 0.15
+    const newsVariation = Math.random() * 0.5 - 0.25 // -0.25 to 0.25
+
+    // Create some correlation between the sentiments
+    const commonFactor = Math.random() * 0.3 - 0.15 // -0.15 to 0.15
+
+    // Calculate sentiments with bounds checking
+    const twitterSentiment = clamp(twitterBaseline + twitterVariation + commonFactor, -1, 1)
+    const googleTrendsSentiment = clamp(googleBaseline + googleVariation + commonFactor, -1, 1)
+    const newsSentiment = clamp(newsBaseline + newsVariation + commonFactor, -1, 1)
+
+    // Format date as MM/DD
+    const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`
+
+    data.push({
+      date: formattedDate,
+      twitterSentiment,
+      googleTrendsSentiment,
+      newsSentiment,
+    })
+
+    // Adjust baselines slightly for trend
+    twitterBaseline += Math.random() * 0.1 - 0.05
+    googleBaseline += Math.random() * 0.08 - 0.04
+    newsBaseline += Math.random() * 0.12 - 0.06
+
+    // Keep baselines in reasonable range
+    twitterBaseline = clamp(twitterBaseline, -0.7, 0.7)
+    googleBaseline = clamp(googleBaseline, -0.7, 0.7)
+    newsBaseline = clamp(newsBaseline, -0.7, 0.7)
+  }
+
+  return data
+}
+
+// Helper function to clamp a value between min and max
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max)
+}
+
+export default SentimentDashboard
