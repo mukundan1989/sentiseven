@@ -1162,26 +1162,30 @@ const SentimentDashboard = () => {
                               <div className="flex items-start justify-between">
                                 {/* Left: Stock Info - Stacked vertically */}
                                 <div className="space-y-1 flex-1 min-w-0">
-                                  <div className="font-bold text-base text-foreground">{stock.symbol}</div>
-                                  <div className="text-xs text-muted-foreground line-clamp-2 pr-1">{stock.name}</div>
+                                  <div className="font-bold text-sm sm:text-base text-foreground">{stock.symbol}</div>
+                                  <div className="text-xs text-muted-foreground line-clamp-2 pr-1 mt-0.5">
+                                    {stock.name}
+                                  </div>
                                 </div>
 
                                 {/* Right: Allocation and Lock Button */}
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  <div className="text-lg font-bold text-foreground">{stock.allocation}%</div>
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  <div className="text-base sm:text-lg font-bold text-foreground">
+                                    {stock.allocation}%
+                                  </div>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className={`h-7 w-7 rounded-full hover:bg-accent/50 transition-all duration-200 ${
+                                    className={`h-6 w-6 sm:h-7 sm:w-7 rounded-full hover:bg-accent/50 transition-all duration-200 ${
                                       stock.locked ? "bg-amber-400/20 border-2 border-amber-400/50" : ""
                                     }`}
                                     onClick={() => handleToggleLock(stock.id)}
                                     disabled={basketLocked}
                                   >
                                     {stock.locked ? (
-                                      <Lock className="h-3 w-3 text-amber-400" />
+                                      <Lock className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-amber-400" />
                                     ) : (
-                                      <Unlock className="h-3 w-3 text-muted-foreground" />
+                                      <Unlock className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground" />
                                     )}
                                   </Button>
                                 </div>
