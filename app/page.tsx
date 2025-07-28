@@ -1038,7 +1038,6 @@ const SentimentDashboard = () => {
                 <>
                   {/* Enhanced Stock Allocation Card */}
                   <Card className="mb-8 glass-morphism border-border/50 shadow-premium">
-                    \`\`\`tsx
                     <CardHeader className="pb-4">
                       <div className="flex items-center justify-between mb-3">
                         <CardTitle className="flex items-center gap-3 text-xl md:text-2xl font-bold">
@@ -1085,7 +1084,6 @@ const SentimentDashboard = () => {
                         Adjust your portfolio allocation and lock in positions based on sentiment analysis
                       </CardDescription>
                     </CardHeader>
-                    \`\`\`
                     <CardContent className="space-y-6">
                       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         {stocks.map((stock) => {
