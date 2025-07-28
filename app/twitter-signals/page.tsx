@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Search, ChevronDown, ChevronUp, Calendar } from "lucide-react"
+import { Search, ChevronDown, ChevronUp, Calendar } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -386,257 +385,232 @@ export default function TwitterSignalsPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Twitter Signals</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">
-            View the latest Twitter sentiment signals for each stock.
-          </p>
+        {/* Header with premium styling */}
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-neuropol text-gradient mb-2">Twitter Signals</h1>
+          <p className="text-muted-foreground text-lg">Real-time sentiment analysis from Twitter conversations</p>
         </div>
-        {/* Summary Stats Card */}
-        <Card className="mb-6 sm:mb-8">
-          <CardContent className="p-4 sm:p-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-              <div className="flex flex-col">
-                <span className="text-muted-foreground text-xs sm:text-sm">Total Signals</span>
-                <span className="text-foreground text-xl sm:text-2xl font-bold">{summaryStats.total}</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-muted-foreground text-xs sm:text-sm">Analyzed Tweets</span>
-                <span className="text-foreground text-xl sm:text-2xl font-bold">
-                  {summaryStats.totalTweets.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-muted-foreground text-xs sm:text-sm">Win Rate %</span>
-                <span className="text-foreground text-xl sm:text-2xl font-bold">
-                  {summaryStats.winRate.toFixed(2)}%
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-muted-foreground text-xs sm:text-sm">Positive Signals</span>
-                <span className="text-green-600 text-xl sm:text-2xl font-bold">{summaryStats.positive}</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-muted-foreground text-xs sm:text-sm">Negative Signals</span>
-                <span className="text-red-600 text-xl sm:text-2xl font-bold">{summaryStats.negative}</span>
-              </div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-border flex justify-between items-center">
-              <span className="text-muted-foreground text-xs sm:text-sm">Last updated: {summaryStats.lastUpdate}</span>
-            </div>
-          </CardContent>
-        </Card>
-        {/* Filters and Controls */}
-        <Card className="mb-6 sm:mb-8">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
-              <div className="flex-1 min-w-[180px]">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    placeholder="Search by symbol..."
-                    className="pl-10 h-9 sm:h-10 text-sm"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Select value={sentimentFilter} onValueChange={setSentimentFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px] h-9 sm:h-10 text-sm">
-                    <SelectValue placeholder="Filter by sentiment" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Sentiments</SelectItem>
-                    <SelectItem value="positive">Positive</SelectItem>
-                    <SelectItem value="negative">Negative</SelectItem>
-                    <SelectItem value="neutral">Neutral</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-full sm:w-[180px] h-9 sm:h-10 text-sm">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="date">Date</SelectItem>
-                    <SelectItem value="symbol">Symbol</SelectItem>
-                    <SelectItem value="sentiment_score">Sentiment Score</SelectItem>
-                    <SelectItem value="tweets">Analyzed Tweets</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9 sm:h-10 sm:w-10"
-                  onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                >
-                  {sortOrder === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        {/* Table View */}
-        <Card className="mb-6 sm:mb-8">
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="flex justify-center items-center h-64">
-                <Loader2 className="animate-spin w-6 h-6 mr-2 text-primary" />
-                <span className="text-muted-foreground">Loading sentiment data...</span>
-              </div>
-            ) : error ? (
-              <div className="flex flex-col justify-center items-center h-64 space-y-4">
-                <p className="text-red-500 text-center">{error}</p>
-                <Button onClick={() => window.location.reload()} variant="outline">
-                  Retry
-                </Button>
-              </div>
-            ) : filteredData.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs sm:text-sm text-left">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="px-3 py-3 sm:px-6 sm:py-4 font-medium text-muted-foreground">Date</th>
-                      <th className="px-3 py-3 sm:px-6 sm:py-4 font-medium text-muted-foreground">Symbol</th>
-                      <th className="px-3 py-3 sm:px-6 sm:py-4 font-medium text-right text-muted-foreground">
-                        Analyzed Tweets
-                      </th>
-                      <th className="px-3 py-3 sm:px-6 sm:py-4 font-medium text-right text-muted-foreground">
-                        Sentiment Score
-                      </th>
-                      <th className="px-3 py-3 sm:px-6 sm:py-4 text-center font-medium text-muted-foreground">
-                        Sentiment
-                      </th>
-                      <th className="px-3 py-3 sm:px-6 sm:py-4 font-medium text-right text-muted-foreground">
-                        Entry Price
-                      </th>
-                      <th className="px-3 py-3 sm:px-6 sm:py-4 font-medium text-right text-muted-foreground">
-                        Current Price
-                      </th>
-                      <th className="px-3 py-3 sm:px-6 sm:py-4 font-medium text-right text-muted-foreground">P/L%</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredData.map((signal, i) => {
-                      const currentPrice = currentPrices[signal.comp_symbol] || 0
-                      const entryPrice = safeNumber(signal.entry_price)
-                      let pLPercentage: number | null = null
-                      let changeColorClass = ""
 
-                      if (safeString(signal.sentiment).toLowerCase() === "positive") {
-                        if (entryPrice !== 0) {
-                          pLPercentage = ((currentPrice - entryPrice) / entryPrice) * 100
-                        }
-                      } else if (safeString(signal.sentiment).toLowerCase() === "negative") {
-                        if (entryPrice !== 0) {
-                          pLPercentage = ((entryPrice - currentPrice) / entryPrice) * 100 // Inverted for profit
-                        }
+        {/* Summary Stats Card with glass morphism */}
+        <div className="glass-card rounded-2xl p-6 mb-8 shadow-glow-blue">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+            <div className="flex flex-col">
+              <span className="text-muted-foreground text-sm mb-1">Total Signals</span>
+              <span className="text-2xl font-bold text-gradient">{summaryStats.total}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-muted-foreground text-sm mb-1">Analyzed Tweets</span>
+              <span className="text-2xl font-bold text-gradient-secondary">
+                {summaryStats.totalTweets.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-muted-foreground text-sm mb-1">Win Rate</span>
+              <span className="text-2xl font-bold text-gradient-accent">{summaryStats.winRate.toFixed(2)}%</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-muted-foreground text-sm mb-1">Positive</span>
+              <span className="text-2xl font-bold text-green-400">{summaryStats.positive}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-muted-foreground text-sm mb-1">Negative</span>
+              <span className="text-2xl font-bold text-red-400">{summaryStats.negative}</span>
+            </div>
+          </div>
+          <div className="mt-6 pt-4 border-t border-white/10">
+            <span className="text-muted-foreground text-sm">Last updated: {summaryStats.lastUpdate}</span>
+          </div>
+        </div>
+
+        {/* Filters Card with premium styling */}
+        <div className="glass-card rounded-2xl p-6 mb-8">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search by symbol..."
+                  className="pl-10 bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Select value={sentimentFilter} onValueChange={setSentimentFilter}>
+                <SelectTrigger className="w-[180px] bg-white/5 border-white/10">
+                  <SelectValue placeholder="Filter by sentiment" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-white/10">
+                  <SelectItem value="all">All Sentiments</SelectItem>
+                  <SelectItem value="positive">Positive</SelectItem>
+                  <SelectItem value="negative">Negative</SelectItem>
+                  <SelectItem value="neutral">Neutral</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[180px] bg-white/5 border-white/10">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-white/10">
+                  <SelectItem value="date">Date</SelectItem>
+                  <SelectItem value="symbol">Symbol</SelectItem>
+                  <SelectItem value="sentiment_score">Sentiment Score</SelectItem>
+                  <SelectItem value="tweets">Analyzed Tweets</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="icon"
+                className="bg-white/5 border-white/10 hover:bg-white/10"
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+              >
+                {sortOrder === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Table Card with premium styling */}
+        <div className="glass-card rounded-2xl overflow-hidden mb-8 shadow-premium">
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="loading-spinner w-8 h-8 rounded-full mr-3"></div>
+              <span className="text-muted-foreground">Loading sentiment data...</span>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col justify-center items-center h-64 space-y-4">
+              <p className="text-red-400 text-center">{error}</p>
+              <Button onClick={() => window.location.reload()} className="btn-gradient-primary">
+                Retry
+              </Button>
+            </div>
+          ) : filteredData.length > 0 ? (
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/10 bg-white/5">
+                    <th className="px-6 py-4 text-left font-medium text-muted-foreground">Date</th>
+                    <th className="px-6 py-4 text-left font-medium text-muted-foreground">Symbol</th>
+                    <th className="px-6 py-4 text-right font-medium text-muted-foreground">Tweets</th>
+                    <th className="px-6 py-4 text-right font-medium text-muted-foreground">Score</th>
+                    <th className="px-6 py-4 text-center font-medium text-muted-foreground">Sentiment</th>
+                    <th className="px-6 py-4 text-right font-medium text-muted-foreground">Entry</th>
+                    <th className="px-6 py-4 text-right font-medium text-muted-foreground">Current</th>
+                    <th className="px-6 py-4 text-right font-medium text-muted-foreground">P/L%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredData.map((signal, i) => {
+                    const currentPrice = currentPrices[signal.comp_symbol] || 0
+                    const entryPrice = safeNumber(signal.entry_price)
+                    let pLPercentage: number | null = null
+                    let changeColorClass = ""
+
+                    if (safeString(signal.sentiment).toLowerCase() === "positive") {
+                      if (entryPrice !== 0) {
+                        pLPercentage = ((currentPrice - entryPrice) / entryPrice) * 100
                       }
-
-                      if (pLPercentage !== null) {
-                        changeColorClass = pLPercentage > 0 ? "text-green-600" : pLPercentage < 0 ? "text-red-600" : ""
+                    } else if (safeString(signal.sentiment).toLowerCase() === "negative") {
+                      if (entryPrice !== 0) {
+                        pLPercentage = ((entryPrice - currentPrice) / entryPrice) * 100
                       }
+                    }
 
-                      return (
-                        <tr
-                          key={`${signal.comp_symbol}-${signal.date}-${i}`}
-                          className="border-b border-border hover:bg-muted/50 transition-colors"
-                        >
-                          <td className="px-3 py-3 sm:px-6 sm:py-4 text-foreground">{signal.date}</td>
-                          <td className="px-3 py-3 sm:px-6 sm:py-4 font-medium text-foreground">
-                            {signal.comp_symbol}
-                          </td>
-                          <td className="px-3 py-3 sm:px-6 sm:py-4 text-right text-foreground">
-                            {signal.analyzed_tweets}
-                          </td>
-                          <td className="px-3 py-3 sm:px-6 sm:py-4 text-right text-foreground">
-                            {safeNumber(signal.sentiment_score).toFixed(2)}
-                          </td>
-                          <td className="px-3 py-3 sm:px-6 sm:py-4 text-center">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-xs font-medium inline-block
-                                ${
-                                  safeString(signal.sentiment).toLowerCase() === "positive"
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-800"
-                                    : safeString(signal.sentiment).toLowerCase() === "negative"
-                                      ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-800"
-                                      : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
-                                }`}
-                            >
-                              {signal.sentiment}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3 sm:px-6 sm:py-4 text-right text-foreground">
-                            ${safeNumber(signal.entry_price).toFixed(2)}
-                          </td>
-                          <td className="px-3 py-3 sm:px-6 sm:py-4 text-right text-foreground">
-                            {pricesLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin inline" />
-                            ) : (
-                              `$${(currentPrices[signal.comp_symbol] || 0).toFixed(2)}`
-                            )}
-                          </td>
-                          <td className={`px-3 py-3 sm:px-6 sm:py-4 text-right font-medium ${changeColorClass}`}>
-                            {pLPercentage !== null ? `${pLPercentage.toFixed(2)}%` : "N/A"}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="flex justify-center items-center h-64">
-                <p className="text-muted-foreground">No Twitter signals found matching your criteria.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        {/* Signal Source Comparison */}
-        <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-              <CardTitle className="text-lg sm:text-xl">Signal Source Comparison</CardTitle>
+                    if (pLPercentage !== null) {
+                      changeColorClass = pLPercentage > 0 ? "text-green-400" : pLPercentage < 0 ? "text-red-400" : ""
+                    }
+
+                    return (
+                      <tr
+                        key={`${signal.comp_symbol}-${signal.date}-${i}`}
+                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                      >
+                        <td className="px-6 py-4 text-foreground">{signal.date}</td>
+                        <td className="px-6 py-4 font-medium text-gradient">{signal.comp_symbol}</td>
+                        <td className="px-6 py-4 text-right text-foreground">{signal.analyzed_tweets}</td>
+                        <td className="px-6 py-4 text-right text-foreground">
+                          {safeNumber(signal.sentiment_score).toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium
+                            ${
+                              safeString(signal.sentiment).toLowerCase() === "positive"
+                                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                : safeString(signal.sentiment).toLowerCase() === "negative"
+                                  ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                  : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                            }`}
+                          >
+                            {signal.sentiment}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right text-foreground">
+                          ${safeNumber(signal.entry_price).toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 text-right text-foreground">
+                          {pricesLoading ? (
+                            <div className="loading-spinner w-4 h-4 rounded-full inline-block"></div>
+                          ) : (
+                            `$${(currentPrices[signal.comp_symbol] || 0).toFixed(2)}`
+                          )}
+                        </td>
+                        <td className={`px-6 py-4 text-right font-medium ${changeColorClass}`}>
+                          {pLPercentage !== null ? `${pLPercentage.toFixed(2)}%` : "N/A"}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
-            <CardDescription className="text-sm sm:text-base">
-              Compare Twitter with Google Trends and News signals
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <div className="h-[250px] sm:h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={comparisonData} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis
-                    dataKey="symbol"
-                    stroke="hsl(var(--muted-foreground))"
-                    className="fill-muted-foreground text-xs sm:text-sm"
-                  />
-                  <YAxis
-                    stroke="hsl(var(--muted-foreground))"
-                    className="fill-muted-foreground text-xs sm:text-sm"
-                    domain={[-1, 1]}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--background))",
-                      borderColor: "hsl(var(--border))",
-                      borderRadius: "0.375rem",
-                      color: "hsl(var(--foreground))",
-                      fontSize: "0.875rem", // text-sm
-                    }}
-                    formatter={(value: any) => [Number(value).toFixed(2), "Sentiment Score"]}
-                  />
-                  <Legend wrapperStyle={{ fontSize: "0.75rem" }} /> {/* text-xs */}
-                  <Bar dataKey="googleTrends" name="Google Trends" fill="#10b981" />
-                  <Bar dataKey="twitter" name="Twitter" fill="#3b82f6" />
-                  <Bar dataKey="news" name="News" fill="#f59e0b" />
-                </BarChart>
-              </ResponsiveContainer>
+          ) : (
+            <div className="flex justify-center items-center h-64">
+              <p className="text-muted-foreground">No Twitter signals found matching your criteria.</p>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
+
+        {/* Chart Card with premium styling */}
+        <div className="glass-card rounded-2xl p-6 shadow-glow-purple">
+          <div className="flex items-center gap-3 mb-6">
+            <Calendar className="h-5 w-5 text-blue-400" />
+            <h2 className="text-xl font-neuropol text-gradient">Signal Source Comparison</h2>
+          </div>
+          <p className="text-muted-foreground mb-6">Compare Twitter with Google Trends and News signals</p>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={comparisonData} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis
+                  dataKey="symbol"
+                  stroke="hsl(var(--muted-foreground))"
+                  className="fill-muted-foreground text-sm"
+                />
+                <YAxis
+                  stroke="hsl(var(--muted-foreground))"
+                  className="fill-muted-foreground text-sm"
+                  domain={[-1, 1]}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "rgba(0,0,0,0.8)",
+                    borderColor: "rgba(255,255,255,0.1)",
+                    borderRadius: "12px",
+                    color: "white",
+                    backdropFilter: "blur(20px)",
+                  }}
+                  formatter={(value: any) => [Number(value).toFixed(2), "Sentiment Score"]}
+                />
+                <Legend />
+                <Bar dataKey="googleTrends" name="Google Trends" fill="#10b981" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="twitter" name="Twitter" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="news" name="News" fill="#f59e0b" radius={[2, 2, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
     </div>
   )
