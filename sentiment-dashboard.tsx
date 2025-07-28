@@ -964,701 +964,686 @@ const SentimentDashboard = () => {
       {/* Background gradient overlay */}
       <div className="fixed inset-0 bg-gradient-to-br from-background via-background to-muted/20 pointer-events-none" />
 
-      <div className="relative z-10 max-w-7xl mx-auto p-6">
-        {isLoading && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="glass-morphism p-8 rounded-2xl shadow-premium flex items-center gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <span className="text-foreground font-medium text-lg">
-                {isLoadingBaskets ? "Loading baskets..." : "Processing..."}
-              </span>
+      {isLoading && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="glass-morphism p-8 rounded-2xl shadow-premium flex items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="text-foreground font-medium text-lg">
+              {isLoadingBaskets ? "Loading baskets..." : "Processing..."}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {selectedStock ? (
+        <StockDetailView stock={selectedStock} onBack={() => setSelectedStock(null)} timePeriod={timePeriod} />
+      ) : (
+        <div className="relative z-10 max-w-7xl mx-auto p-6">
+          {" "}
+          {/* This div now directly contains the main content */}
+          {/* Enhanced Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
+            <div className="space-y-2">
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gradient">
+                Sentiment Analysis Dashboard
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Track market sentiment across multiple data sources with AI-powered insights
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <Badge className={`${overallSentiment.color} px-4 py-2 text-white font-medium text-sm shadow-lg`}>
+                {overallSentiment.text}
+              </Badge>
+              <Tabs defaultValue={timePeriod} onValueChange={setTimePeriod} className="w-[220px]">
+                <TabsList className="grid grid-cols-3 bg-card/50 backdrop-blur-sm border border-border/50">
+                  <TabsTrigger
+                    value="1d"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  >
+                    1D
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="1w"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  >
+                    1W
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="1m"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  >
+                    1M
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
           </div>
-        )}
-
-        {selectedStock ? (
-          <StockDetailView stock={selectedStock} onBack={() => setSelectedStock(null)} timePeriod={timePeriod} />
-        ) : (
-          <>
-            {/* Enhanced Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
-              <div className="space-y-2">
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gradient">
-                  Sentiment Analysis Dashboard
-                </h1>
-                <p className="text-muted-foreground text-lg">
-                  Track market sentiment across multiple data sources with AI-powered insights
-                </p>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Badge className={`${overallSentiment.color} px-4 py-2 text-white font-medium text-sm shadow-lg`}>
-                  {overallSentiment.text}
-                </Badge>
-                <Tabs defaultValue={timePeriod} onValueChange={setTimePeriod} className="w-[220px]">
-                  <TabsList className="grid grid-cols-3 bg-card/50 backdrop-blur-sm border border-border/50">
-                    <TabsTrigger
-                      value="1d"
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                    >
-                      1D
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="1w"
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                    >
-                      1W
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="1m"
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                    >
-                      1M
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
+          {/* Enhanced Inputs Section */}
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">Portfolio Configuration</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-10 w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
+                onClick={() => toggleSection("inputs")}
+              >
+                {sectionsCollapsed.inputs ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
+              </Button>
             </div>
 
-            {/* Enhanced Inputs Section */}
-            <div className="mb-10">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground">Portfolio Configuration</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-10 w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
-                  onClick={() => toggleSection("inputs")}
-                >
-                  {sectionsCollapsed.inputs ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
-                </Button>
-              </div>
-
-              {!sectionsCollapsed.inputs && (
-                <>
-                  {/* Enhanced Stock Allocation Card */}
-                  <Card className="mb-8 glass-morphism border-border/50 shadow-premium">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-2">
-                          <CardTitle className="flex items-center gap-3 text-xl md:text-2xl font-bold">
-                            <div className="p-2 rounded-lg bg-gradient-primary">
-                              <BarChart3 className="h-6 w-6 text-white" />
-                            </div>
-                            Stock Allocation
-                          </CardTitle>
-                          <CardDescription className="text-base text-muted-foreground">
-                            Adjust your portfolio allocation and lock in positions based on sentiment analysis
-                          </CardDescription>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-10 gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
-                          onClick={() =>
-                            basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsStockSelectorOpen(true)
-                          }
-                        >
-                          <Edit2 className="h-4 w-4" />
-                          Edit Stocks
-                        </Button>
-                      </div>
-                    </CardHeader>
-
-                    <CardContent className="space-y-6">
-                      {stocks.map((stock) => {
-                        const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
-                        return (
-                          <div
-                            key={stock.id}
-                            className="space-y-4 p-4 rounded-xl bg-gradient-card border border-border/30"
-                          >
-                            <div className="flex items-center justify-between gap-4">
-                              <div className="flex items-center gap-4 flex-1">
-                                <div className="min-w-[4rem] font-bold text-lg text-foreground">{stock.symbol}</div>
-                                <div className="text-sm text-muted-foreground truncate flex-1">{stock.name}</div>
-                              </div>
-                              <div className="flex items-center gap-4 flex-shrink-0">
-                                <div className="text-lg font-bold text-foreground min-w-[4rem] text-right">
-                                  {stock.allocation}%
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-10 w-10 rounded-full hover:bg-accent/50 transition-all duration-200"
-                                  onClick={() => handleToggleLock(stock.id)}
-                                  disabled={basketLocked}
-                                >
-                                  {stock.locked ? (
-                                    <Lock className="h-5 w-5 text-amber-400" />
-                                  ) : (
-                                    <Unlock className="h-5 w-5 text-muted-foreground" />
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-
-                            {/* Enhanced Allocation Slider */}
-                            <div className="space-y-3">
-                              <div className="relative">
-                                <Slider
-                                  value={[stock.allocation]}
-                                  max={100}
-                                  step={1}
-                                  disabled={stock.locked || basketLocked}
-                                  onValueChange={(value) => handleAllocationChange(stock.id, value[0])}
-                                  className="py-2"
-                                />
-                                {/* Sentiment-based overlay */}
-                                <div
-                                  className={`absolute top-1/2 left-0 h-2 rounded-full pointer-events-none transform -translate-y-1/2 transition-all duration-500 ${
-                                    stockData.compositeSentiment > 0.3
-                                      ? "bg-gradient-to-r from-emerald-400/30 to-emerald-500/30"
-                                      : stockData.compositeSentiment > -0.3
-                                        ? "bg-gradient-to-r from-amber-400/30 to-amber-500/30"
-                                        : "bg-gradient-to-r from-red-400/30 to-red-500/30"
-                                  }`}
-                                  style={{ width: `${stock.allocation}%` }}
-                                />
-                              </div>
-                              {stock.locked && (
-                                <div className="text-sm text-amber-400 flex items-center gap-2 bg-amber-400/10 px-3 py-2 rounded-lg">
-                                  <Lock className="h-4 w-4" />
-                                  Position locked at {stock.allocation}%
-                                </div>
-                              )}
-                            </div>
+            {!sectionsCollapsed.inputs && (
+              <>
+                {/* Enhanced Stock Allocation Card */}
+                <Card className="mb-8 glass-morphism border-border/50 shadow-premium">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-2">
+                        <CardTitle className="flex items-center gap-3 text-xl md:text-2xl font-bold">
+                          <div className="p-2 rounded-lg bg-gradient-primary">
+                            <BarChart3 className="h-6 w-6 text-white" />
                           </div>
-                        )
-                      })}
-                    </CardContent>
-
-                    <CardFooter className="flex flex-wrap justify-between border-t border-border/30 pt-6 gap-4">
-                      <div className="flex items-center gap-6">
-                        <div className="text-sm text-muted-foreground">
-                          <span className="font-bold text-foreground text-lg">
-                            {stocks.filter((s) => s.locked).length}
-                          </span>{" "}
-                          of {stocks.length} positions locked
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={handleResetAllocations}
-                          className="gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
-                          disabled={basketLocked}
-                        >
-                          <RotateCw className="h-4 w-4" />
-                          Reset
-                        </Button>
+                          Stock Allocation
+                        </CardTitle>
+                        <CardDescription className="text-base text-muted-foreground">
+                          Adjust your portfolio allocation and lock in positions based on sentiment analysis
+                        </CardDescription>
                       </div>
                       <Button
                         size="sm"
-                        onClick={() =>
-                          basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsAllocationEditorOpen(true)
-                        }
-                        disabled={basketLocked}
-                        className="btn-gradient-primary"
+                        variant="outline"
+                        className="h-10 gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
+                        onClick={() => (basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsStockSelectorOpen(true))}
                       >
-                        Adjust Allocations
+                        <Edit2 className="h-4 w-4" />
+                        Edit Stocks
                       </Button>
-                    </CardFooter>
-                  </Card>
+                    </div>
+                  </CardHeader>
 
-                  {/* Enhanced Source Weighting and Correlation Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    {/* Enhanced Source Weighting Controls */}
-                    <Card className="glass-morphism border-border/50 shadow-premium">
-                      <CardHeader className="pb-4">
-                        <CardTitle className="flex items-center gap-3 text-xl font-bold">
-                          <div className="p-2 rounded-lg bg-gradient-secondary">
-                            <Activity className="h-6 w-6 text-white" />
-                          </div>
-                          Source Weighting
-                        </CardTitle>
-                        <CardDescription className="text-base text-muted-foreground">
-                          Adjust the influence of each data source on the composite sentiment
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-8">
-                        <div className="space-y-6">
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <label className="text-sm font-medium text-muted-foreground">Twitter Sentiment</label>
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold bg-gradient-primary text-transparent bg-clip-text px-3 py-1 rounded-lg bg-card/50">
-                                  {(weights.twitter * 100).toFixed(0)}%
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
-                                  onClick={() => toggleWeightLock("twitter")}
-                                  disabled={basketLocked}
-                                >
-                                  {weightLocks.twitter ? (
-                                    <Lock className="h-4 w-4 text-amber-400" />
-                                  ) : (
-                                    <Unlock className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </Button>
-                              </div>
+                  <CardContent className="space-y-6">
+                    {stocks.map((stock) => {
+                      const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
+                      return (
+                        <div
+                          key={stock.id}
+                          className="space-y-4 p-4 rounded-xl bg-gradient-card border border-border/30"
+                        >
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4 flex-1">
+                              <div className="min-w-[4rem] font-bold text-lg text-foreground">{stock.symbol}</div>
+                              <div className="text-sm text-muted-foreground truncate flex-1">{stock.name}</div>
                             </div>
-                            <Slider
-                              defaultValue={[weights.twitter]}
-                              value={[weights.twitter]}
-                              max={1}
-                              step={0.05}
-                              onValueChange={(value) => handleWeightChange("twitter", value)}
-                              className="py-2"
-                              disabled={basketLocked}
-                            />
+                            <div className="flex items-center gap-4 flex-shrink-0">
+                              <div className="text-lg font-bold text-foreground min-w-[4rem] text-right">
+                                {stock.allocation}%
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 rounded-full hover:bg-accent/50 transition-all duration-200"
+                                onClick={() => handleToggleLock(stock.id)}
+                                disabled={basketLocked}
+                              >
+                                {stock.locked ? (
+                                  <Lock className="h-5 w-5 text-amber-400" />
+                                ) : (
+                                  <Unlock className="h-5 w-5 text-muted-foreground" />
+                                )}
+                              </Button>
+                            </div>
                           </div>
 
+                          {/* Enhanced Allocation Slider */}
                           <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <label className="text-sm font-medium text-muted-foreground">Google Trends</label>
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold bg-gradient-secondary text-transparent bg-clip-text px-3 py-1 rounded-lg bg-card/50">
-                                  {(weights.googleTrends * 100).toFixed(0)}%
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
-                                  onClick={() => toggleWeightLock("googleTrends")}
-                                  disabled={basketLocked}
-                                >
-                                  {weightLocks.googleTrends ? (
-                                    <Lock className="h-4 w-4 text-amber-400" />
-                                  ) : (
-                                    <Unlock className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </Button>
-                              </div>
+                            <div className="relative">
+                              <Slider
+                                value={[stock.allocation]}
+                                max={100}
+                                step={1}
+                                disabled={stock.locked || basketLocked}
+                                onValueChange={(value) => handleAllocationChange(stock.id, value[0])}
+                                className="py-2"
+                              />
+                              {/* Sentiment-based overlay */}
+                              <div
+                                className={`absolute top-1/2 left-0 h-2 rounded-full pointer-events-none transform -translate-y-1/2 transition-all duration-500 ${
+                                  stockData.compositeSentiment > 0.3
+                                    ? "bg-gradient-to-r from-emerald-400/30 to-emerald-500/30"
+                                    : stockData.compositeSentiment > -0.3
+                                      ? "bg-gradient-to-r from-amber-400/30 to-amber-500/30"
+                                      : "bg-gradient-to-r from-red-400/30 to-red-500/30"
+                                }`}
+                                style={{ width: `${stock.allocation}%` }}
+                              />
                             </div>
-                            <Slider
-                              defaultValue={[weights.googleTrends]}
-                              value={[weights.googleTrends]}
-                              max={1}
-                              step={0.05}
-                              onValueChange={(value) => handleWeightChange("googleTrends", value)}
-                              className="py-2"
-                              disabled={basketLocked}
-                            />
-                          </div>
-
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <label className="text-sm font-medium text-muted-foreground">News Sentiment</label>
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-bold bg-gradient-accent text-transparent bg-clip-text px-3 py-1 rounded-lg bg-card/50">
-                                  {(weights.news * 100).toFixed(0)}%
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
-                                  onClick={() => toggleWeightLock("news")}
-                                  disabled={basketLocked}
-                                >
-                                  {weightLocks.news ? (
-                                    <Lock className="h-4 w-4 text-amber-400" />
-                                  ) : (
-                                    <Unlock className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </Button>
+                            {stock.locked && (
+                              <div className="text-sm text-amber-400 flex items-center gap-2 bg-amber-400/10 px-3 py-2 rounded-lg">
+                                <Lock className="h-4 w-4" />
+                                Position locked at {stock.allocation}%
                               </div>
-                            </div>
-                            <Slider
-                              defaultValue={[weights.news]}
-                              value={[weights.news]}
-                              max={1}
-                              step={0.05}
-                              onValueChange={(value) => handleWeightChange("news", value)}
-                              className="py-2"
-                              disabled={basketLocked}
-                            />
+                            )}
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                      )
+                    })}
+                  </CardContent>
 
-                    {/* Enhanced Sentiment-Performance Correlation */}
-                    <CorrelationChart stocks={stocks} weights={weights} />
-                  </div>
+                  <CardFooter className="flex flex-wrap justify-between border-t border-border/30 pt-6 gap-4">
+                    <div className="flex items-center gap-6">
+                      <div className="text-sm text-muted-foreground">
+                        <span className="font-bold text-foreground text-lg">
+                          {stocks.filter((s) => s.locked).length}
+                        </span>{" "}
+                        of {stocks.length} positions locked
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleResetAllocations}
+                        className="gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
+                        disabled={basketLocked}
+                      >
+                        <RotateCw className="h-4 w-4" />
+                        Reset
+                      </Button>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        basketLocked ? setIsUnlockBasketAlertOpen(true) : setIsAllocationEditorOpen(true)
+                      }
+                      disabled={basketLocked}
+                      className="btn-gradient-primary"
+                    >
+                      Adjust Allocations
+                    </Button>
+                  </CardFooter>
+                </Card>
 
-                  {/* Enhanced Basket Management */}
-                  <Card className="mb-8 glass-morphism border-border/50 shadow-premium">
+                {/* Enhanced Source Weighting and Correlation Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                  {/* Enhanced Source Weighting Controls */}
+                  <Card className="glass-morphism border-border/50 shadow-premium">
                     <CardHeader className="pb-4">
                       <CardTitle className="flex items-center gap-3 text-xl font-bold">
-                        <div className="p-2 rounded-lg bg-gradient-accent">
-                          <BarChart3 className="h-6 w-6 text-white" />
+                        <div className="p-2 rounded-lg bg-gradient-secondary">
+                          <Activity className="h-6 w-6 text-white" />
                         </div>
-                        Basket Management
+                        Source Weighting
                       </CardTitle>
                       <CardDescription className="text-base text-muted-foreground">
-                        Select an existing basket or create a new one to track your portfolio performance
+                        Adjust the influence of each data source on the composite sentiment
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="flex flex-col lg:flex-row gap-4 w-full">
-                        {/* Enhanced Basket Dropdown */}
-                        <div className="flex-1">
-                          <Select value={selectedBasketId || ""} onValueChange={handleBasketChange}>
-                            <SelectTrigger className="bg-card/50 border-border/50 h-12 text-base">
-                              <SelectValue placeholder="Select a basket" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-card/95 backdrop-blur-sm border-border/50">
-                              {allBaskets &&
-                                allBaskets.map((basket) => (
-                                  <SelectItem key={basket.id} value={basket.id} className="text-base">
-                                    <div className="flex items-center justify-between w-full">
-                                      <span>{basket.name}</span>
-                                      {basket.is_locked && <Lock className="h-4 w-4 text-amber-400 ml-3" />}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Enhanced Action Buttons */}
-                        <div className="flex flex-wrap gap-3">
-                          <Button
-                            variant="outline"
-                            onClick={() => saveCurrentBasket(false)}
-                            disabled={!basketId || isLoading || basketLocked}
-                            className="gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
-                          >
-                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                            Save Changes
-                          </Button>
-
-                          <Button
-                            variant="destructive"
-                            onClick={() => handleDeleteBasket()}
-                            disabled={!basketId || isLoading || basketLocked}
-                            className="gap-2 bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all duration-200"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                          </Button>
-
-                          <Button
-                            onClick={() => setIsAddBasketModalOpen(true)}
-                            disabled={isLoading}
-                            className="gap-2 btn-gradient-primary"
-                          >
-                            <Plus className="h-4 w-4" />
-                            New Basket
-                          </Button>
-
-                          {basketId && (
-                            <Button
-                              variant={basketLocked ? "outline" : "secondary"}
-                              onClick={() => (basketLocked ? handleUnlockBasket() : saveCurrentBasket(true))}
-                              disabled={isLoading}
-                              className={`gap-2 transition-all duration-200 ${
-                                basketLocked
-                                  ? "bg-amber-500/20 border-amber-500/30 text-amber-400 hover:bg-amber-500/30"
-                                  : "btn-gradient-secondary"
-                              }`}
-                            >
-                              {basketLocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-                              {basketLocked ? "Unlock" : "Lock"}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Enhanced Current Basket Info */}
-                      {basketId && (
-                        <div className="mt-6 pt-6 border-t border-border/30">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">Current Basket:</span>
-                              <div className="font-bold text-lg text-foreground">{basketName}</div>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">Total Stocks:</span>
-                              <div className="font-bold text-lg text-foreground">{stocks.length}</div>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">Status:</span>
-                              <div className="font-medium">
-                                {basketLocked ? (
-                                  <Badge
-                                    variant="outline"
-                                    className="border-amber-400/50 text-amber-400 bg-amber-400/10"
-                                  >
-                                    <Lock className="h-3 w-3 mr-1" />
-                                    Locked
-                                  </Badge>
-                                ) : (
-                                  <Badge
-                                    variant="outline"
-                                    className="border-emerald-400/50 text-emerald-400 bg-emerald-400/10"
-                                  >
-                                    <Unlock className="h-3 w-3 mr-1" />
-                                    Editable
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">Created:</span>
-                              <div className="font-medium text-foreground">{formatDate(basketDates.created)}</div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </>
-              )}
-            </div>
-
-            {/* Conditional Enhanced Insights and Performance Tracking Sections */}
-            {basketLocked ? (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-10">
-                {/* Enhanced Insights Section */}
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl md:text-3xl font-bold text-foreground">Market Insights</h2>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-10 w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
-                      onClick={() => toggleSection("insights")}
-                    >
-                      {sectionsCollapsed.insights ? (
-                        <ChevronDown className="h-5 w-5" />
-                      ) : (
-                        <ChevronUp className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </div>
-
-                  {!sectionsCollapsed.insights && (
-                    <div className="grid grid-cols-1 gap-6">
-                      {stockPerformanceData &&
-                        stockPerformanceData.map((stock) => (
-                          <Card
-                            key={stock.id}
-                            className="glass-morphism border-border/50 shadow-premium cursor-pointer hover:shadow-glow-blue transition-all duration-300 hover:scale-[1.02]"
-                            onClick={() => handleStockClick(stock)}
-                          >
-                            <CardHeader className="pb-3">
-                              <div className="flex justify-between items-start">
-                                <div className="space-y-1">
-                                  <CardTitle className="text-xl font-bold text-foreground">{stock.symbol}</CardTitle>
-                                  <CardDescription className="text-sm text-muted-foreground">
-                                    {stock.name}
-                                  </CardDescription>
-                                </div>
-                                <div className="text-right space-y-1">
-                                  <div className="text-xl font-bold text-foreground">${stock.price}</div>
-                                  <div className={`text-sm font-medium ${getPerformanceColor(stock.change)}`}>
-                                    {stock.change > 0 ? "+" : ""}
-                                    {stock.change.toFixed(2)}%
-                                  </div>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                                <span className="text-sm font-medium text-muted-foreground">Portfolio Weight</span>
-                                <span className="font-bold text-lg text-foreground">{stock.allocation}%</span>
-                              </div>
-                              <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                                <span className="text-sm font-medium text-muted-foreground">Sentiment Score</span>
-                                <div className="flex items-center gap-2">
-                                  {getSentimentIcon(stock.compositeSentiment)}
-                                  <span className={`text-sm font-bold ${getSentimentColor(stock.compositeSentiment)}`}>
-                                    {stock.compositeSentiment.toFixed(2)}
-                                  </span>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Enhanced Performance Tracking Section */}
-                <div id="tracking-section" className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl md:text-3xl font-bold text-foreground">Performance Tracking</h2>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-10 w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
-                      onClick={() => toggleSection("tracking")}
-                    >
-                      {sectionsCollapsed.tracking ? (
-                        <ChevronDown className="h-5 w-5" />
-                      ) : (
-                        <ChevronUp className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </div>
-
-                  {!sectionsCollapsed.tracking && (
-                    <Card className="glass-morphism border-border/50 shadow-premium">
-                      <CardHeader className="pb-4">
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-2">
-                            <CardTitle className="flex items-center gap-3 text-xl font-bold">
-                              <div className="p-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-400">
-                                <Lock className="h-6 w-6 text-white" />
-                              </div>
-                              Locked Basket: {basketName}
-                            </CardTitle>
-                            <CardDescription className="text-base text-muted-foreground">
-                              This basket is locked for performance tracking. Unlock to make changes.
-                            </CardDescription>
-                          </div>
-                          <Button
-                            variant="outline"
-                            onClick={handleUnlockBasket}
-                            disabled={isLoading}
-                            className="gap-2 bg-amber-500/20 border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-all duration-200"
-                          >
-                            <Unlock className="h-4 w-4" />
-                            Unlock Basket
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div className="text-center p-4 rounded-xl bg-gradient-card border border-border/30">
-                            <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">
-                              {stocks.reduce((sum, stock) => sum + stock.allocation, 0)}%
-                            </div>
-                            <div className="text-sm text-muted-foreground">Total Allocation</div>
-                          </div>
-                          <div className="text-center p-4 rounded-xl bg-gradient-card border border-border/30">
-                            <div className="text-2xl md:text-3xl font-bold text-emerald-400 mb-1">+2.4%</div>
-                            <div className="text-sm text-muted-foreground">Performance Since Lock</div>
-                          </div>
-                          <div className="text-center p-4 rounded-xl bg-gradient-card border border-border/30">
-                            <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">{stocks.length}</div>
-                            <div className="text-sm text-muted-foreground">Stocks in Basket</div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                            <span className="text-sm font-medium text-muted-foreground">Created:</span>
-                            <span className="font-medium text-foreground">{formatDate(basketDates.created)}</span>
-                          </div>
-                          <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                            <span className="text-sm font-medium text-muted-foreground">Last Updated:</span>
-                            <span className="font-medium text-foreground">{formatDate(basketDates.updated)}</span>
-                          </div>
-                          <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
-                            <span className="text-sm font-medium text-muted-foreground">Locked Date:</span>
+                    <CardContent className="space-y-8">
+                      <div className="space-y-6">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <label className="text-sm font-medium text-muted-foreground">Twitter Sentiment</label>
                             <div className="flex items-center gap-3">
-                              <span className="font-medium text-foreground">{formatDate(basketDates.locked)}</span>
+                              <span className="text-sm font-bold bg-gradient-primary text-transparent bg-clip-text px-3 py-1 rounded-lg bg-card/50">
+                                {(weights.twitter * 100).toFixed(0)}%
+                              </span>
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
-                                onClick={() => setIsEditingLockDate(true)}
+                                onClick={() => toggleWeightLock("twitter")}
+                                disabled={basketLocked}
                               >
-                                <Edit className="h-4 w-4" />
+                                {weightLocks.twitter ? (
+                                  <Lock className="h-4 w-4 text-amber-400" />
+                                ) : (
+                                  <Unlock className="h-4 w-4 text-muted-foreground" />
+                                )}
                               </Button>
                             </div>
                           </div>
+                          <Slider
+                            defaultValue={[weights.twitter]}
+                            value={[weights.twitter]}
+                            max={1}
+                            step={0.05}
+                            onValueChange={(value) => handleWeightChange("twitter", value)}
+                            className="py-2"
+                            disabled={basketLocked}
+                          />
                         </div>
 
-                        <Popover open={isEditingLockDate} onOpenChange={setIsEditingLockDate}>
-                          <PopoverTrigger asChild>
-                            <div />
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className="w-auto p-0 bg-card/95 backdrop-blur-sm border-border/50"
-                            align="end"
-                          >
-                            <Calendar
-                              mode="single"
-                              selected={basketDates.locked || undefined}
-                              onSelect={(date) => {
-                                if (date) {
-                                  handleUpdateLockDate(date)
-                                  setIsEditingLockDate(false)
-                                }
-                              }}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </div>
-            ) : null}
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <label className="text-sm font-medium text-muted-foreground">Google Trends</label>
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm font-bold bg-gradient-secondary text-transparent bg-clip-text px-3 py-1 rounded-lg bg-card/50">
+                                {(weights.googleTrends * 100).toFixed(0)}%
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
+                                onClick={() => toggleWeightLock("googleTrends")}
+                                disabled={basketLocked}
+                              >
+                                {weightLocks.googleTrends ? (
+                                  <Lock className="h-4 w-4 text-amber-400" />
+                                ) : (
+                                  <Unlock className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                          <Slider
+                            defaultValue={[weights.googleTrends]}
+                            value={[weights.googleTrends]}
+                            max={1}
+                            step={0.05}
+                            onValueChange={(value) => handleWeightChange("googleTrends", value)}
+                            className="py-2"
+                            disabled={basketLocked}
+                          />
+                        </div>
 
-            {/* Enhanced Footer */}
-            <div className="mt-12 pt-8 border-t border-border/30 text-center">
-              <p className="text-muted-foreground text-sm">
-                © 2025 Sentiment Analysis Dashboard. Data refreshes every 15 minutes.
-              </p>
-              <div className="mt-2 flex justify-center items-center gap-2">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                <span className="text-xs text-emerald-400 font-medium">Live Data</span>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <label className="text-sm font-medium text-muted-foreground">News Sentiment</label>
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm font-bold bg-gradient-accent text-transparent bg-clip-text px-3 py-1 rounded-lg bg-card/50">
+                                {(weights.news * 100).toFixed(0)}%
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
+                                onClick={() => toggleWeightLock("news")}
+                                disabled={basketLocked}
+                              >
+                                {weightLocks.news ? (
+                                  <Lock className="h-4 w-4 text-amber-400" />
+                                ) : (
+                                  <Unlock className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                          <Slider
+                            defaultValue={[weights.news]}
+                            value={[weights.news]}
+                            max={1}
+                            step={0.05}
+                            onValueChange={(value) => handleWeightChange("news", value)}
+                            className="py-2"
+                            disabled={basketLocked}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Enhanced Sentiment-Performance Correlation */}
+                  <CorrelationChart stocks={stocks} weights={weights} />
+                </div>
+
+                {/* Enhanced Basket Management */}
+                <Card className="mb-8 glass-morphism border-border/50 shadow-premium">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-3 text-xl font-bold">
+                      <div className="p-2 rounded-lg bg-gradient-accent">
+                        <BarChart3 className="h-6 w-6 text-white" />
+                      </div>
+                      Basket Management
+                    </CardTitle>
+                    <CardDescription className="text-base text-muted-foreground">
+                      Select an existing basket or create a new one to track your portfolio performance
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex flex-col lg:flex-row gap-4 w-full">
+                      {/* Enhanced Basket Dropdown */}
+                      <div className="flex-1">
+                        <Select value={selectedBasketId || ""} onValueChange={handleBasketChange}>
+                          <SelectTrigger className="bg-card/50 border-border/50 h-12 text-base">
+                            <SelectValue placeholder="Select a basket" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-card/95 backdrop-blur-sm border-border/50">
+                            {allBaskets &&
+                              allBaskets.map((basket) => (
+                                <SelectItem key={basket.id} value={basket.id} className="text-base">
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>{basket.name}</span>
+                                    {basket.is_locked && <Lock className="h-4 w-4 text-amber-400 ml-3" />}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Enhanced Action Buttons */}
+                      <div className="flex flex-wrap gap-3">
+                        <Button
+                          variant="outline"
+                          onClick={() => saveCurrentBasket(false)}
+                          disabled={!basketId || isLoading || basketLocked}
+                          className="gap-2 bg-card/50 border-border/50 hover:bg-accent/50 transition-all duration-200"
+                        >
+                          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                          Save Changes
+                        </Button>
+
+                        <Button
+                          variant="destructive"
+                          onClick={() => handleDeleteBasket()}
+                          disabled={!basketId || isLoading || basketLocked}
+                          className="gap-2 bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all duration-200"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </Button>
+
+                        <Button
+                          onClick={() => setIsAddBasketModalOpen(true)}
+                          disabled={isLoading}
+                          className="gap-2 btn-gradient-primary"
+                        >
+                          <Plus className="h-4 w-4" />
+                          New Basket
+                        </Button>
+
+                        {basketId && (
+                          <Button
+                            variant={basketLocked ? "outline" : "secondary"}
+                            onClick={() => (basketLocked ? handleUnlockBasket() : saveCurrentBasket(true))}
+                            disabled={isLoading}
+                            className={`gap-2 transition-all duration-200 ${
+                              basketLocked
+                                ? "bg-amber-500/20 border-amber-500/30 text-amber-400 hover:bg-amber-500/30"
+                                : "btn-gradient-secondary"
+                            }`}
+                          >
+                            {basketLocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                            {basketLocked ? "Unlock" : "Lock"}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Enhanced Current Basket Info */}
+                    {basketId && (
+                      <div className="mt-6 pt-6 border-t border-border/30">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
+                          <div className="space-y-1">
+                            <span className="text-muted-foreground">Current Basket:</span>
+                            <div className="font-bold text-lg text-foreground">{basketName}</div>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-muted-foreground">Total Stocks:</span>
+                            <div className="font-bold text-lg text-foreground">{stocks.length}</div>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-muted-foreground">Status:</span>
+                            <div className="font-medium">
+                              {basketLocked ? (
+                                <Badge variant="outline" className="border-amber-400/50 text-amber-400 bg-amber-400/10">
+                                  <Lock className="h-3 w-3 mr-1" />
+                                  Locked
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="border-emerald-400/50 text-emerald-400 bg-emerald-400/10"
+                                >
+                                  <Unlock className="h-3 w-3 mr-1" />
+                                  Editable
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-muted-foreground">Created:</span>
+                            <div className="font-medium text-foreground">{formatDate(basketDates.created)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </div>
+          {/* Conditional Enhanced Insights and Performance Tracking Sections */}
+          {basketLocked ? (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-10">
+              {/* Enhanced Insights Section */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl md:text-3xl font-bold text-foreground">Market Insights</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
+                    onClick={() => toggleSection("insights")}
+                  >
+                    {sectionsCollapsed.insights ? (
+                      <ChevronDown className="h-5 w-5" />
+                    ) : (
+                      <ChevronUp className="h-5 w-5" />
+                    )}
+                  </Button>
+                </div>
+
+                {!sectionsCollapsed.insights && (
+                  <div className="grid grid-cols-1 gap-6">
+                    {stockPerformanceData &&
+                      stockPerformanceData.map((stock) => (
+                        <Card
+                          key={stock.id}
+                          className="glass-morphism border-border/50 shadow-premium cursor-pointer hover:shadow-glow-blue transition-all duration-300 hover:scale-[1.02]"
+                          onClick={() => handleStockClick(stock)}
+                        >
+                          <CardHeader className="pb-3">
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-1">
+                                <CardTitle className="text-xl font-bold text-foreground">{stock.symbol}</CardTitle>
+                                <CardDescription className="text-sm text-muted-foreground">
+                                  {stock.name}
+                                </CardDescription>
+                              </div>
+                              <div className="text-right space-y-1">
+                                <div className="text-xl font-bold text-foreground">${stock.price}</div>
+                                <div className={`text-sm font-medium ${getPerformanceColor(stock.change)}`}>
+                                  {stock.change > 0 ? "+" : ""}
+                                  {stock.change.toFixed(2)}%
+                                </div>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
+                              <span className="text-sm font-medium text-muted-foreground">Portfolio Weight</span>
+                              <span className="font-bold text-lg text-foreground">{stock.allocation}%</span>
+                            </div>
+                            <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
+                              <span className="text-sm font-medium text-muted-foreground">Sentiment Score</span>
+                              <div className="flex items-center gap-2">
+                                {getSentimentIcon(stock.compositeSentiment)}
+                                <span className={`text-sm font-bold ${getSentimentColor(stock.compositeSentiment)}`}>
+                                  {stock.compositeSentiment.toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Enhanced Performance Tracking Section */}
+              <div id="tracking-section" className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl md:text-3xl font-bold text-foreground">Performance Tracking</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 w-10 p-0 hover:bg-accent/50 rounded-full transition-all duration-200"
+                    onClick={() => toggleSection("tracking")}
+                  >
+                    {sectionsCollapsed.tracking ? (
+                      <ChevronDown className="h-5 w-5" />
+                    ) : (
+                      <ChevronUp className="h-5 w-5" />
+                    )}
+                  </Button>
+                </div>
+
+                {!sectionsCollapsed.tracking && (
+                  <Card className="glass-morphism border-border/50 shadow-premium">
+                    <CardHeader className="pb-4">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-2">
+                          <CardTitle className="flex items-center gap-3 text-xl font-bold">
+                            <div className="p-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-400">
+                              <Lock className="h-6 w-6 text-white" />
+                            </div>
+                            Locked Basket: {basketName}
+                          </CardTitle>
+                          <CardDescription className="text-base text-muted-foreground">
+                            This basket is locked for performance tracking. Unlock to make changes.
+                          </CardDescription>
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={handleUnlockBasket}
+                          disabled={isLoading}
+                          className="gap-2 bg-amber-500/20 border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-all duration-200"
+                        >
+                          <Unlock className="h-4 w-4" />
+                          Unlock Basket
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="text-center p-4 rounded-xl bg-gradient-card border border-border/30">
+                          <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">
+                            {stocks.reduce((sum, stock) => sum + stock.allocation, 0)}%
+                          </div>
+                          <div className="text-sm text-muted-foreground">Total Allocation</div>
+                        </div>
+                        <div className="text-center p-4 rounded-xl bg-gradient-card border border-border/30">
+                          <div className="text-2xl md:text-3xl font-bold text-emerald-400 mb-1">+2.4%</div>
+                          <div className="text-sm text-muted-foreground">Performance Since Lock</div>
+                        </div>
+                        <div className="text-center p-4 rounded-xl bg-gradient-card border border-border/30">
+                          <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">{stocks.length}</div>
+                          <div className="text-sm text-muted-foreground">Stocks in Basket</div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
+                          <span className="text-sm font-medium text-muted-foreground">Created:</span>
+                          <span className="font-medium text-foreground">{formatDate(basketDates.created)}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
+                          <span className="text-sm font-medium text-muted-foreground">Last Updated:</span>
+                          <span className="font-medium text-foreground">{formatDate(basketDates.updated)}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-card">
+                          <span className="text-sm font-medium text-muted-foreground">Locked Date:</span>
+                          <div className="flex items-center gap-3">
+                            <span className="font-medium text-foreground">{formatDate(basketDates.locked)}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-full hover:bg-accent/50 transition-all duration-200"
+                              onClick={() => setIsEditingLockDate(true)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Popover open={isEditingLockDate} onOpenChange={setIsEditingLockDate}>
+                        <PopoverTrigger asChild>
+                          <div />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-card/95 backdrop-blur-sm border-border/50" align="end">
+                          <Calendar
+                            mode="single"
+                            selected={basketDates.locked || undefined}
+                            onSelect={(date) => {
+                              if (date) {
+                                handleUpdateLockDate(date)
+                                setIsEditingLockDate(false)
+                              }
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
-
-            {/* Modals */}
-            <AddBasketModal
-              open={isAddBasketModalOpen}
-              onOpenChange={setIsAddBasketModalOpen}
-              onSave={createNewBasket}
-              isLoading={isLoading}
-            />
-
-            <StockSelector
-              open={isStockSelectorOpen}
-              onOpenChange={setIsStockSelectorOpen}
-              initialStocks={stocks}
-              onSave={handleSaveStocks}
-            />
-
-            <StockAllocation
-              open={isAllocationEditorOpen}
-              onOpenChange={setIsAllocationEditorOpen}
-              stocks={stocks}
-              onSave={handleSaveStocks}
-              onAllocationChange={handleAllocationChange}
-              onToggleLock={handleToggleLock}
-            />
-
-            <AlertDialog open={isUnlockBasketAlertOpen} onOpenChange={setIsUnlockBasketAlertOpen}>
-              <AlertDialogContent className="glass-morphism border-border/50">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-foreground text-xl">Basket Locked</AlertDialogTitle>
-                  <AlertDialogDescription className="text-muted-foreground text-base">
-                    This basket is currently locked for performance tracking. Please unlock it to make changes to stock
-                    positions or allocations.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-card/50 text-foreground border-border/50 hover:bg-accent/50">
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction onClick={handleUnlockBasket} className="btn-gradient-primary">
-                    Unlock Basket
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </>
-        )}
-      </div>
+          ) : null}
+          {/* Enhanced Footer */}
+          <div className="mt-12 pt-8 border-t border-border/30 text-center">
+            <p className="text-muted-foreground text-sm">
+              © 2025 Sentiment Analysis Dashboard. Data refreshes every 15 minutes.
+            </p>
+            <div className="mt-2 flex justify-center items-center gap-2">
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+              <span className="text-xs text-emerald-400 font-medium">Live Data</span>
+            </div>
+          </div>
+          {/* Modals */}
+          <AddBasketModal
+            open={isAddBasketModalOpen}
+            onOpenChange={setIsAddBasketModalOpen}
+            onSave={createNewBasket}
+            isLoading={isLoading}
+          />
+          <StockSelector
+            open={isStockSelectorOpen}
+            onOpenChange={setIsStockSelectorOpen}
+            initialStocks={stocks}
+            onSave={handleSaveStocks}
+          />
+          <StockAllocation
+            open={isAllocationEditorOpen}
+            onOpenChange={setIsAllocationEditorOpen}
+            stocks={stocks}
+            onSave={handleSaveStocks}
+            onAllocationChange={handleAllocationChange}
+            onToggleLock={handleToggleLock}
+          />
+          <AlertDialog open={isUnlockBasketAlertOpen} onOpenChange={setIsUnlockBasketAlertOpen}>
+            <AlertDialogContent className="glass-morphism border-border/50">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-foreground text-xl">Basket Locked</AlertDialogTitle>
+                <AlertDialogDescription className="text-muted-foreground text-base">
+                  This basket is currently locked for performance tracking. Please unlock it to make changes to stock
+                  positions or allocations.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-card/50 text-foreground border-border/50 hover:bg-accent/50">
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction onClick={handleUnlockBasket} className="btn-gradient-primary">
+                  Unlock Basket
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
     </div>
   )
 }
