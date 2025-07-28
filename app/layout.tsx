@@ -9,9 +9,9 @@ import { UserNav } from "@/components/user-nav"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Toaster } from "@/components/ui/toaster"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ChevronDown, Menu, Activity } from "lucide-react" // Import Menu icon
+import { ChevronDown, Menu, Activity } from "lucide-react"
 import localFont from "next/font/local"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet" // Import Sheet components
+import { Button } from "@/components/ui/button"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -41,82 +41,75 @@ export default function RootLayout({
                 <div className="max-w-7xl mx-auto px-6 py-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center">
-                      {/* Hamburger icon for mobile */}
+                      {/* Mobile Menu Dropdown */}
                       <div className="xl:hidden mr-4">
-                        <Sheet>
-                          <SheetTrigger asChild>
-                            <button className="p-2 -ml-2 rounded-md text-foreground hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-10 w-10 rounded-full text-foreground hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200"
+                            >
                               <Menu className="h-6 w-6" />
                               <span className="sr-only">Open menu</span>
-                            </button>
-                          </SheetTrigger>
-                          <SheetContent
-                            side="left"
-                            className="w-[250px] sm:w-[300px] glass-morphism border-border/30 p-6"
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            className="glass-morphism border-border/30 w-56 mt-2"
+                            align="start"
+                            sideOffset={8}
                           >
-                            <div className="flex flex-col space-y-4">
-                              <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2 rounded-lg bg-gradient-primary">
-                                  <Activity className="h-5 w-5 text-white" />
-                                </div>
-                                <span className="font-neuropol text-foreground text-lg font-bold text-gradient">
-                                  SENTIBOARD
-                                </span>
-                              </div>
+                            <DropdownMenuItem asChild>
                               <Link
                                 href="/"
                                 className="text-foreground hover:text-primary transition-colors w-full font-medium"
                               >
                                 Home
                               </Link>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger className="text-foreground hover:text-primary transition-colors w-full flex items-center justify-between font-medium">
-                                  Signals
-                                  <ChevronDown className="ml-1 h-4 w-4" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="glass-morphism border-border/30 w-[calc(100%-1rem)]">
-                                  <DropdownMenuItem asChild>
-                                    <Link
-                                      href="/google-trend-signals"
-                                      className="text-foreground hover:text-primary transition-colors w-full"
-                                    >
-                                      Google Trends
-                                    </Link>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem asChild>
-                                    <Link
-                                      href="/twitter-signals"
-                                      className="text-foreground hover:text-primary transition-colors w-full"
-                                    >
-                                      Twitter Signals
-                                    </Link>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem asChild>
-                                    <Link
-                                      href="/news-signals"
-                                      className="text-foreground hover:text-primary transition-colors w-full"
-                                    >
-                                      News Signals
-                                    </Link>
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href="/google-trend-signals"
+                                className="text-foreground hover:text-primary transition-colors w-full"
+                              >
+                                Google Trends
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href="/twitter-signals"
+                                className="text-foreground hover:text-primary transition-colors w-full"
+                              >
+                                Twitter Signals
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href="/news-signals"
+                                className="text-foreground hover:text-primary transition-colors w-full"
+                              >
+                                News Signals
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
                               <Link
                                 href="/performance"
                                 className="text-foreground hover:text-primary transition-colors w-full font-medium"
                               >
                                 Performance
                               </Link>
-                            </div>
-                          </SheetContent>
-                        </Sheet>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                      {/* SENTIBOARD Logo - enhanced styling */}
+
+                      {/* SENTIBOARD Logo - responsive */}
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-gradient-primary">
                           <Activity className="h-6 w-6 text-white" />
                         </div>
-                        <span className="font-neuropol text-foreground text-xl font-bold text-gradient">
+                        {/* Hide text on mobile, show on larger screens */}
+                        <span className="hidden sm:block font-neuropol text-foreground text-xl font-bold text-gradient">
                           SENTIBOARD
                         </span>
                       </div>
