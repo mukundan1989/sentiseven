@@ -1603,42 +1603,15 @@ const SentimentDashboard = () => {
             ) : null}
 
             {/* Enhanced Footer */}
-            <footer className="glass-morphism rounded-2xl p-6 mt-12 shadow-premium relative overflow-hidden">
-              {/* Decorative elements */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-cyan-500/5 pointer-events-none" />
-              <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-transparent rounded-full blur-xl" />
-              <div className="absolute bottom-0 right-0 w-24 h-24 bg-gradient-to-tl from-purple-400/10 to-transparent rounded-full blur-xl" />
-
-              <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start gap-6">
-                {/* Left side - Logo and tagline */}
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-foreground/30">
-                    <Activity className="h-6 w-6 text-foreground/70" />
-                  </div>
-                  <div className="space-y-1">
-                    <span className="font-roboto text-foreground/70 text-xl font-bold">SENTIBOARD</span>
-                    <p className="text-muted-foreground text-sm max-w-xs">
-                      Advanced sentiment analysis for smarter investment decisions
-                    </p>
-                  </div>
-                </div>
-
-                {/* Right side - Copyright and legal links */}
-                <div className="text-right space-y-2">
-                  <p className="text-muted-foreground text-sm">
-                    © 2025 Sentiment Analysis Dashboard. All rights reserved.
-                  </p>
-                  <div className="flex flex-col gap-1 text-xs">
-                    <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                      Privacy Policy
-                    </a>
-                    <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                      Terms of Service
-                    </a>
-                  </div>
-                </div>
+            <div className="mt-12 pt-8 border-t border-border/30 text-center">
+              <p className="text-muted-foreground text-sm">
+                © 2025 Sentiment Analysis Dashboard. Data refreshes every 15 minutes.
+              </p>
+              <div className="mt-2 flex justify-center items-center gap-2">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                <span className="text-xs text-emerald-400 font-medium">Live Data</span>
               </div>
-            </footer>
+            </div>
 
             {/* Modals */}
             <AddBasketModal
