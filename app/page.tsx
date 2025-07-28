@@ -1,128 +1,96 @@
-import { TrendingUp, Clock, Activity, Zap, ArrowRight, Sparkles } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import Link from "next/link"
+import { TrendingUp } from "lucide-react"
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-      {/* Hero Section - Direct content without extra containers */}
-      <section className="relative overflow-hidden">
-        {/* Background effects */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_70%)]" />
-
-        <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left Content */}
-            <div className="space-y-8">
-              {/* Icon Grid */}
-              <div className="flex gap-4">
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg">
-                  <Clock className="h-8 w-8 text-white" />
-                </div>
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-                  <Activity className="h-8 w-8 text-white" />
-                </div>
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg">
-                  <Zap className="h-8 w-8 text-white" />
-                </div>
-              </div>
-
-              {/* Main Heading */}
-              <div className="space-y-6">
-                <h1 className="text-5xl lg:text-7xl font-bold text-white leading-tight">
-                  <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    Sentiment Analysis
-                  </span>
-                  <br />
-                  <span className="text-white">Dashboard</span>
-                </h1>
-
-                <p className="text-xl text-slate-300 leading-relaxed max-w-2xl">
-                  Track market sentiment across multiple data sources with AI-powered insights. Make informed investment
-                  decisions with real-time sentiment analysis.
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/sentiment-dashboard">
-                  <Button
-                    size="lg"
-                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-                  >
-                    <ArrowRight className="mr-2 h-5 w-5" />
-                    Get Started
-                  </Button>
-                </Link>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-slate-600 text-slate-300 hover:bg-slate-800 px-8 py-4 rounded-xl text-lg font-semibold bg-transparent"
-                >
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Learn More
-                </Button>
-              </div>
-            </div>
-
-            {/* Right Content - Live Sentiment Card */}
-            <div className="relative">
-              <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50 backdrop-blur-sm shadow-2xl">
-                <CardContent className="p-8">
-                  <div className="space-y-6">
-                    {/* Header */}
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600">
-                        <Activity className="h-5 w-5 text-white" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-white">Live Sentiment Analysis</h3>
-                    </div>
-
-                    {/* Market Confidence */}
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400">Market Confidence</span>
-                        <span className="text-emerald-400 font-bold">+72%</span>
-                      </div>
-
-                      {/* Progress Bar */}
-                      <div className="relative h-3 bg-slate-700 rounded-full overflow-hidden">
-                        <div
-                          className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full"
-                          style={{ width: "72%" }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Sentiment Breakdown */}
-                    <div className="grid grid-cols-2 gap-6 pt-4">
-                      <div className="text-center space-y-2">
-                        <div className="flex items-center justify-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-emerald-400" />
-                          <span className="text-emerald-400 font-semibold">Bullish</span>
-                        </div>
-                        <div className="text-2xl font-bold text-white">45%</div>
-                      </div>
-                      <div className="text-center space-y-2">
-                        <div className="flex items-center justify-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-red-400 rotate-180" />
-                          <span className="text-red-400 font-semibold">Bearish</span>
-                        </div>
-                        <div className="text-2xl font-bold text-white">28%</div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
+        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-100 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+          Get started by editing&nbsp;
+          <code className="font-mono font-bold">app/page.tsx</code>
+        </p>
+        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white/10 dark:from-black dark:via-black/30 lg:static lg:h-auto lg:w-auto lg:bg-none">
+          <a
+            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
+            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            By <img src="/vercel.svg" alt="Vercel Logo" className="dark:invert" width={100} height={24} priority />
+          </a>
         </div>
-      </section>
+      </div>
 
+      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
+        <a
+          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            Docs{" "}
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            Find in-depth information about Next.js features and API.
+          </p>
+        </a>
+
+        <a
+          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            Learn{" "}
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            Learn about Next.js in an interactive course with&nbsp;quizzes!
+          </p>
+        </a>
+
+        <a
+          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            Templates{" "}
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            Explore starter templates for your next Next.js project.
+          </p>
+        </a>
+
+        <a
+          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            Deploy{" "}
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            Instantly deploy your Next.js site to a shareable URL with Vercel.
+          </p>
+        </a>
+      </div>
       {/* Footer */}
-      <footer className="relative border-t border-white/10">
+      <footer className="relative mt-16 border-t border-white/10">
         {/* Decorative gradient line */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
 
