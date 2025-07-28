@@ -177,12 +177,6 @@ export function CorrelationChart() {
                       {source.winRate.toFixed(1)}%
                     </div>
 
-                    {/* Vertical marker */}
-                    <div
-                      className="absolute top-0 h-full w-0.5 bg-foreground z-10 shadow-sm"
-                      style={{ left: getWinRateWidthPercentage(source.winRate) }}
-                    />
-
                     {/* Enhanced Progress bar fill with gradient */}
                     <div
                       className="h-full rounded-full transition-all duration-500 ease-out relative overflow-hidden"
